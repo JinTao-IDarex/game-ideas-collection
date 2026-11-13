@@ -1,0 +1,233 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-10-20T02:45:11.830Z",
+  "source": "build-page-dispatch-manifest.mjs",
+  "mode": "existing-edit",
+  "summary_path": "runtime-orchestration-summary.json",
+  "skillProvenance": {
+    "name": "solo-design",
+    "version": "2026.10.13.09.48.16",
+    "version_source": "skill-release-manifest.json",
+    "read_status": "ok"
+  },
+  "dispatchPreflightManifest": [
+    {
+      "recorded_at": "2026-10-20T02:45:11.740Z",
+      "generatedBy": "build-page-dispatch-manifest.mjs",
+      "packetType": "ExistingEditPagePacket",
+      "laneContract": {
+        "resolvedLane": "existing_edit_add_comparison",
+        "packetType": "ExistingEditPagePacket",
+        "pageRuntimeGuide": "intent-workflows/intent-project-mutation/existing-edit-page-runtime.md",
+        "dispatchContract": "intent-workflows/intent-project-mutation/existing-edit-dispatch-contract.md"
+      },
+      "taskLinePresent": true,
+      "outputPathPresent": true,
+      "sharedTemplate": "intent-workflows/intent-project-mutation/existing-edit-page-runtime.md",
+      "nodeId": "page-puzzle",
+      "htmlSrc": "pages/puzzle.html",
+      "supplementaryReads": [],
+      "allowedWritePaths": [
+        "pages/puzzle.html",
+        "assets/"
+      ],
+      "forbiddenWriteRoots": [
+        "*.design",
+        "runtime-orchestration-summary.json",
+        "validation-report.json",
+        "finish-readiness-report.json",
+        "restore-contract-report.json",
+        "page-generation-summary.json"
+      ],
+      "toolPolicy": {
+        "todoWriteAllowed": false,
+        "validationScriptsAllowed": false,
+        "previewAllowed": false,
+        "helperScriptsAllowed": false,
+        "designFileWriteAllowed": false,
+        "allowedWritePaths": [
+          "pages/puzzle.html",
+          "assets/"
+        ]
+      },
+      "skillRuntime": {
+        "skillDir": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design",
+        "deterministicToolDir": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling",
+        "toolPaths": {
+          "applyHtmlHeadContract": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\apply-html-head-contract.mjs",
+          "recordDispatchCompletion": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\record-dispatch-completion.mjs",
+          "buildPageDispatchManifest": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\build-page-dispatch-manifest.mjs",
+          "validateDesignWorkspace": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\validate-design-workspace.mjs",
+          "validateFinishReadiness": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\validate-finish-readiness.mjs",
+          "validateRestoreContract": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\validate-restore-contract.mjs"
+        },
+        "requiredForPageSubAgent": [
+          "applyHtmlHeadContract",
+          "recordDispatchCompletion"
+        ],
+        "pathInjection": "absolute",
+        "pathContract": "Do not use {SKILL_DIR} placeholders inside Page Sub-Agent packets; use toolPaths.* absolute paths.",
+        "commandTemplates": {
+          "recordDispatchCompletion": "node \"c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\record-dispatch-completion.mjs\" \"d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker\" --node-id=\"page-puzzle\" --html-src=\"pages/puzzle.html\" --status=completed --changed-files=<comma-separated-project-relative-files> --trace-digest=<main-agent-runtime-trace-digest> --tool-ledger-json=<tool-ledger-json-or-file>"
+        }
+      },
+      "cssFilePath": "d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker\\colors_and_type.css",
+      "htmlFilePath": "d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker\\pages\\puzzle.html",
+      "brandPrefix": "mp",
+      "aestheticsMode": "free-explore",
+      "toolDisciplineBlockPresent": true,
+      "fillHtmlHeadCommand": "node \"c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\apply-html-head-contract.mjs\" \"d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker\\colors_and_type.css\" \"d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker\\pages\\puzzle.html\" --title=\"地铁拼图师 · 北京环城记\" --lang=\"zh-CN\" --prefix=\"mp\" --replace-head",
+      "headFillMode": "replace-head-after-body",
+      "viewportMode": "document-scroll",
+      "completionSchemaExpected": "full",
+      "restoreFields": null,
+      "restoreContractStatus": null,
+      "restoreCompactPacket": null,
+      "deterministicCommands": null,
+      "sourceAuthorityLock": null,
+      "preDispatchFileHashes": {
+        "metro-puzzle-maker.design": "03be934fb04ce7ca75e3b5edbc694ccfca54e0a8b1230cc65998ba997330e224"
+      },
+      "contextPreflight": {
+        "workflowPath": "intent-workflows/intent-project-mutation/INTENT_WORKFLOW.md",
+        "requiredContextFiles": [
+          "shared-runtime/runtime-boundaries/lane-runtime-contracts.md",
+          "shared-runtime/agent-dispatch-runtime/lane-dispatch-index.md",
+          "shared-runtime/agent-dispatch-runtime/shared-page-rendering-kernel.md",
+          "delivery-quality/page-rendering-quality-gate.md",
+          "delivery-quality/design-artifact-validation.md",
+          "delivery-quality/delivery-evidence-contract.md"
+        ],
+        "optionalContextFiles": [
+          "visual-experience/visual-experience-guidelines.md"
+        ],
+        "passed": true
+      },
+      "pageSliceOnly": true,
+      "requiredFieldsPresent": true,
+      "missingFields": [],
+      "fillHtmlHeadCommandValid": true,
+      "mobileNavigation": {
+        "required": false,
+        "appliesToThisPage": false,
+        "canonicalHtmlIncluded": false,
+        "missingFields": []
+      },
+      "persistedToSummary": true,
+      "taskQueryAudited": false,
+      "proofSource": "summary-only",
+      "largeWorkflowFilesInTaskQuery": null
+    },
+    {
+      "recorded_at": "2026-10-20T02:45:11.740Z",
+      "generatedBy": "build-page-dispatch-manifest.mjs",
+      "packetType": "ExistingEditPagePacket",
+      "laneContract": {
+        "resolvedLane": "existing_edit_add_comparison",
+        "packetType": "ExistingEditPagePacket",
+        "pageRuntimeGuide": "intent-workflows/intent-project-mutation/existing-edit-page-runtime.md",
+        "dispatchContract": "intent-workflows/intent-project-mutation/existing-edit-dispatch-contract.md"
+      },
+      "taskLinePresent": true,
+      "outputPathPresent": true,
+      "sharedTemplate": "intent-workflows/intent-project-mutation/existing-edit-page-runtime.md",
+      "nodeId": "page-puzzle-v2",
+      "htmlSrc": "pages/puzzle-v2.html",
+      "supplementaryReads": [],
+      "allowedWritePaths": [
+        "pages/puzzle-v2.html",
+        "assets/"
+      ],
+      "forbiddenWriteRoots": [
+        "*.design",
+        "runtime-orchestration-summary.json",
+        "validation-report.json",
+        "finish-readiness-report.json",
+        "restore-contract-report.json",
+        "page-generation-summary.json"
+      ],
+      "toolPolicy": {
+        "todoWriteAllowed": false,
+        "validationScriptsAllowed": false,
+        "previewAllowed": false,
+        "helperScriptsAllowed": false,
+        "designFileWriteAllowed": false,
+        "allowedWritePaths": [
+          "pages/puzzle-v2.html",
+          "assets/"
+        ]
+      },
+      "skillRuntime": {
+        "skillDir": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design",
+        "deterministicToolDir": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling",
+        "toolPaths": {
+          "applyHtmlHeadContract": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\apply-html-head-contract.mjs",
+          "recordDispatchCompletion": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\record-dispatch-completion.mjs",
+          "buildPageDispatchManifest": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\build-page-dispatch-manifest.mjs",
+          "validateDesignWorkspace": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\validate-design-workspace.mjs",
+          "validateFinishReadiness": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\validate-finish-readiness.mjs",
+          "validateRestoreContract": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\validate-restore-contract.mjs"
+        },
+        "requiredForPageSubAgent": [
+          "applyHtmlHeadContract",
+          "recordDispatchCompletion"
+        ],
+        "pathInjection": "absolute",
+        "pathContract": "Do not use {SKILL_DIR} placeholders inside Page Sub-Agent packets; use toolPaths.* absolute paths.",
+        "commandTemplates": {
+          "recordDispatchCompletion": "node \"c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\record-dispatch-completion.mjs\" \"d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker\" --node-id=\"page-puzzle-v2\" --html-src=\"pages/puzzle-v2.html\" --status=completed --changed-files=<comma-separated-project-relative-files> --trace-digest=<main-agent-runtime-trace-digest> --tool-ledger-json=<tool-ledger-json-or-file>"
+        }
+      },
+      "cssFilePath": "d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker\\colors_and_type.css",
+      "htmlFilePath": "d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker\\pages\\puzzle-v2.html",
+      "brandPrefix": "mp",
+      "aestheticsMode": "free-explore",
+      "toolDisciplineBlockPresent": true,
+      "fillHtmlHeadCommand": "node \"c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\apply-html-head-contract.mjs\" \"d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker\\colors_and_type.css\" \"d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker\\pages\\puzzle-v2.html\" --title=\"地铁拼图师 · 北京环城记 — 四线全图版\" --lang=\"zh-CN\" --prefix=\"mp\"",
+      "headFillMode": "skeleton-first",
+      "viewportMode": "document-scroll",
+      "completionSchemaExpected": "full",
+      "restoreFields": null,
+      "restoreContractStatus": null,
+      "restoreCompactPacket": null,
+      "deterministicCommands": null,
+      "sourceAuthorityLock": null,
+      "preDispatchFileHashes": {
+        "metro-puzzle-maker.design": "03be934fb04ce7ca75e3b5edbc694ccfca54e0a8b1230cc65998ba997330e224"
+      },
+      "contextPreflight": {
+        "workflowPath": "intent-workflows/intent-project-mutation/INTENT_WORKFLOW.md",
+        "requiredContextFiles": [
+          "shared-runtime/runtime-boundaries/lane-runtime-contracts.md",
+          "shared-runtime/agent-dispatch-runtime/lane-dispatch-index.md",
+          "shared-runtime/agent-dispatch-runtime/shared-page-rendering-kernel.md",
+          "delivery-quality/page-rendering-quality-gate.md",
+          "delivery-quality/design-artifact-validation.md",
+          "delivery-quality/delivery-evidence-contract.md"
+        ],
+        "optionalContextFiles": [
+          "visual-experience/visual-experience-guidelines.md"
+        ],
+        "passed": true
+      },
+      "pageSliceOnly": true,
+      "requiredFieldsPresent": true,
+      "missingFields": [],
+      "fillHtmlHeadCommandValid": true,
+      "mobileNavigation": {
+        "required": false,
+        "appliesToThisPage": false,
+        "canonicalHtmlIncluded": false,
+        "missingFields": []
+      },
+      "persistedToSummary": true,
+      "taskQueryAudited": false,
+      "proofSource": "summary-only",
+      "largeWorkflowFilesInTaskQuery": null
+    }
+  ],
+  "deterministicCommandsByPage": {
+    "pages/puzzle.html": {},
+    "pages/puzzle-v2.html": {}
+  }
+}

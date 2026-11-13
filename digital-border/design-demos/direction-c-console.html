@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>方向 C · 暗色控制台 — 数字边境 / 我是风控系统</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Serif+SC:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0B0D0C; --panel:#111413; --line:#222826; --line-2:#2E3532;
+  --fg:#D6DAD6; --fg-dim:#7E857F; --amber:#E8B34A; --green:#7CE38B; --red:#E0604F;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --serif:"Noto Serif SC",serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:var(--bg); color:var(--fg); font-family:var(--mono);
+  -webkit-font-smoothing:antialiased; text-wrap:pretty;
+  padding:34px 34px 70px; min-height:100vh;
+  background-image:repeating-linear-gradient(0deg, rgba(255,255,255,.015) 0 1px, transparent 1px 3px);
+}
+.bar{display:flex; flex-wrap:wrap; align-items:baseline; gap:14px; border-bottom:1px solid var(--line-2); padding-bottom:16px; margin-bottom:26px}
+.bar__tag{font-size:11px; letter-spacing:.2em; color:var(--amber); border:1px solid var(--amber); padding:3px 9px}
+.bar h1{font-size:22px; font-weight:700; letter-spacing:.1em}
+.bar h1 .en{font-size:11px; font-weight:400; color:var(--fg-dim); letter-spacing:.16em; margin-left:8px}
+.bar p{flex-basis:100%; font-size:12.5px; line-height:1.8; color:var(--fg-dim); max-width:92ch}
+
+.grid{display:grid; grid-template-columns:1fr 1fr; gap:22px; align-items:start}
+@media(max-width:1120px){.grid{grid-template-columns:1fr}}
+
+.panel{border:1px solid var(--line-2); background:var(--panel); display:flex; flex-direction:column; min-height:392px}
+.panel__bar{display:flex; justify-content:space-between; align-items:center; padding:9px 14px; border-bottom:1px solid var(--line); font-size:11.5px; color:var(--fg-dim); letter-spacing:.08em}
+.panel__leds{display:flex; gap:6px}
+.led{width:9px; height:9px; background:var(--line-2)}
+.led--on{background:var(--green)}
+.led--warn{background:var(--amber)}
+.led--bad{background:var(--red)}
+.panel__title{padding:12px 14px; border-bottom:1px solid var(--line); font-family:var(--serif); font-size:15px; letter-spacing:.12em; color:var(--fg)}
+.stream{padding:12px 14px; font-size:12.5px; line-height:2; flex:1}
+.stream .t{color:var(--fg-dim); display:inline-block; width:56px}
+.stream .ok{color:var(--green)}
+.stream .warn{color:var(--amber)}
+.stream .err{color:var(--red)}
+.stream .k{color:var(--fg-dim)}
+.panel__input{display:flex; gap:8px; padding:10px 14px; border-top:1px solid var(--line)}
+.panel__input .prompt{color:var(--amber)}
+.caret{display:inline-block; width:8px; height:15px; background:var(--fg); vertical-align:-2px; animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.panel__foot{padding:9px 14px; border-top:1px solid var(--line); font-size:11px; color:var(--fg-dim); letter-spacing:.06em; display:flex; justify-content:space-between}
+
+/* 风控队列 */
+.qrow{display:grid; grid-template-columns:auto 1fr auto; gap:12px; align-items:center; padding:11px 14px; border-bottom:1px solid var(--line); font-size:12.5px}
+.qrow:last-of-type{border-bottom:none}
+.qid{color:var(--fg-dim)}
+.qmeta b{display:block; color:var(--fg); font-weight:500}
+.qmeta span{color:var(--fg-dim); font-size:11.5px}
+.qact{display:flex; gap:8px}
+.tbtn{font-family:var(--mono); font-size:11.5px; letter-spacing:.1em; padding:6px 14px; background:transparent; color:var(--fg); border:1px solid var(--line-2); cursor:pointer}
+.tbtn:hover{border-color:var(--fg-dim)}
+.tbtn--hold{border-color:var(--red); color:var(--red)}
+.gauge{margin:12px 14px; border:1px solid var(--line-2); padding:10px 12px; font-size:11.5px; color:var(--fg-dim); line-height:1.8}
+.gauge b{color:var(--amber); font-weight:500}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <span class="bar__tag">方向 C</span>
+  <h1>暗色控制台<span class="en">Ops Console</span></h1>
+  <p>系统的内部视角。近黑底、等宽字、琥珀与磷绿的日志流，状态用方块而非圆点。人在这里不是"用户"，只是一行行被记录的 session；判决以最简洁的一行日志给出，没有解释，也没有申诉入口。</p>
+</header>
+
+<main class="grid">
+
+  <!-- 数字边境：一个人被记录成一行日志 -->
+  <section class="panel">
+    <div class="panel__bar">
+      <span>《数字边境》 · session REC-000731</span>
+      <span class="panel__leds"><i class="led led--on"></i><i class="led led--warn"></i><i class="led"></i></span>
+    </div>
+    <div class="panel__title">访问受理 · 实时记录</div>
+    <div class="stream">
+      <div><span class="t">00:01</span><span class="k">session.open</span> <span class="k">region=CN</span></div>
+      <div><span class="t">00:04</span><span class="k">identity.submit</span> <span class="k">phone=156****</span></div>
+      <div><span class="t">00:06</span><span class="k">policy.check</span> <span class="warn">region unsupported</span></div>
+      <div><span class="t">00:07</span><span class="err">REJECTED</span> <span class="k">reason: out of service area</span></div>
+      <div><span class="t">00:12</span><span class="k">retry.attempt</span> <span class="warn">n=2</span></div>
+      <div><span class="t">00:15</span><span class="k">policy.check</span> <span class="warn">new condition loaded</span></div>
+      <div><span class="t">00:16</span><span class="err">REJECTED</span> <span class="k">reason: verification required</span></div>
+      <div><span class="t">00:31</span><span class="k">retry.attempt</span> <span class="warn">n=7</span></div>
+      <div><span class="t">00:33</span><span class="err">REJECTED</span> <span class="k">reason: environment flagged</span></div>
+    </div>
+    <div class="panel__input"><span class="prompt">&gt;</span><span>再试一次</span><span class="caret"></span></div>
+    <div class="panel__foot"><span>attempts 7</span><span>status DENIED</span></div>
+  </section>
+
+  <!-- 我是风控系统 -->
+  <section class="panel">
+    <div class="panel__bar">
+      <span>《我是风控系统》 · 夜班 shift_01</span>
+      <span class="panel__leds"><i class="led led--bad"></i><i class="led led--bad"></i><i class="led led--warn"></i></span>
+    </div>
+    <div class="panel__title">待处理案卷队列</div>
+    <div class="qrow">
+      <span class="qid">#A-2201</span>
+      <span class="qmeta"><b>来源 未支持地区</b><span>dev:new · hist:nil · behav:steady</span></span>
+      <span class="qact"><button class="tbtn">放行</button><button class="tbtn tbtn--hold">拦截</button></span>
+    </div>
+    <div class="qrow">
+      <span class="qid">#A-2202</span>
+      <span class="qmeta"><b>来源 未支持地区</b><span>dev:seen · hist:nil · behav:steady</span></span>
+      <span class="qact"><button class="tbtn">放行</button><button class="tbtn tbtn--hold">拦截</button></span>
+    </div>
+    <div class="qrow">
+      <span class="qid">#A-2203</span>
+      <span class="qmeta"><b>来源 支持地区</b><span>dev:new · hist:none · behav:odd</span></span>
+      <span class="qact"><button class="tbtn">放行</button><button class="tbtn tbtn--hold">拦截</button></span>
+    </div>
+    <div class="gauge">本班次配额 · 拦截率 <b>≥ 30%</b><br>本班次政策：<b>尚未下发</b>。你的判断将用于训练下一代模型。</div>
+    <div class="panel__foot"><span>processed 0 / 12</span><span>consistency —</span><span>quota —</span></div>
+  </section>
+
+</main>
+
+</body>
+</html>

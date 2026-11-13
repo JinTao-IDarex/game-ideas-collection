@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>最后一公里 · 方向四 手机版找车页 v2（停车点验车）</title>
+<!--
+  v2 变更（用户反馈）：点地图标记不再只弹一辆车，而是弹出一个「停车点」，
+  里面有 3-5 辆车供挑选，只有 1 辆能骑——可见伤画在车上，隐伤只留线索，选错扣 5 秒。
+  REASONING
+  - 集群 = 哈啰地图上的聚合点玩法化：「走到停车点才发现一堆车没一辆好的」是真实通勤记忆
+  - 每次加载随机生成车况、打乱顺序，同一停车点可反复赌
+  - 难度来源：隐伤（刹车失灵/链条断/慢撒气）只有一句暧昧线索 + 图上一个细节，验车靠眼力
+-->
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden}
+  body{background:#20242B;font-family:'Noto Sans SC',sans-serif;display:flex;align-items:center;justify-content:center;gap:56px}
+  .side{color:#E8EAEE;max-width:340px}
+  .side h1{font-size:34px;font-weight:900;line-height:1.3}
+  .side h1 em{color:#33B5FF;font-style:normal}
+  .side p{color:#9BA1AB;font-size:14px;line-height:1.9;margin-top:14px}
+  .side .keys{margin-top:22px;display:flex;flex-direction:column;gap:10px}
+  .side .key{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:#C6CAD2;line-height:1.6}
+  .side .key i{flex:none;width:8px;height:8px;border-radius:50%;background:#33B5FF;margin-top:6px}
+  .side .key b{color:#FF6B4A}
+
+  .phone{width:390px;height:844px;border-radius:52px;background:#000;padding:10px;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 2px #3A3F47;flex:none}
+  .screen{width:100%;height:100%;border-radius:44px;overflow:hidden;position:relative;background:#F2F0EA}
+
+  .statusbar{position:absolute;top:0;left:0;right:0;height:44px;z-index:40;display:flex;justify-content:space-between;align-items:center;padding:0 26px;font-size:13px;font-weight:700;color:#222;pointer-events:none}
+  .notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:104px;height:28px;background:#000;border-radius:99px;z-index:41}
+
+  .map{position:absolute;inset:0;background:#F2F0EA}
+  .block{position:absolute;background:#E7E4DA;border-radius:6px}
+  .block.park{background:#DCE9D4}
+  .road{position:absolute;background:#FFFFFF}
+  .road.h{height:14px;box-shadow:0 1px 0 #DDD9CE}
+  .road.v{width:14px;box-shadow:1px 0 0 #DDD9CE}
+  .road-name{position:absolute;font-size:10px;color:#B0AC9F;letter-spacing:3px;font-weight:500;transform:rotate(90deg);transform-origin:left center}
+
+  .zone{position:absolute;border:2px dashed rgba(51,181,255,.7);border-radius:14px;background:rgba(51,181,255,.08)}
+  .zone .zlb{position:absolute;top:-11px;left:12px;background:#33B5FF;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px}
+
+  .company{position:absolute;transform:translate(-50%,-100%);z-index:12;text-align:center}
+  .company .pin{width:34px;height:34px;border-radius:50% 50% 50% 4px;background:#FF5A3C;color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;transform:rotate(-45deg);box-shadow:0 3px 8px rgba(255,90,60,.4);margin:0 auto}
+  .company .pin span{transform:rotate(45deg)}
+  .company .lb{font-size:11px;font-weight:900;color:#FF5A3C;margin-top:3px;background:#fff;padding:1px 7px;border-radius:99px;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+
+  .me{position:absolute;transform:translate(-50%,-50%);z-index:11}
+  .me .dot{width:16px;height:16px;border-radius:50%;background:#1A9CFF;border:3px solid #fff;box-shadow:0 1px 6px rgba(26,156,255,.5)}
+  .me .ring{position:absolute;inset:-14px;border-radius:50%;border:2px solid rgba(26,156,255,.4);animation:pulse 2s infinite}
+  @keyframes pulse{0%{transform:scale(.5);opacity:1}100%{transform:scale(1.4);opacity:0}}
+
+  /* 停车点集群标记 */
+  .pk{position:absolute;transform:translate(-50%,-50%);z-index:13;cursor:pointer;text-align:center}
+  .pk .ico{
+    width:36px;height:36px;border-radius:50%;background:#fff;position:relative;
+    box-shadow:0 2px 8px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;
+    transition:transform .12s;
+  }
+  .pk.active .ico{background:#1A9CFF;transform:scale(1.15);box-shadow:0 4px 14px rgba(26,156,255,.5)}
+  .pk.active .ico svg path{stroke:#fff}
+  .pk .cnt{
+    position:absolute;top:-7px;right:-9px;min-width:17px;height:17px;border-radius:99px;
+    background:#FF8A00;color:#fff;font-size:10px;font-weight:900;line-height:17px;padding:0 4px;
+    border:2px solid #fff;
+  }
+  .pk .d{position:absolute;top:40px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:10px;font-weight:700;color:#666;background:rgba(255,255,255,.92);padding:1px 6px;border-radius:99px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+
+  .mission{position:absolute;top:56px;left:14px;right:14px;z-index:30;background:rgba(34,36,40,.92);backdrop-filter:blur(8px);border-radius:16px;padding:10px 14px;display:flex;align-items:center;gap:12px;color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+  .mission .clock{font-size:22px;font-weight:900;color:#FF6B4A;font-variant-numeric:tabular-nums;letter-spacing:.5px;transition:transform .1s}
+  .mission .clock.hit{animation:hit .4s}
+  @keyframes hit{0%{transform:scale(1.35);color:#FF3B2F}100%{transform:scale(1)}}
+  .mission .tt{font-size:11px;color:#B9BDC6;line-height:1.5}
+  .mission .tt b{color:#fff}
+  .mission .mini{margin-left:auto;display:flex;gap:8px}
+  .mission .mstat{text-align:center}
+  .mission .mstat .v{font-size:14px;font-weight:900}
+  .mission .mstat .k{font-size:9px;color:#B9BDC6}
+  .mission .mstat .bar{width:34px;height:3px;background:#3A3F47;border-radius:2px;margin-top:3px;overflow:hidden}
+  .mission .mstat .bar i{display:block;height:100%;background:#33B5FF}
+  .mission .mstat.mood .bar i{background:#FFC53D}
+
+  .fabs{position:absolute;right:12px;bottom:236px;z-index:25;display:flex;flex-direction:column;gap:10px}
+  .fab{width:40px;height:40px;border-radius:50%;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.16);display:flex;align-items:center;justify-content:center;cursor:pointer}
+
+  /* 默认底部 */
+  .sheet-default{position:absolute;left:0;right:0;bottom:0;z-index:26;padding:14px 18px 26px;background:linear-gradient(180deg,rgba(242,240,234,0),rgba(242,240,234,.96) 26%)}
+  .near{font-size:12px;color:#888;font-weight:500;margin-bottom:10px;text-align:center}
+  .near b{color:#E6432D}
+  .scan{width:100%;border:none;cursor:pointer;border-radius:16px;padding:17px;background:linear-gradient(135deg,#33B5FF,#1A7CFF);color:#fff;font-size:18px;font-weight:900;font-family:inherit;letter-spacing:2px;box-shadow:0 8px 20px rgba(26,124,255,.35);display:flex;align-items:center;justify-content:center;gap:10px}
+  .scan-sub{text-align:center;font-size:11px;color:#999;margin-top:9px}
+  .scan-sub u{color:#1A7CFF;font-weight:700}
+
+  /* 停车点验车卡 */
+  .sheet-cluster{
+    position:absolute;left:0;right:0;bottom:0;z-index:27;background:#fff;border-radius:22px 22px 0 0;
+    box-shadow:0 -8px 30px rgba(0,0,0,.15);padding:12px 0 20px;
+    transform:translateY(110%);transition:transform .25s cubic-bezier(.2,.9,.3,1);
+    max-height:62%;display:flex;flex-direction:column;
+  }
+  .sheet-cluster.show{transform:translateY(0)}
+  .sheet-cluster .grab{width:38px;height:4px;border-radius:99px;background:#E4E4E4;margin:0 auto 8px;flex:none}
+  .sc-head{padding:0 18px;display:flex;align-items:baseline;gap:10px}
+  .sc-head h2{font-size:17px;font-weight:900}
+  .sc-head .meta{font-size:11px;color:#999}
+  .sc-head .odds{margin-left:auto;font-size:11px;font-weight:900;color:#E6432D;background:#FDECEA;padding:3px 9px;border-radius:99px}
+  .sc-row{display:flex;gap:10px;overflow-x:auto;padding:12px 18px;scrollbar-width:none}
+  .sc-row::-webkit-scrollbar{display:none}
+  .card{
+    flex:none;width:118px;border:2px solid #EDEFF2;border-radius:14px;padding:8px 8px 10px;cursor:pointer;
+    background:#FAFBFC;transition:border-color .15s,transform .15s;position:relative;text-align:center;
+  }
+  .card:hover{transform:translateY(-2px)}
+  .card.sel{border-color:#1A7CFF;background:#F0F7FF}
+  .card.dead{opacity:.45;pointer-events:none}
+  .card.dead::after{content:'✕ 骑不了';position:absolute;inset:auto 0 34px 0;font-size:11px;font-weight:900;color:#E6432D}
+  .card .no{font-size:10px;color:#999;font-weight:700;margin-top:2px}
+  .card .tagline{font-size:10px;font-weight:700;margin-top:4px;padding:2px 0;border-radius:99px}
+  .card .tagline.unk{background:#FFF3E0;color:#B8791A}
+  .card .tagline.bad{background:#FDECEA;color:#E6432D}
+
+  /* 验车详情区 */
+  .inspect{flex:none;border-top:1px solid #F0F1F3;padding:12px 18px 0;display:none}
+  .inspect.show{display:block}
+  .inspect .row{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:center}
+  .inspect .img{background:#F6F8FA;border-radius:12px;padding:4px}
+  .inspect .tags{display:flex;flex-wrap:wrap;gap:6px}
+  .tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;background:#F0F2F5;color:#555}
+  .tag.ok{background:#E8F7EE;color:#1FA84A}
+  .tag.bad{background:#FDECEA;color:#E6432D}
+  .tag.hint{background:#FFF7E6;color:#B8791A;border:1px dashed #E8C069}
+  .verdict{margin-top:10px;font-size:13px;font-weight:700;line-height:1.6;min-height:22px}
+  .verdict.good{color:#1FA84A}
+  .verdict.bad{color:#E6432D}
+  .verdict.uneasy{color:#B8791A}
+  .actions{display:flex;gap:10px;margin-top:10px}
+  .btn{border:none;cursor:pointer;border-radius:14px;font-family:inherit;font-weight:900;font-size:15px;padding:13px 0}
+  .btn.ghost{flex:1;background:#F0F2F5;color:#444}
+  .btn.main{flex:1.6;background:linear-gradient(135deg,#33B5FF,#1A7CFF);color:#fff;box-shadow:0 6px 14px rgba(26,124,255,.3)}
+  .btn:disabled{opacity:.5;box-shadow:none;cursor:default}
+</style>
+</head>
+<body>
+
+<div class="side">
+  <h1>方向四 v2<br>手机版 · <em>停车点验车</em></h1>
+  <p>点地图上的停车点，弹出一排车：3~5 辆里只有 1 辆能骑。可见伤直接画在车上，隐伤只有一句暧昧线索，选错一次扣 5 秒。</p>
+  <div class="keys">
+    <div class="key"><i></i>蓝色圆点 = 停车点，橙色角标 = 这里有几辆车；数字越大选择越多，但坑也越多</div>
+    <div class="key"><i></i>验车靠眼力：「细看：刹车线有点垂」= 刹车失灵，「细看：链条松松垮垮」= 链条断——图上也画了出来</div>
+    <div class="key"><i></i>选到明伤车：<b>-5 秒</b>，这车标 ✕ 不能再选；选到隐伤车：验车查不出，骑行阶段才爆发</div>
+    <div class="key"><i></i>每次打开页面车况随机生成、顺序打乱，没有背板答案</div>
+  </div>
+</div>
+
+<div class="phone">
+  <div class="screen">
+    <div class="statusbar"><span>08:55</span><span>📶 🔋</span></div>
+    <div class="notch"></div>
+
+    <div class="map" id="map">
+      <div class="block" style="left:4%;top:6%;width:30%;height:20%"></div>
+      <div class="block park" style="left:40%;top:5%;width:22%;height:16%"></div>
+      <div class="block" style="left:68%;top:8%;width:28%;height:24%"></div>
+      <div class="block" style="left:6%;top:36%;width:24%;height:18%"></div>
+      <div class="block" style="left:70%;top:42%;width:26%;height:16%"></div>
+      <div class="block park" style="left:8%;top:64%;width:26%;height:18%"></div>
+      <div class="block" style="left:44%;top:66%;width:20%;height:16%"></div>
+      <div class="block" style="left:72%;top:66%;width:24%;height:20%"></div>
+      <div class="road h" style="left:0;top:30%;width:100%"></div>
+      <div class="road h" style="left:0;top:58%;width:100%"></div>
+      <div class="road v" style="left:36%;top:0;height:100%"></div>
+      <div class="road v" style="left:64%;top:0;height:100%"></div>
+      <div class="road-name" style="left:37.5%;top:14%">望 京 街</div>
+      <div class="zone" style="left:58%;top:19%;width:40%;height:15%"><span class="zlb">打卡范围</span></div>
+      <div class="company" style="left:82%;top:29%"><div class="pin"><span>司</span></div><div class="lb">公司</div></div>
+      <div class="me" style="left:22%;top:52%"><div class="ring"></div><div class="dot"></div></div>
+    </div>
+
+    <div class="mission">
+      <div class="clock" id="timer">04:32</div>
+      <div class="tt">限时挑战 · <b>09:00 前打卡</b><br>当前：找个停车点，验出一辆能骑的</div>
+      <div class="mini">
+        <div class="mstat"><div class="v">100</div><div class="k">体力</div><div class="bar"><i style="width:100%"></i></div></div>
+        <div class="mstat mood"><div class="v">86</div><div class="k">心情</div><div class="bar"><i style="width:86%"></i></div></div>
+      </div>
+    </div>
+
+    <div class="fabs">
+      <div class="fab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1A7CFF" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div>
+      <div class="fab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg></div>
+    </div>
+
+    <div class="sheet-default" id="sheetDefault">
+      <div class="near">附近有 <b>3</b> 个停车点 · 每个停车点只有 <b>1 辆</b>能骑，点开验车</div>
+      <button class="scan">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M3 7V4h3M17 4h3v3M21 17v3h-3M7 20H4v-3M3 12h18"/></svg>
+        扫码开锁
+      </button>
+      <div class="scan-sub">二维码损坏？试试 <u>输入编号开锁</u></div>
+    </div>
+
+    <div class="sheet-cluster" id="sheetCluster"></div>
+  </div>
+</div>
+
+<script>
+/* ============ 数据：随机生成停车点车况 ============ */
+const VISIBLE=[
+  {def:'无坐垫', dmg:{saddle:0}},
+  {def:'无把手', dmg:{handle:0}},
+  {def:'坐垫湿', dmg:{wet:1}},
+  {def:'脚踏掉了一只', dmg:{pedal:0}},
+];
+const HIDDEN=[
+  {def:'刹车失灵', clue:'刹车线有点垂', dmg:{cable:1}},
+  {def:'链条断了', clue:'链条松松垮垮', dmg:{chain:0}},
+  {def:'轮胎慢撒气', clue:'轮胎看着有点瘪', dmg:{flat:1}},
+];
+const CLUSTER_DEFS=[
+  {id:'P1', name:'家楼下停车点', x:30, y:26, walk:20, n:4},
+  {id:'P2', name:'地铁口停车点', x:58, y:20, walk:45, n:5},
+  {id:'P3', name:'公司楼后停车点', x:74, y:44, walk:70, n:3},
+];
+const rnd=()=>Math.random();
+const shuffle=a=>a.map(v=>[rnd(),v]).sort((x,y)=>x[0]-y[0]).map(p=>p[1]);
+
+function genClusters(){
+  return CLUSTER_DEFS.map(d=>{
+    const goodIdx=Math.floor(rnd()*d.n);
+    const vis=shuffle([...VISIBLE]), hid=shuffle([...HIDDEN]);
+    const bikes=[];
+    for(let i=0;i<d.n;i++){
+      const no='860'+Math.floor(rnd()*10)+' '+(1000+Math.floor(rnd()*9000));
+      if(i===goodIdx){
+        bikes.push({no,state:'good',clue:'这辆……好像真没问题？',dmg:{}});
+      }else if(hid.length && (i%2===0 || !vis.length)){
+        const h=hid.pop();
+        bikes.push({no,state:'hidden',def:h.def,clue:'细看：'+h.clue,dmg:h.dmg});
+      }else{
+        const v=vis.pop()||VISIBLE[i%4];
+        bikes.push({no,state:'visible',def:v.def,clue:null,dmg:v.dmg});
+      }
+    }
+    return {...d, bikes:shuffle(bikes), dead:{}};
+  });
+}
+let CLUSTERS=genClusters();
+let curCluster=null, selIdx=null;
+
+/* ============ 单车 SVG（伤都画在车上） ============ */
+function bikeSVG(dmg){
+  const ink='#2B3A4A',blue='#1A7CFF',bad='#E6432D';
+  const saddle=dmg.saddle!==0
+    ?`<line x1="95" y1="52" x2="95" y2="70" stroke="${ink}" stroke-width="3"/>
+      <rect x="82" y="44" width="26" height="9" rx="4.5" fill="${ink}"/>
+      ${dmg.wet?`<ellipse cx="95" cy="47" rx="9" ry="3" fill="#6FC6F5"/><circle cx="89" cy="46" r="1.4" fill="#fff"/>`:''}`
+    :`<line x1="95" y1="52" x2="95" y2="70" stroke="${bad}" stroke-width="3" stroke-dasharray="3 3"/>`;
+  const handle=dmg.handle!==0
+    ?`<line x1="205" y1="46" x2="205" y2="72" stroke="${ink}" stroke-width="3"/>
+      <line x1="193" y1="46" x2="217" y2="46" stroke="${ink}" stroke-width="4.5" stroke-linecap="round"/>
+      ${dmg.cable?`<path d="M210 48 Q 224 74 215 92" stroke="${bad}" stroke-width="2" fill="none" stroke-dasharray="4 3"/>`:''}`
+    :`<line x1="205" y1="46" x2="205" y2="72" stroke="${ink}" stroke-width="3"/><circle cx="205" cy="44" r="3" fill="${bad}"/>`;
+  const chain=dmg.chain!==0
+    ?`<line x1="95" y1="100" x2="150" y2="100" stroke="#9AA7B4" stroke-width="2.5"/>`
+    :`<path d="M95 100 Q 122 116 150 100" stroke="${bad}" stroke-width="2.5" fill="none" stroke-dasharray="4 3"/>`;
+  const pedal=dmg.pedal!==0
+    ?`<circle cx="110" cy="105" r="7" fill="${blue}"/><line x1="110" y1="105" x2="120" y2="112" stroke="${ink}" stroke-width="3"/>`
+    :`<circle cx="110" cy="105" r="7" fill="${blue}"/><line x1="110" y1="105" x2="118" y2="111" stroke="${bad}" stroke-width="3" stroke-dasharray="2 2"/>`;
+  const wheel=(cx)=>dmg.flat
+    ?`<ellipse cx="${cx}" cy="109" rx="34" ry="29" fill="none" stroke="${ink}" stroke-width="5"/>`
+    :`<circle cx="${cx}" cy="105" r="34" fill="none" stroke="${ink}" stroke-width="5"/>`;
+  return `<svg viewBox="0 0 260 150" width="100%">
+    ${wheel(70)}${wheel(190)}
+    <path d="M70 105 L110 105 L150 68 L95 68 Z" fill="none" stroke="${blue}" stroke-width="5" stroke-linejoin="round"/>
+    <line x1="150" y1="68" x2="190" y2="105" stroke="${blue}" stroke-width="5"/>
+    <line x1="110" y1="105" x2="95" y2="68" stroke="${blue}" stroke-width="5"/>
+    ${pedal}${chain}${saddle}${handle}</svg>`;
+}
+
+const ICON=`<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5.5 17.5a3 3 0 1 0 0-.1M18.5 17.5a3 3 0 1 0 0-.1M5.5 17h4l3-7h4M12.5 10 10 5.5h2.5M15 5l3.5 5.5" stroke="#1A7CFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+/* ============ 渲染 ============ */
+function renderMarkers(){
+  document.querySelectorAll('.pk').forEach(n=>n.remove());
+  const map=document.getElementById('map');
+  CLUSTERS.forEach(c=>{
+    const d=document.createElement('div');
+    d.className='pk'+(curCluster===c.id?' active':'');
+    d.style.left=c.x+'%';d.style.top=c.y+'%';
+    d.innerHTML=`<div class="ico">${ICON}<div class="cnt">${c.n}</div></div><div class="d">步行 ${c.walk}s</div>`;
+    d.onclick=e=>{e.stopPropagation();openCluster(c.id);};
+    map.appendChild(d);
+  });
+}
+
+function openCluster(id){
+  curCluster=id; selIdx=null;
+  renderMarkers();
+  document.getElementById('sheetDefault').style.display='none';
+  renderClusterSheet();
+  document.getElementById('sheetCluster').classList.add('show');
+}
+
+function renderClusterSheet(){
+  const c=CLUSTERS.find(x=>x.id===curCluster);
+  const el=document.getElementById('sheetCluster');
+  el.innerHTML=`
+    <div class="grab"></div>
+    <div class="sc-head">
+      <h2>${c.name}</h2><span class="meta">步行 ${c.walk}s</span>
+      <span class="odds">${c.n} 辆里只有 1 辆能骑</span>
+    </div>
+    <div class="sc-row">
+      ${c.bikes.map((b,i)=>`
+        <div class="card ${selIdx===i?'sel':''} ${c.dead[i]?'dead':''}" onclick="selectBike(${i})">
+          ${bikeSVG(b.dmg)}
+          <div class="no">No.${b.no.slice(-4)}</div>
+          <div class="tagline ${b.state==='visible'?'bad':'unk'}">${b.state==='visible'?b.def:'外观完好?'}</div>
+        </div>`).join('')}
+    </div>
+    <div class="inspect" id="inspect"></div>`;
+  if(selIdx!==null) renderInspect();
+}
+
+function selectBike(i){
+  selIdx=i; renderClusterSheet();
+}
+
+function renderInspect(){
+  const c=CLUSTERS.find(x=>x.id===curCluster);
+  const b=c.bikes[selIdx];
+  const box=document.getElementById('inspect');
+  box.classList.add('show');
+  box.innerHTML=`
+    <div class="row">
+      <div class="img">${bikeSVG(b.dmg)}</div>
+      <div>
+        <div class="tags">
+          ${b.state==='visible'?`<span class="tag bad">${b.def}</span>`:`<span class="tag ok">外观完好</span>`}
+          ${b.clue?`<span class="tag hint">${b.clue}</span>`:''}
+        </div>
+        <div class="verdict" id="verdict"></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" onclick="closeCluster()">换停车点</button>
+      <button class="btn main" onclick="commit()">就选这辆</button>
+    </div>`;
+}
+
+function commit(){
+  const c=CLUSTERS.find(x=>x.id===curCluster);
+  const b=c.bikes[selIdx];
+  const v=document.getElementById('verdict');
+  const btn=document.querySelector('.btn.main');
+  if(b.state==='visible'){
+    c.dead[selIdx]=true;
+    v.className='verdict bad';
+    v.textContent=`❌ 上手一推——${b.def}，根本没法骑！换一辆（-5s）`;
+    penalize(5);
+    btn.disabled=true; btn.textContent='这辆不行';
+    setTimeout(()=>{renderClusterSheet();},1400);
+  }else if(b.state==='hidden'){
+    v.className='verdict uneasy';
+    v.textContent='😬 外观查不出毛病，但总觉得哪里不对劲……骑上才知道';
+    btn.textContent='硬着头皮骑 →';
+    btn.onclick=()=>toast(`【完整版预告】开锁上路后，${b.def}将在骑行阶段爆发`);
+  }else{
+    v.className='verdict good';
+    v.textContent='✅ 验车通过！刹车灵、链条紧、坐垫干爽——就是它了！';
+    btn.textContent=`去开锁（步行 -${c.walk}s）→`;
+    btn.onclick=()=>toast('【完整版预告】进入开锁阶段：扫码/输编号，二维码可能被烧毁');
+  }
+}
+
+function toast(msg){
+  const t=document.createElement('div');
+  t.style.cssText='position:absolute;top:170px;left:24px;right:24px;z-index:60;background:rgba(34,36,40,.95);color:#fff;font-size:13px;font-weight:700;padding:13px 16px;border-radius:14px;text-align:center;line-height:1.6;box-shadow:0 8px 24px rgba(0,0,0,.3)';
+  t.textContent=msg;
+  document.querySelector('.screen').appendChild(t);
+  setTimeout(()=>t.remove(),2600);
+}
+
+function penalize(s){
+  t=Math.max(0,t-s);
+  const el=document.getElementById('timer');
+  el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit');
+  updTimer();
+}
+
+function closeCluster(){
+  curCluster=null; selIdx=null;
+  renderMarkers();
+  document.getElementById('sheetCluster').classList.remove('show');
+  document.getElementById('sheetDefault').style.display='block';
+}
+document.getElementById('map').addEventListener('click',()=>{ if(curCluster) closeCluster(); });
+
+/* ============ 倒计时 ============ */
+let t=272;
+function updTimer(){
+  const m=String(Math.floor(t/60)).padStart(2,'0'),s=String(t%60).padStart(2,'0');
+  document.getElementById('timer').textContent=m+':'+s;
+}
+setInterval(()=>{ if(t>0){t--;updTimer();} },1000);
+
+renderMarkers();
+</script>
+</body>
+</html>

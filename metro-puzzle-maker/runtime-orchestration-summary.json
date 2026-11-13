@@ -1,0 +1,682 @@
+{
+  "skillProvenance": {
+    "name": "solo-design",
+    "version": "2026.10.13.09.48.16",
+    "version_source": "skill-release-manifest.json",
+    "read_status": "ok"
+  },
+  "designSource": {
+    "operatingMode": "free-explore",
+    "designLibrary": null,
+    "cssFilePath": "colors_and_type.css",
+    "brandPrefix": "mp"
+  },
+  "pages": [
+    {
+      "nodeId": "page-puzzle",
+      "slug": "puzzle",
+      "title": "地铁拼图师 · 北京环城记",
+      "htmlSrc": "pages/puzzle.html",
+      "viewportMode": "document-scroll",
+      "pageType": "task-driven",
+      "businessScenario": "单条 2 号线环线的城市拼图解密页（源页，本轮冻结不改）。",
+      "supplementaryReads": [],
+      "qualityRisks": [
+        "游戏态（拼图/谜案）需要 JS 驱动，必须保证核心内容默认可见，不依赖 JS 才显现",
+        "SVG 线路图在窄屏需整体缩放，避免横向溢出",
+        "车站字模数量较多（18 块），需网格化排布并保证触控尺寸",
+        "谜案与档案区内容较长，需与首屏玩法分层，避免首屏过密"
+      ]
+    },
+    {
+      "nodeId": "page-puzzle-v2",
+      "slug": "puzzle-v2",
+      "title": "地铁拼图师 · 北京环城记 — 四线全图版",
+      "htmlSrc": "pages/puzzle-v2.html",
+      "viewportMode": "document-scroll",
+      "pageType": "task-driven",
+      "businessScenario": "既有《地铁拼图师》的对比升级页：把方形示意网格升级为真实地铁图视觉语言（线宽 / 圆点 / 换乘双环 / 官方线路色），由单条 2 号线环线扩展为内城四线 1/2/4/5 号线共 80 站，并为每站补写城市故事。",
+      "derivationType": "comparison-from-source",
+      "sourcePageId": "page-puzzle",
+      "sourceHtmlSrc": "pages/puzzle.html",
+      "supplementaryReads": [],
+      "componentPlan": [
+        {
+          "name": "masthead-hero",
+          "purpose": "报头 + 元信息（线路 4 · 车站 80 · 谜面 4）+ 纯文字锚点导航"
+        },
+        {
+          "name": "ring-puzzle-board",
+          "purpose": "地铁图风格的 2 号线环线拼图板（SVG 折线环 + 车站圆点 + 字模盘）"
+        },
+        {
+          "name": "four-line-map",
+          "purpose": "四线全图参考图（4 条 polyline + 80 站 + 8 换乘双环 + 线路图例）"
+        },
+        {
+          "name": "riddle-deck",
+          "purpose": "4 条城市谜案 + 判定反馈 + 环线矩形揭示"
+        },
+        {
+          "name": "station-atlas",
+          "purpose": "十八站详写档案卡（环线 18 站，4-6 句）"
+        },
+        {
+          "name": "line-stations-notes",
+          "purpose": "沿线诸站（62 站，按线分组，每站 2 句）+ 图例说明"
+        }
+      ],
+      "imagePlan": [],
+      "qualityRisks": [
+        "四线全图含 80 个站点标签，需控制绘制单位与容器宽度以保证标签 ≥12px 可读且不横向溢出",
+        "环线拼图板与四线全图是两块独立 SVG，需分别设定 viewBox 与绘制单位，避免共用坐标导致标签冲突",
+        "8 个换乘站需用双圆环区分普通站，且仅表示 1/2/4/5 四线之间的换乘",
+        "线路识别色属数据语义色，不得扩用为 UI 强调色；UI 强调色仍仅 --mp-primary",
+        "拼图与谜案为 JS 驱动玩法，须保证全图 / 档案 / 沿线故事等核心内容默认可见，不依赖 JS 才显现"
+      ]
+    }
+  ],
+  "project": {
+    "projectName": "地铁拼图师 · 北京环城记",
+    "designProjectPath": "d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker",
+    "resolvedLane": "existing_edit_add_comparison",
+    "operatingMode": "free-explore",
+    "deviceType": "desktop",
+    "viewportMode": "document-scroll",
+    "language": "zh-CN",
+    "sourcePageId": "page-puzzle",
+    "sourceHtmlSrc": "pages/puzzle.html",
+    "derivationType": "comparison-from-source",
+    "inPlaceEditAllowed": false,
+    "sourceProjectLaneHeritage": {
+      "sourceLane": "free_exploration",
+      "inheritedConstraints": [],
+      "note": "源工程为 free-explore（无 Design Library、无 restore、无 graphic-layout 约束），故无继承性只读护栏；仅继承其 styleContinuityAnchors 与工程外壳。"
+    },
+    "selectedIntentWorkflowRead": true,
+    "intentProfile": {
+      "caseFamily": "existing_edit_add_comparison",
+      "operatingMode": "free-explore",
+      "routingReason": "Route Card — mode: existing-edit; user asked to optimize the existing 《地铁拼图师》 page (style + map visual language + more lines + per-station stories) while a current page exists -> Quick Path A1 Comparison Page Change. Source page stays immutable; a new comparison page page-puzzle-v2 is created. No image generation (vector data-viz + typography).",
+      "laneComplexity": "stateful-free-fast"
+    },
+    "contextRequirementsLoaded": [
+      {
+        "path": "shared-runtime/runtime-boundaries/lane-runtime-contracts.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "shared-runtime/agent-dispatch-runtime/lane-dispatch-index.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "shared-runtime/agent-dispatch-runtime/shared-page-rendering-kernel.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "delivery-quality/page-rendering-quality-gate.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "delivery-quality/design-artifact-validation.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "delivery-quality/delivery-evidence-contract.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "visual-experience/visual-experience-guidelines.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "shared-runtime/design-artifact-formats/design-project-file-format.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "intent-workflows/intent-page-free-exploration/start-free-exploration-project.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "intent-workflows/intent-page-free-exploration/free-exploration-page-runtime.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "intent-workflows/intent-page-free-exploration/dispatch-contract.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "intent-workflows/intent-page-free-exploration/orchestration-summary-fields.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "intent-workflows/intent-project-mutation/INTENT_WORKFLOW.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "intent-workflows/intent-project-mutation/comparison-page-contract.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "intent-workflows/intent-project-mutation/existing-edit-dispatch-contract.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "intent-workflows/intent-project-mutation/existing-edit-page-runtime.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "intent-workflows/intent-project-mutation/orchestration-summary-fields.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      }
+    ],
+    "contextReadScope": {
+      "mainAgent": {
+        "forbiddenReads": [
+          "other intent-workflows/**",
+          "Sub-Agent implementation files before dispatch"
+        ]
+      },
+      "pageSubAgent": {
+        "allowedReads": [
+          "current lane page runtime guide",
+          "current lane dispatch contract excerpt",
+          "current Page Packet",
+          "supplementaryReads[] only"
+        ],
+        "forbiddenReads": [
+          "SKILL.md full re-read",
+          "other intent-workflows/**",
+          "full runtime-orchestration-summary.json unless explicitly sliced"
+        ]
+      },
+      "readScopeLedgerWriter": "shared-runtime/deterministic-tooling/build-page-dispatch-manifest.mjs"
+    },
+    "sharedProjectShellContract": {
+      "applies": true,
+      "mobileNavigation": {
+        "applies": false,
+        "reason": "桌面端 document-scroll 单文件页，导航为报头下方的纯文字锚点导航（#site-nav），不属于移动端底部 tab 栏契约。"
+      }
+    },
+    "supplementaryReads": [],
+    "cssPreflightEvidence": {
+      "applies": true,
+      "status": "passed",
+      "prefixMode": "standard",
+      "command": "node {SKILL_DIR}/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker\\colors_and_type.css d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker\\.preflight\\preflight.html --title=\"Preflight\" --lang=zh-CN --prefix=mp",
+      "brandPrefix": "mp",
+      "checks": {
+        "themeVars": "present",
+        "semanticTokenFallback": "present",
+        "themeInline": "present",
+        "tailwindCdn": "present",
+        "htmlClass": "present",
+        "semanticMappings": "resolved"
+      },
+      "retryCount": 0,
+      "blockingReason": null
+    },
+    "fillHtmlHeadCommand": "node \"c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\apply-html-head-contract.mjs\" \"d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker\\colors_and_type.css\" \"d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker\\pages\\puzzle-v2.html\" --title=\"地铁拼图师 · 北京环城记 — 四线全图版\" --lang=zh-CN --prefix=mp",
+    "validationRunDiscipline": {
+      "maxFullValidationRuns": 2,
+      "softWarningsTriggerRepair": false,
+      "blockingRepairMode": "targeted-once",
+      "forbiddenRepairTriggers": [
+        "soft-warning-only",
+        "provenance-warning-only",
+        "style-warning-only"
+      ]
+    },
+    "lowValueCallWatchdog": {
+      "applies": true,
+      "noProgressSignals": [
+        "no_tool_call",
+        "no_artifact_diff",
+        "no_structured_decision"
+      ],
+      "noProgressNextAction": "enter_readiness_or_blocked_summary"
+    },
+    "styleContinuityAnchors": {
+      "colorSystem": "纸白地面 #f4f1e8 + 墨黑正文 #1b1915 + 单一赭橙强调色 #a63a2a；线路识别色（1 号线 #c23a30 / 2 号线 #00619b / 4 号线 #008c95 / 5 号线 #aa0061）仅作数据语义色，不参与 UI 强调",
+      "shapeSystem": "极小圆角三档 2 / 4 / 8px；圆与方几何由数据图形承担（线路圆点、矩形信息块）；禁用大圆角胶囊与全圆按钮",
+      "typographySystem": "中文衬线标题（Noto Serif SC）+ 无衬线正文（Inter / Noto Sans SC）+ 等宽字体承载编号与坐标元信息；标题短名词短语、断行保护",
+      "spacingSystem": "8pt 阶梯 4 / 8 / 12 / 16 / 24 / 32 / 48 / 80px；分区靠 ≥48px 留白 + 1px 发丝线，不用卡片堆叠",
+      "componentLanguage": "发丝分隔线是唯一分组手段；报头 + 纯文字锚点导航；列表 / 表格用细线而非底色卡片；控件为朴素描边按钮",
+      "surfaceAndDepth": "静态面仅 1px 发丝线与极浅阴影（alpha ≤ 0.05）；无玻璃拟态、无霓虹、无彩色边框；印刷品质感",
+      "imageryAndIconography": "全程无 emoji；功能性图标仅用 lucide 1.8.0 线性图标；核心视觉为自绘 SVG 线路图（真实地铁图语法）",
+      "interactionTone": "克制的即时反馈（位移、透明度、描边与填充变化），无弹跳、无彩色光效；prefers-reduced-motion 下全部动画降级为 0.01ms"
+    },
+    "pageCompletenessGate": {
+      "expectedPages": [
+        "puzzle",
+        "puzzle-v2"
+      ],
+      "requiredStates": [
+        "puzzle-playing",
+        "puzzle-complete",
+        "riddle-playing",
+        "riddle-solved",
+        "atlas-browsing",
+        "fullmap-browsing",
+        "line-filter-toggled"
+      ],
+      "requiredInteractions": [
+        "tile-select-and-place",
+        "puzzle-hint",
+        "puzzle-restart",
+        "riddle-answer",
+        "line-legend-filter",
+        "section-anchor-nav"
+      ],
+      "requiredNavigation": [
+        "section-anchor-nav"
+      ],
+      "missingAllowed": []
+    },
+    "defaultDeliverableVisibility": {
+      "applies": true,
+      "requiredVisibleRegions": [
+        {
+          "htmlSrc": "pages/puzzle-v2.html",
+          "selector": "#hero",
+          "label": "报头与元信息（首屏）",
+          "source": "user requirement"
+        },
+        {
+          "htmlSrc": "pages/puzzle-v2.html",
+          "selector": "#puzzle-board",
+          "label": "地铁图风格的 2 号线环线拼图板（核心玩法）",
+          "source": "user requirement"
+        },
+        {
+          "htmlSrc": "pages/puzzle-v2.html",
+          "selector": "#fullmap-section",
+          "label": "内城四线全图（1/2/4/5 号线 80 站 + 换乘 + 图例）",
+          "source": "user requirement"
+        },
+        {
+          "htmlSrc": "pages/puzzle-v2.html",
+          "selector": "#riddle-section",
+          "label": "城市谜案（解密玩法）",
+          "source": "user requirement"
+        },
+        {
+          "htmlSrc": "pages/puzzle-v2.html",
+          "selector": "#atlas-section",
+          "label": "八十站档案（四线 80 站故事卡片，环线详写）",
+          "source": "user requirement"
+        }
+      ],
+      "hiddenAllowed": [
+        {
+          "selector": "#puzzle-win",
+          "label": "拼图完成揭示弹层",
+          "reason": "transient game feedback overlay"
+        },
+        {
+          "selector": "#riddle-verdict",
+          "label": "谜案判定反馈",
+          "reason": "transient game feedback"
+        },
+        {
+          "selector": "#ring-reveal",
+          "label": "环线矩形揭示反馈",
+          "reason": "transient game feedback"
+        }
+      ]
+    },
+    "validationHistory": [],
+    "dispatchPreflightManifest": [
+      {
+        "recorded_at": "2026-10-20T02:45:11.740Z",
+        "generatedBy": "build-page-dispatch-manifest.mjs",
+        "packetType": "ExistingEditPagePacket",
+        "laneContract": {
+          "resolvedLane": "existing_edit_add_comparison",
+          "packetType": "ExistingEditPagePacket",
+          "pageRuntimeGuide": "intent-workflows/intent-project-mutation/existing-edit-page-runtime.md",
+          "dispatchContract": "intent-workflows/intent-project-mutation/existing-edit-dispatch-contract.md"
+        },
+        "taskLinePresent": true,
+        "outputPathPresent": true,
+        "sharedTemplate": "intent-workflows/intent-project-mutation/existing-edit-page-runtime.md",
+        "nodeId": "page-puzzle",
+        "htmlSrc": "pages/puzzle.html",
+        "supplementaryReads": [],
+        "allowedWritePaths": [
+          "pages/puzzle.html",
+          "assets/"
+        ],
+        "forbiddenWriteRoots": [
+          "*.design",
+          "runtime-orchestration-summary.json",
+          "validation-report.json",
+          "finish-readiness-report.json",
+          "restore-contract-report.json",
+          "page-generation-summary.json"
+        ],
+        "toolPolicy": {
+          "todoWriteAllowed": false,
+          "validationScriptsAllowed": false,
+          "previewAllowed": false,
+          "helperScriptsAllowed": false,
+          "designFileWriteAllowed": false,
+          "allowedWritePaths": [
+            "pages/puzzle.html",
+            "assets/"
+          ]
+        },
+        "skillRuntime": {
+          "skillDir": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design",
+          "deterministicToolDir": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling",
+          "toolPaths": {
+            "applyHtmlHeadContract": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\apply-html-head-contract.mjs",
+            "recordDispatchCompletion": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\record-dispatch-completion.mjs",
+            "buildPageDispatchManifest": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\build-page-dispatch-manifest.mjs",
+            "validateDesignWorkspace": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\validate-design-workspace.mjs",
+            "validateFinishReadiness": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\validate-finish-readiness.mjs",
+            "validateRestoreContract": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\validate-restore-contract.mjs"
+          },
+          "requiredForPageSubAgent": [
+            "applyHtmlHeadContract",
+            "recordDispatchCompletion"
+          ],
+          "pathInjection": "absolute",
+          "pathContract": "Do not use {SKILL_DIR} placeholders inside Page Sub-Agent packets; use toolPaths.* absolute paths.",
+          "commandTemplates": {
+            "recordDispatchCompletion": "node \"c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\record-dispatch-completion.mjs\" \"d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker\" --node-id=\"page-puzzle\" --html-src=\"pages/puzzle.html\" --status=completed --changed-files=<comma-separated-project-relative-files> --trace-digest=<main-agent-runtime-trace-digest> --tool-ledger-json=<tool-ledger-json-or-file>"
+          }
+        },
+        "cssFilePath": "d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker\\colors_and_type.css",
+        "htmlFilePath": "d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker\\pages\\puzzle.html",
+        "brandPrefix": "mp",
+        "aestheticsMode": "free-explore",
+        "toolDisciplineBlockPresent": true,
+        "fillHtmlHeadCommand": "node \"c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\apply-html-head-contract.mjs\" \"d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker\\colors_and_type.css\" \"d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker\\pages\\puzzle.html\" --title=\"地铁拼图师 · 北京环城记\" --lang=\"zh-CN\" --prefix=\"mp\" --replace-head",
+        "headFillMode": "replace-head-after-body",
+        "viewportMode": "document-scroll",
+        "completionSchemaExpected": "full",
+        "restoreFields": null,
+        "restoreContractStatus": null,
+        "restoreCompactPacket": null,
+        "deterministicCommands": null,
+        "sourceAuthorityLock": null,
+        "preDispatchFileHashes": {
+          "metro-puzzle-maker.design": "03be934fb04ce7ca75e3b5edbc694ccfca54e0a8b1230cc65998ba997330e224"
+        },
+        "contextPreflight": {
+          "workflowPath": "intent-workflows/intent-project-mutation/INTENT_WORKFLOW.md",
+          "requiredContextFiles": [
+            "shared-runtime/runtime-boundaries/lane-runtime-contracts.md",
+            "shared-runtime/agent-dispatch-runtime/lane-dispatch-index.md",
+            "shared-runtime/agent-dispatch-runtime/shared-page-rendering-kernel.md",
+            "delivery-quality/page-rendering-quality-gate.md",
+            "delivery-quality/design-artifact-validation.md",
+            "delivery-quality/delivery-evidence-contract.md"
+          ],
+          "optionalContextFiles": [
+            "visual-experience/visual-experience-guidelines.md"
+          ],
+          "passed": true
+        },
+        "pageSliceOnly": true,
+        "requiredFieldsPresent": true,
+        "missingFields": [],
+        "fillHtmlHeadCommandValid": true,
+        "mobileNavigation": {
+          "required": false,
+          "appliesToThisPage": false,
+          "canonicalHtmlIncluded": false,
+          "missingFields": []
+        },
+        "persistedToSummary": true,
+        "taskQueryAudited": false,
+        "proofSource": "summary-only",
+        "largeWorkflowFilesInTaskQuery": null
+      },
+      {
+        "recorded_at": "2026-10-20T02:45:11.740Z",
+        "generatedBy": "build-page-dispatch-manifest.mjs",
+        "packetType": "ExistingEditPagePacket",
+        "laneContract": {
+          "resolvedLane": "existing_edit_add_comparison",
+          "packetType": "ExistingEditPagePacket",
+          "pageRuntimeGuide": "intent-workflows/intent-project-mutation/existing-edit-page-runtime.md",
+          "dispatchContract": "intent-workflows/intent-project-mutation/existing-edit-dispatch-contract.md"
+        },
+        "taskLinePresent": true,
+        "outputPathPresent": true,
+        "sharedTemplate": "intent-workflows/intent-project-mutation/existing-edit-page-runtime.md",
+        "nodeId": "page-puzzle-v2",
+        "htmlSrc": "pages/puzzle-v2.html",
+        "supplementaryReads": [],
+        "allowedWritePaths": [
+          "pages/puzzle-v2.html",
+          "assets/"
+        ],
+        "forbiddenWriteRoots": [
+          "*.design",
+          "runtime-orchestration-summary.json",
+          "validation-report.json",
+          "finish-readiness-report.json",
+          "restore-contract-report.json",
+          "page-generation-summary.json"
+        ],
+        "toolPolicy": {
+          "todoWriteAllowed": false,
+          "validationScriptsAllowed": false,
+          "previewAllowed": false,
+          "helperScriptsAllowed": false,
+          "designFileWriteAllowed": false,
+          "allowedWritePaths": [
+            "pages/puzzle-v2.html",
+            "assets/"
+          ]
+        },
+        "skillRuntime": {
+          "skillDir": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design",
+          "deterministicToolDir": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling",
+          "toolPaths": {
+            "applyHtmlHeadContract": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\apply-html-head-contract.mjs",
+            "recordDispatchCompletion": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\record-dispatch-completion.mjs",
+            "buildPageDispatchManifest": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\build-page-dispatch-manifest.mjs",
+            "validateDesignWorkspace": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\validate-design-workspace.mjs",
+            "validateFinishReadiness": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\validate-finish-readiness.mjs",
+            "validateRestoreContract": "c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\validate-restore-contract.mjs"
+          },
+          "requiredForPageSubAgent": [
+            "applyHtmlHeadContract",
+            "recordDispatchCompletion"
+          ],
+          "pathInjection": "absolute",
+          "pathContract": "Do not use {SKILL_DIR} placeholders inside Page Sub-Agent packets; use toolPaths.* absolute paths.",
+          "commandTemplates": {
+            "recordDispatchCompletion": "node \"c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\record-dispatch-completion.mjs\" \"d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker\" --node-id=\"page-puzzle-v2\" --html-src=\"pages/puzzle-v2.html\" --status=completed --changed-files=<comma-separated-project-relative-files> --trace-digest=<main-agent-runtime-trace-digest> --tool-ledger-json=<tool-ledger-json-or-file>"
+          }
+        },
+        "cssFilePath": "d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker\\colors_and_type.css",
+        "htmlFilePath": "d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker\\pages\\puzzle-v2.html",
+        "brandPrefix": "mp",
+        "aestheticsMode": "free-explore",
+        "toolDisciplineBlockPresent": true,
+        "fillHtmlHeadCommand": "node \"c:\\Users\\apple\\.trae-cn\\plugins\\trae-remote-official\\trae-design\\0.1.3\\skills\\solo-design\\shared-runtime\\deterministic-tooling\\apply-html-head-contract.mjs\" \"d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker\\colors_and_type.css\" \"d:\\2workspace\\codex\\trae-1024\\metro-puzzle-maker\\pages\\puzzle-v2.html\" --title=\"地铁拼图师 · 北京环城记 — 四线全图版\" --lang=\"zh-CN\" --prefix=\"mp\"",
+        "headFillMode": "skeleton-first",
+        "viewportMode": "document-scroll",
+        "completionSchemaExpected": "full",
+        "restoreFields": null,
+        "restoreContractStatus": null,
+        "restoreCompactPacket": null,
+        "deterministicCommands": null,
+        "sourceAuthorityLock": null,
+        "preDispatchFileHashes": {
+          "metro-puzzle-maker.design": "03be934fb04ce7ca75e3b5edbc694ccfca54e0a8b1230cc65998ba997330e224"
+        },
+        "contextPreflight": {
+          "workflowPath": "intent-workflows/intent-project-mutation/INTENT_WORKFLOW.md",
+          "requiredContextFiles": [
+            "shared-runtime/runtime-boundaries/lane-runtime-contracts.md",
+            "shared-runtime/agent-dispatch-runtime/lane-dispatch-index.md",
+            "shared-runtime/agent-dispatch-runtime/shared-page-rendering-kernel.md",
+            "delivery-quality/page-rendering-quality-gate.md",
+            "delivery-quality/design-artifact-validation.md",
+            "delivery-quality/delivery-evidence-contract.md"
+          ],
+          "optionalContextFiles": [
+            "visual-experience/visual-experience-guidelines.md"
+          ],
+          "passed": true
+        },
+        "pageSliceOnly": true,
+        "requiredFieldsPresent": true,
+        "missingFields": [],
+        "fillHtmlHeadCommandValid": true,
+        "mobileNavigation": {
+          "required": false,
+          "appliesToThisPage": false,
+          "canonicalHtmlIncluded": false,
+          "missingFields": []
+        },
+        "persistedToSummary": true,
+        "taskQueryAudited": false,
+        "proofSource": "summary-only",
+        "largeWorkflowFilesInTaskQuery": null
+      }
+    ],
+    "readScopeLedger": [
+      {
+        "actor": "page-sub-agent",
+        "lane": "free_exploration",
+        "path": "intent-workflows/intent-page-free-exploration/free-exploration-page-runtime.md",
+        "reason": "page runtime guide",
+        "scopeClass": "page-runtime",
+        "declaredBeforeRead": true,
+        "recordedAt": "2026-10-20T01:38:15.524Z",
+        "nodeId": "page-puzzle",
+        "htmlSrc": "pages/puzzle.html"
+      },
+      {
+        "actor": "page-sub-agent",
+        "lane": "free_exploration",
+        "path": "intent-workflows/intent-page-free-exploration/dispatch-contract.md",
+        "reason": "dispatch contract",
+        "scopeClass": "dispatch-contract",
+        "declaredBeforeRead": true,
+        "recordedAt": "2026-10-20T01:38:15.524Z",
+        "nodeId": "page-puzzle",
+        "htmlSrc": "pages/puzzle.html"
+      },
+      {
+        "actor": "page-sub-agent",
+        "lane": "existing_edit_add_comparison",
+        "path": "intent-workflows/intent-project-mutation/existing-edit-page-runtime.md",
+        "reason": "page runtime guide",
+        "scopeClass": "page-runtime",
+        "declaredBeforeRead": true,
+        "recordedAt": "2026-10-20T02:45:11.740Z",
+        "nodeId": "page-puzzle",
+        "htmlSrc": "pages/puzzle.html"
+      },
+      {
+        "actor": "page-sub-agent",
+        "lane": "existing_edit_add_comparison",
+        "path": "intent-workflows/intent-project-mutation/existing-edit-dispatch-contract.md",
+        "reason": "dispatch contract",
+        "scopeClass": "dispatch-contract",
+        "declaredBeforeRead": true,
+        "recordedAt": "2026-10-20T02:45:11.740Z",
+        "nodeId": "page-puzzle",
+        "htmlSrc": "pages/puzzle.html"
+      }
+    ],
+    "mainAgentPostDispatchMutations": [
+      {
+        "path": "pages/puzzle-v2.html",
+        "reason": "main-agent targeted map-geometry fidelity refinement after page sub-agent dispatch (Line 4 north-west fold-in fix removing spurious L4/L2 crossing and wrong 新街口 ordering, Lines 4/5 middle-band uniform 32px station pitch, Line 2 north-edge even spacing)",
+        "owner": "main-agent",
+        "recordedAt": "2026-10-20T07:32:24.669Z",
+        "source": "record-dispatch-completion.mjs"
+      },
+      {
+        "path": "metro-puzzle-maker.design",
+        "reason": "host canvas auto-layout snapshot refresh for page-puzzle-v2 (measured layout, not a content change)",
+        "owner": "main-agent",
+        "recordedAt": "2026-10-20T07:32:58.104Z",
+        "source": "record-dispatch-completion.mjs"
+      },
+      {
+        "path": "pages/puzzle-v2.html",
+        "reason": "main-agent uniform 40px station-pitch relayout of the four-line network (Line 2 north edge raised 40px to free vertical room, Lines 4 and 5 middle band converted from 32px to 40px pitch, Line 2 west and east edges mirrored to the same 200/240/280/400/440 rhythm, all four polylines plus 40 station and label coordinate pairs updated, fullmap viewBox extended to -280 1040)",
+        "owner": "main-agent",
+        "recordedAt": "2026-10-20T08:05:23.599Z",
+        "source": "record-dispatch-completion.mjs"
+      },
+      {
+        "path": "pages/puzzle-v2.html",
+        "reason": "expand atlas to 80 station story cards, remove line-stations section, add map-station click/keyboard jump with card highlight",
+        "owner": "main-agent",
+        "recordedAt": "2026-10-21T00:23:39.973Z",
+        "source": "record-dispatch-completion.mjs"
+      }
+    ],
+    "expectedDispatches": [
+      {
+        "nodeId": "page-puzzle-v2",
+        "pageId": "page-puzzle-v2",
+        "targetPageId": "page-puzzle-v2",
+        "htmlSrc": "pages/puzzle-v2.html",
+        "packetType": "ExistingEditPagePacket",
+        "status": "completed",
+        "changedFiles": [
+          "pages/puzzle-v2.html"
+        ],
+        "toolCallLedger": {
+          "source": "main-agent-runtime-trace",
+          "traceDigest": "2ba16d3a66513b4cf6d66f2c461d88024428b19341d6d6a59565a06ef85d60bd",
+          "todoWriteCalls": 0,
+          "previewCalls": 0,
+          "validationScriptCalls": 0,
+          "helperScriptWrites": 0
+        },
+        "recordedAt": "2026-10-21T00:25:30.400Z",
+        "source": "record-dispatch-completion.mjs"
+      },
+      {
+        "nodeId": "page-puzzle",
+        "pageId": "page-puzzle",
+        "targetPageId": "page-puzzle",
+        "htmlSrc": "pages/puzzle.html",
+        "packetType": "ExistingEditPagePacket",
+        "status": "not_required",
+        "changedFiles": [],
+        "toolCallLedger": {
+          "source": "main-agent-runtime-trace",
+          "traceDigest": "b7c115a114d22e29e1f217d40bebed7e882400981c9e74f44c7eb7c71982a4cf",
+          "todoWriteCalls": 0,
+          "previewCalls": 0,
+          "validationScriptCalls": 0,
+          "helperScriptWrites": 0
+        },
+        "recordedAt": "2026-10-20T03:15:37.133Z",
+        "source": "record-dispatch-completion.mjs"
+      }
+    ]
+  }
+}

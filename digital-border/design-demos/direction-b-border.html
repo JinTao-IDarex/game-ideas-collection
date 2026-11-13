@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>方向 B · 签证机读区 — 数字边境 / 我是风控系统</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#EFE7D3; --cream-2:#E4D9BE; --navy:#16233A; --navy-soft:#3C4A63;
+  --red:#8C2B24; --gold:#8A6A2F; --line:#C7B995;
+  --serif:"Noto Serif SC","Source Han Serif SC","Songti SC",serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:var(--cream); color:var(--navy); font-family:var(--serif);
+  -webkit-font-smoothing:antialiased; text-wrap:pretty;
+  padding:44px 44px 72px; min-height:100vh;
+  /* 极淡防伪底纹 */
+  background-image:repeating-linear-gradient(115deg, rgba(22,35,58,.035) 0 2px, transparent 2px 9px);
+}
+.top{
+  background:var(--navy); color:var(--cream); padding:20px 26px; display:flex; flex-wrap:wrap;
+  align-items:baseline; gap:16px; border-bottom:4px solid var(--red);
+}
+.top__tag{font-family:var(--mono); font-size:11px; letter-spacing:.2em; border:1px solid rgba(239,231,211,.5); padding:3px 9px}
+.top h1{font-size:28px; font-weight:700; letter-spacing:.08em}
+.top h1 .en{font-family:var(--mono); font-size:12px; font-weight:400; color:rgba(239,231,211,.7); letter-spacing:.14em; margin-left:8px}
+.top p{flex-basis:100%; font-size:13.5px; line-height:1.75; max-width:80ch; color:rgba(239,231,211,.85)}
+
+.grid{display:grid; grid-template-columns:1.05fr .95fr; gap:26px; margin-top:30px; align-items:start}
+@media(max-width:1120px){.grid{grid-template-columns:1fr}}
+
+/* ---- 左：数字边境 · 签证页 ---- */
+.passport{
+  background:var(--cream-2); border:1px solid var(--line);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.5);
+  padding:0 0 0 0; position:relative;
+}
+.passport__band{display:flex; justify-content:space-between; align-items:center; padding:14px 22px; border-bottom:1px solid var(--line); font-family:var(--mono); font-size:11px; letter-spacing:.14em; color:var(--navy-soft)}
+.passport__band b{color:var(--navy); letter-spacing:.2em}
+.passport__body{display:grid; grid-template-columns:118px 1fr; gap:22px; padding:24px 22px}
+.photo{width:118px; height:150px; border:1px solid var(--navy-soft);
+  background:repeating-linear-gradient(45deg, rgba(22,35,58,.08) 0 8px, transparent 8px 16px);
+  display:flex; align-items:flex-end; justify-content:center; padding-bottom:8px}
+.photo span{font-family:var(--mono); font-size:10px; letter-spacing:.1em; color:var(--navy-soft)}
+.pdata{display:grid; gap:0}
+.pdata div{display:grid; grid-template-columns:74px 1fr; padding:8px 0; border-bottom:1px solid var(--line); align-items:center}
+.pdata dt{font-size:11px; letter-spacing:.16em; color:var(--navy-soft)}
+.pdata dd{font-family:var(--mono); font-size:13.5px; letter-spacing:.02em}
+.stamp{margin:6px 22px 0; border:2px solid var(--red); color:var(--red); transform:rotate(-8deg);
+  padding:8px 16px; display:inline-block; font-size:20px; font-weight:700; letter-spacing:.14em; opacity:.9}
+.verdictline{padding:16px 22px 22px; font-size:14px; line-height:1.75}
+.verdictline b{color:var(--red)}
+.mrz{margin:0 22px 22px; border-top:1px solid var(--navy-soft); border-bottom:1px solid var(--navy-soft);
+  padding:9px 6px; font-family:var(--mono); font-size:12.5px; line-height:1.55; letter-spacing:.06em; color:var(--navy); word-break:break-all}
+
+/* ---- 右：我是风控系统 · 查验口 ---- */
+.checker{background:var(--cream-2); border:1px solid var(--line)}
+.checker__head{display:flex; justify-content:space-between; align-items:center; padding:13px 20px; border-bottom:1px solid var(--line); font-size:13px}
+.checker__quota{font-family:var(--mono); font-size:11px; letter-spacing:.08em; background:var(--navy); color:var(--cream); padding:3px 9px}
+.card{border-bottom:1px solid var(--line); padding:14px 20px; display:grid; grid-template-columns:64px 1fr; gap:14px}
+.card__tag{font-family:var(--mono); font-size:11px; color:var(--red); letter-spacing:.08em; border-top:2px solid var(--red); padding-top:6px}
+.card__body b{display:block; font-size:14px; margin-bottom:3px}
+.card__body .mrzline{font-family:var(--mono); font-size:11.5px; color:var(--navy-soft); letter-spacing:.05em; word-break:break-all}
+.card__act{grid-column:1 / -1; display:flex; gap:10px; margin-top:10px; padding-left:78px}
+.vbtn{font-family:var(--mono); font-size:12px; letter-spacing:.12em; padding:7px 18px; border:1px solid var(--navy); background:transparent; color:var(--navy); cursor:pointer}
+.vbtn--hold{border-color:var(--red); background:var(--red); color:var(--cream)}
+.checker__foot{padding:13px 20px; font-family:var(--mono); font-size:11px; color:var(--navy-soft); letter-spacing:.08em; display:flex; justify-content:space-between}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <span class="top__tag">方向 B</span>
+  <h1>签证机读区<span class="en">Machine-Readable Zone</span></h1>
+  <p>把"边境"直接做成证件本身。奶油纸色、深墨蓝与暗红，衬线配机读区等宽字串，底部两道 MRZ 虚线——人话部分说得很客气，机器读的那一行才是真正的判决。</p>
+</header>
+
+<main class="grid">
+
+  <!-- 数字边境 -->
+  <section class="passport">
+    <div class="passport__band"><b>ACCESS PERMIT</b><span>TYPE&nbsp;·&nbsp;DIGITAL BORDER</span></div>
+    <div class="passport__body">
+      <div class="photo"><span>照片 · 待采集</span></div>
+      <dl class="pdata">
+        <div><dt>持有人</dt><dd>ORDINARY USER</dd></div>
+        <div><dt>所属地区</dt><dd>CN</dd></div>
+        <div><dt>申请事由</dt><dd>使用 AI 助手</dd></div>
+        <div><dt>签发状态</dt><dd style="color:var(--red)">REJECTED</dd></div>
+      </dl>
+    </div>
+    <div class="stamp">不予受理</div>
+    <p class="verdictline">理由：<b>该地区不在服务范围。</b>不予受理。</p>
+    <div class="mrz">P&lt;CHNPOOL&lt;&lt;ORDINARY&lt;USER&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;<br>REC0007318CN850XXXXX0F&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;0</div>
+  </section>
+
+  <!-- 我是风控系统 -->
+  <section class="checker">
+    <div class="checker__head"><span>查验口 · 第 01 班次</span><span class="checker__quota">拦截率 指标 ≥ 30%</span></div>
+
+    <article class="card">
+      <div class="card__tag">#A-2201</div>
+      <div class="card__body">
+        <b>来源 · 未支持地区</b>
+        <p class="mrzline">DEV/NEW&nbsp;·&nbsp;HIST/NIL&nbsp;·&nbsp;BEHAVIOR/STEADY</p>
+      </div>
+      <div class="card__act"><button class="vbtn">放 行</button><button class="vbtn vbtn--hold">拦 截</button></div>
+    </article>
+
+    <article class="card">
+      <div class="card__tag">#A-2202</div>
+      <div class="card__body">
+        <b>来源 · 未支持地区</b>
+        <p class="mrzline">DEV/SEEN&nbsp;·&nbsp;HIST/NIL&nbsp;·&nbsp;BEHAVIOR/STEADY</p>
+      </div>
+      <div class="card__act"><button class="vbtn">放 行</button><button class="vbtn vbtn--hold">拦 截</button></div>
+    </article>
+
+    <article class="card">
+      <div class="card__tag">#A-2203</div>
+      <div class="card__body">
+        <b>来源 · 支持地区</b>
+        <p class="mrzline">DEV/NEW&nbsp;·&nbsp;HIST/NONE&nbsp;·&nbsp;BEHAVIOR/ODD</p>
+      </div>
+      <div class="card__act"><button class="vbtn">放 行</button><button class="vbtn vbtn--hold">拦 截</button></div>
+    </article>
+
+    <div class="checker__foot"><span>已处理 0 / 12</span><span>一致率 —</span><span>配额达成 —</span></div>
+  </section>
+
+</main>
+
+</body>
+</html>

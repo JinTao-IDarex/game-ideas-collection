@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>最后一公里 · 方向一 Dark Editorial</title>
+<!--
+  ASSUMPTIONS
+  - 桌面 1440×900 单屏游戏画面，不滚动
+  - 本初稿只做「找车/选车」阶段：地图 + 6 辆单车 + 详情卡 + HUD
+  - 车辆点击可切换详情，倒计时为真实走秒（营造紧迫感）
+  REASONING
+  - 风格：Dark Editorial（Brittany Chiang brittanychiang.com v4）
+    深海军底 #0A192F + 板岩灰文字 #8892B0 + 单一荧光青绿 accent #64FFDA
+  - 色彩论证：暗色底 = 早高峰天没亮的通勤焦虑；荧光青绿 = 找车 App 扫描定位的「雷达感」，
+    两种颜色都来自「凌晨打开单车 App」这一真实场景记忆，非凭空发明。
+  - 骨架：左固定侧栏（任务简报 + 编号车辆列表）+ 右侧主地图区。等宽字编号标签是签名元素。
+  - form 来自内容的哪里：「任务简报」这个形式直接来自「5 分钟打卡」的使命感——
+    游戏被框成一次代号「LAST-MILE」的作战任务，倒计时就是 briefing 里的 TTL。
+-->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A192F; --bg2:#112240; --line:#1D2D50;
+    --ink:#8892B0; --ink-hi:#CCD6F6; --accent:#64FFDA; --warn:#FF6B6B;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'Inter','Noto Sans SC',sans-serif;
+    display:grid; grid-template-columns:380px 1fr; height:100vh;
+  }
+  .mono{font-family:'JetBrains Mono',monospace}
+
+  /* ===== 左侧栏：任务简报 ===== */
+  aside{
+    border-right:1px solid var(--line);
+    padding:32px 28px; display:flex; flex-direction:column; gap:28px;
+    background:linear-gradient(180deg,#0A192F 0%,#0C1D38 100%);
+  }
+  .brand{font-size:12px;letter-spacing:.25em;color:var(--accent)}
+  .brand b{color:var(--ink-hi)}
+  h1{font-size:30px;line-height:1.2;color:var(--ink-hi);font-weight:800;font-family:'Noto Sans SC',sans-serif}
+  h1 span{color:var(--accent)}
+  .brief{font-size:13px;line-height:1.8}
+  .brief em{color:var(--warn);font-style:normal}
+
+  .hud{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .hud .cell{border:1px solid var(--line);border-radius:6px;padding:10px 12px;background:var(--bg2)}
+  .hud .k{font-size:10px;letter-spacing:.15em;color:var(--ink);margin-bottom:6px}
+  .hud .v{font-size:20px;font-weight:700;color:var(--accent)}
+  .hud .v.warn{color:var(--warn)}
+  .hud .bar{height:4px;background:var(--line);border-radius:2px;margin-top:8px;overflow:hidden}
+  .hud .bar i{display:block;height:100%;background:var(--accent)}
+
+  .sect{font-size:11px;letter-spacing:.2em;color:var(--accent);margin-bottom:-14px}
+  .bike-list{display:flex;flex-direction:column}
+  .bike-row{
+    display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;
+    padding:11px 10px;border-bottom:1px solid var(--line);cursor:pointer;
+    transition:background .15s; position:relative;
+  }
+  .bike-row:hover{background:rgba(100,255,218,.05)}
+  .bike-row.active{background:rgba(100,255,218,.09)}
+  .bike-row.active::before{content:'';position:absolute;left:-28px;top:0;bottom:0;width:2px;background:var(--accent)}
+  .bike-row .no{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent)}
+  .bike-row .nm{font-size:14px;color:var(--ink-hi);font-weight:600}
+  .bike-row .st{font-size:12px;color:var(--ink);margin-top:2px}
+  .bike-row .walk{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink)}
+  .tag-unknown{color:var(--warn)}
+
+  /* ===== 右侧：地图 + 详情 ===== */
+  main{position:relative;display:flex;flex-direction:column}
+  .map-wrap{flex:1;position:relative;margin:24px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:
+    linear-gradient(rgba(29,45,80,.35) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(29,45,80,.35) 1px,transparent 1px);
+    background-size:56px 56px;background-color:#0B1B33}
+  .map-label{position:absolute;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;color:#3A4C74}
+  .road{position:absolute;background:#16294B;border-radius:4px}
+  .node{position:absolute;transform:translate(-50%,-50%);cursor:pointer;z-index:5}
+  .node .dot{
+    width:40px;height:40px;border-radius:50%;background:var(--bg2);
+    border:2px solid var(--accent);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px;
+    transition:transform .15s, box-shadow .15s;
+  }
+  .node:hover .dot{transform:scale(1.15)}
+  .node.active .dot{background:var(--accent);color:#0A192F;box-shadow:0 0 24px rgba(100,255,218,.5)}
+  .node .walk-tag{
+    position:absolute;top:44px;left:50%;transform:translateX(-50%);
+    font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink);white-space:nowrap;
+  }
+  .poi{position:absolute;transform:translate(-50%,-50%);text-align:center;z-index:4}
+  .poi .ico{width:52px;height:52px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;font-family:'Noto Sans SC'}
+  .poi .lb{font-size:12px;margin-top:6px;color:var(--ink-hi);font-weight:600}
+  .poi.home .ico{background:#233554;color:var(--ink-hi);border:1px solid var(--line)}
+  .poi.work .ico{background:var(--warn);color:#0A192F;box-shadow:0 0 30px rgba(255,107,107,.35)}
+
+  /* 详情面板：浮在地图右下角 */
+  .detail{
+    position:absolute;right:24px;bottom:24px;width:420px;z-index:10;
+    background:rgba(10,25,47,.92);backdrop-filter:blur(6px);
+    border:1px solid var(--line);border-radius:8px;padding:20px 22px;
+  }
+  .detail .head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+  .detail .no{font-family:'JetBrains Mono',monospace;color:var(--accent);font-size:12px;letter-spacing:.15em}
+  .detail h2{color:var(--ink-hi);font-size:20px;font-weight:800;font-family:'Noto Sans SC'}
+  .detail .walk{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink)}
+  .bike-stage{margin:14px 0;border:1px dashed var(--line);border-radius:6px;background:#0B1B33;padding:6px}
+  .clues{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .clue{font-size:12px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);color:var(--ink-hi)}
+  .clue.bad{border-color:rgba(255,107,107,.5);color:var(--warn)}
+  .clue.hint{border-style:dashed;color:var(--ink)}
+  .cta{
+    width:100%;padding:13px;border:none;border-radius:6px;cursor:pointer;
+    background:transparent;border:1px solid var(--accent);color:var(--accent);
+    font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;letter-spacing:.1em;
+    transition:all .15s;
+  }
+  .cta:hover{background:var(--accent);color:#0A192F}
+  .corner{position:absolute;font-family:'JetBrains Mono',monospace;font-size:10px;color:#3A4C74;letter-spacing:.15em}
+</style>
+</head>
+<body>
+
+<aside>
+  <div>
+    <div class="brand mono">MISSION BRIEFING · <b>LAST-MILE-05</b></div>
+    <h1 style="margin-top:14px">最后一公里<span>_</span></h1>
+    <p class="brief" style="margin-top:10px">
+      08:55，距离 09:00 打卡还剩 <em>5 分钟</em>。地图上有 6 辆单车，
+      车况大多是 <em>未知</em>。选错一辆，今天就毁了。
+    </p>
+  </div>
+
+  <div class="hud">
+    <div class="cell"><div class="k mono">TIME LEFT</div><div class="v warn mono" id="timer">04:32</div><div class="bar"><i id="tbar" style="width:90%"></i></div></div>
+    <div class="cell"><div class="k mono">体力</div><div class="v mono">100</div><div class="bar"><i style="width:100%"></i></div></div>
+    <div class="cell"><div class="k mono">心情</div><div class="v mono">86</div><div class="bar"><i style="width:86%"></i></div></div>
+  </div>
+
+  <div class="sect mono">// AVAILABLE BIKES · 6</div>
+  <div class="bike-list" id="bikeList"></div>
+</aside>
+
+<main>
+  <div class="map-wrap" id="map">
+    <div class="corner" style="top:12px;left:14px">SECTOR: 望京SOHO · GRID 56px</div>
+    <div class="corner" style="top:12px;right:14px">SCAN: BIKE-SHARE v2.4</div>
+    <div class="corner" style="bottom:12px;left:14px">LAT 39.997 · LON 116.470</div>
+    <!-- 道路 -->
+    <div class="road" style="left:0;top:30%;width:100%;height:14px"></div>
+    <div class="road" style="left:0;top:64%;width:100%;height:14px"></div>
+    <div class="road" style="left:28%;top:0;width:14px;height:100%"></div>
+    <div class="road" style="left:62%;top:0;width:14px;height:100%"></div>
+    <!-- 起点 / 终点 -->
+    <div class="poi home" style="left:12%;top:82%"><div class="ico">家</div><div class="lb">当前位置</div></div>
+    <div class="poi work" style="left:86%;top:14%"><div class="ico">司</div><div class="lb">公司 · 09:00 打卡</div></div>
+    <!-- 车辆节点由 JS 注入 -->
+    <div class="detail" id="detail"></div>
+  </div>
+</main>
+
+<script>
+const BIKES = [
+  {id:'A', no:'01', x:22, y:26, walk:20, visible:['外观完好'], clue:'刹车线垂落', clueType:'hint', hidden:'刹车失灵',
+   dmg:{handle:true,saddle:true,chain:true}, droopCable:true},
+  {id:'B', no:'02', x:34, y:52, walk:35, visible:['无坐垫'], clue:null, hidden:null,
+   dmg:{handle:true,saddle:false,chain:true}},
+  {id:'C', no:'03', x:48, y:22, walk:45, visible:['外观完好'], clue:'链条松垮下垂', clueType:'hint', hidden:'链条断',
+   dmg:{handle:true,saddle:true,chain:false}, sagChain:true},
+  {id:'D', no:'04', x:52, y:48, walk:60, visible:['坐垫湿'], clue:'坐垫有水渍反光', clueType:'hint', hidden:null,
+   dmg:{handle:true,saddle:true,chain:true}, wet:true},
+  {id:'E', no:'05', x:72, y:38, walk:75, visible:['无把手'], clue:null, hidden:null,
+   dmg:{handle:false,saddle:true,chain:true}},
+  {id:'F', no:'06', x:42, y:78, walk:90, visible:['外观完好'], clue:'这辆……好像真的没问题？', clueType:'hint', hidden:null,
+   dmg:{handle:true,saddle:true,chain:true}},
+];
+let cur = 'A';
+
+// 侧视单车 SVG（隐伤线索画在图上）
+function bikeSVG(b){
+  const ink='#64FFDA', dim='#8892B0', warn='#FF6B6B';
+  const saddle = b.dmg.saddle
+    ? `<line x1="95" y1="52" x2="95" y2="70" stroke="${ink}" stroke-width="3"/>
+       <rect x="82" y="44" width="26" height="9" rx="4" fill="${ink}"/>
+       ${b.wet?`<ellipse cx="95" cy="47" rx="10" ry="3.5" fill="#5EC8F2" opacity=".85"/><circle cx="88" cy="46" r="1.6" fill="#fff" opacity=".9"/>`:''}`
+    : `<line x1="95" y1="52" x2="95" y2="70" stroke="${warn}" stroke-width="3" stroke-dasharray="3 3"/>`;
+  const handle = b.dmg.handle
+    ? `<line x1="205" y1="46" x2="205" y2="72" stroke="${ink}" stroke-width="3"/>
+       <line x1="193" y1="46" x2="217" y2="46" stroke="${ink}" stroke-width="4" stroke-linecap="round"/>
+       ${b.droopCable?`<path d="M210 48 Q 224 74 214 92" stroke="${warn}" stroke-width="2" fill="none" stroke-dasharray="4 3"/>`:''}`
+    : `<line x1="205" y1="46" x2="205" y2="72" stroke="${ink}" stroke-width="3"/>
+       <circle cx="205" cy="44" r="3" fill="${warn}"/>`;
+  const chain = b.dmg.chain
+    ? `<line x1="95" y1="100" x2="150" y2="100" stroke="${dim}" stroke-width="2.5"/>`
+    : `<path d="M95 100 Q 122 116 150 100" stroke="${warn}" stroke-width="2.5" fill="none" stroke-dasharray="4 3"/>`;
+  return `<svg viewBox="0 0 260 150" width="100%">
+    <circle cx="70" cy="105" r="34" fill="none" stroke="${ink}" stroke-width="4"/>
+    <circle cx="190" cy="105" r="34" fill="none" stroke="${ink}" stroke-width="4"/>
+    <path d="M70 105 L110 105 L150 68 L95 68 Z" fill="none" stroke="${ink}" stroke-width="3.5" stroke-linejoin="round"/>
+    <line x1="150" y1="68" x2="190" y2="105" stroke="${ink}" stroke-width="3.5"/>
+    <line x1="110" y1="105" x2="95" y2="68" stroke="${ink}" stroke-width="3.5"/>
+    <circle cx="110" cy="105" r="7" fill="none" stroke="${dim}" stroke-width="3"/>
+    ${chain}${saddle}${handle}
+  </svg>`;
+}
+
+function renderList(){
+  document.getElementById('bikeList').innerHTML = BIKES.map(b=>`
+    <div class="bike-row ${b.id===cur?'active':''}" onclick="pick('${b.id}')">
+      <div class="no">${b.no}</div>
+      <div>
+        <div class="nm">单车 ${b.id}</div>
+        <div class="st">${b.visible.join(' · ')||'<span class="tag-unknown">车况未知</span>'}${b.hidden?'' : ''}</div>
+      </div>
+      <div class="walk">🚶${b.walk}s</div>
+    </div>`).join('');
+}
+function renderNodes(){
+  const map = document.getElementById('map');
+  map.querySelectorAll('.node').forEach(n=>n.remove());
+  BIKES.forEach(b=>{
+    const d = document.createElement('div');
+    d.className = 'node'+(b.id===cur?' active':'');
+    d.style.left = b.x+'%'; d.style.top = b.y+'%';
+    d.innerHTML = `<div class="dot">${b.visible[0]==='外观完好'?'?':b.id}</div><div class="walk-tag">walk ${b.walk}s</div>`;
+    d.onclick = ()=>pick(b.id);
+    map.appendChild(d);
+  });
+}
+function renderDetail(){
+  const b = BIKES.find(x=>x.id===cur);
+  document.getElementById('detail').innerHTML = `
+    <div class="head"><div><div class="no">UNIT ${b.no} // SCAN RESULT</div><h2>单车 ${b.id}</h2></div>
+    <div class="walk">步行 ${b.walk}s</div></div>
+    <div class="bike-stage">${bikeSVG(b)}</div>
+    <div class="clues">
+      ${b.visible.map(v=>`<span class="clue ${v==='外观完好'?'':'bad'}">${v}</span>`).join('')}
+      ${b.clue?`<span class="clue hint">⚠ 细节：${b.clue}</span>`:''}
+      ${b.hidden?`<span class="clue hint">?? 未检测项可能存在</span>`:''}
+    </div>
+    <button class="cta">→ 步行前往（-${b.walk}s）</button>`;
+}
+function pick(id){ cur=id; renderList(); renderNodes(); renderDetail(); }
+
+// 真实走秒的倒计时
+let t = 272;
+setInterval(()=>{ if(t>0){t--;
+  const m=String(Math.floor(t/60)).padStart(2,'0'), s=String(t%60).padStart(2,'0');
+  document.getElementById('timer').textContent = m+':'+s;
+  document.getElementById('tbar').style.width = (t/300*100)+'%';
+}},1000);
+
+renderList(); renderNodes(); renderDetail();
+</script>
+</body>
+</html>

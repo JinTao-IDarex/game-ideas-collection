@@ -1,0 +1,80 @@
+{
+  "data": [
+    {
+      "id": "page-puzzle",
+      "title": "地铁拼图师 · 北京环城记",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1794182400000,
+      "canvasData": {
+        "x": 0,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 3571,
+          "viewportWidth": 1440,
+          "sourceHash": "fnv1a-096e5bd1",
+          "measuredAt": 1792462355820
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/puzzle.html",
+        "interactions": []
+      }
+    },
+    {
+      "id": "page-puzzle-v2",
+      "title": "地铁拼图师 · 北京环城记 — 四线全图版",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1792464000000,
+      "canvasData": {
+        "x": 480,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 9778,
+          "viewportWidth": 1440,
+          "sourceHash": "fnv1a-3fbaa6bf",
+          "measuredAt": 1792542365664
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/puzzle-v2.html",
+        "interactions": [],
+        "supersedesPageId": "page-puzzle"
+      }
+    },
+    {
+      "id": "page-puzzle-v3",
+      "title": "地铁拼图师 · 北京环城记 — 三幕解谜版",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1792543886756,
+      "canvasData": {
+        "x": 960,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 7361,
+          "viewportWidth": 1440,
+          "sourceHash": "fnv1a-8c4fc5da",
+          "measuredAt": 1792544037435
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/puzzle-v3.html",
+        "interactions": [],
+        "supersedesPageId": "page-puzzle-v2"
+      }
+    }
+  ],
+  "config": {
+    "autoLayout": true,
+    "deviceType": "desktop",
+    "projectName": "地铁拼图师 · 北京环城记"
+  }
+}

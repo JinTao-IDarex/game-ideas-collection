@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Logs
+*.log
+
+# Tool cache (Trae share packages)
+.trae-html-share-packages/
+
+# OS files
+.DS_Store
+Thumbs.db

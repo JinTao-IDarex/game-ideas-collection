@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地铁拼图师 · 北京环城记 — 四线全图版</title>
+    <style id="theme-vars">
+/* ============================================================
+   《地铁拼图师 · 北京环城记》设计令牌
+   方向：印刷品 / 编辑排版风 —— 纸白底、墨黑字、单一赭橙强调色、
+        发丝分隔线、极小圆角、中文衬线标题 + 无衬线正文。
+   单一品牌色原则：全站仅 --mp-primary 一个强调色。
+   ============================================================ */
+
+:root {
+  /* —— 语义颜色（脚本解析必需）—— */
+  --mp-background: #f4f1e8;
+  --mp-foreground: #1b1915;
+  --mp-card: #fbf9f3;
+  --mp-card-foreground: #1b1915;
+  --mp-popover: #fffdf8;
+  --mp-popover-foreground: #1b1915;
+  --mp-primary: #a63a2a;
+  --mp-primary-foreground: #fdfaf5;
+  --mp-muted: #e9e4d7;
+  --mp-muted-foreground: #6b6455;
+  --mp-border: #d6cfbe;
+  --mp-input: #d6cfbe;
+  --mp-ring: #a63a2a;
+
+  /* —— 圆角阶梯（脚本解析必需）—— */
+  --mp-radius-sm: 2px;
+  --mp-radius-md: 4px;
+  --mp-radius-lg: 8px;
+
+  /* —— 字体 —— */
+  --mp-font-serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "SimSun", serif;
+  --mp-font-sans: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --mp-font-mono: "SFMono-Regular", "JetBrains Mono", "Menlo", "Consolas", monospace;
+
+  /* —— 版式阶梯 —— */
+  --mp-text-display: clamp(34px, 4.6vw, 58px);
+  --mp-text-h1: clamp(26px, 3.2vw, 40px);
+  --mp-text-h2: clamp(20px, 2.2vw, 27px);
+  --mp-text-h3: 18px;
+  --mp-text-body: 15px;
+  --mp-text-caption: 13px;
+
+  /* —— 8pt 间距 —— */
+  --mp-s1: 4px;
+  --mp-s2: 8px;
+  --mp-s3: 12px;
+  --mp-s4: 16px;
+  --mp-s5: 24px;
+  --mp-s6: 32px;
+  --mp-s7: 48px;
+  --mp-s8: 80px;
+
+  /* —— 分隔与阴影（静态面仅发丝线与极浅阴影）—— */
+  --mp-hairline: 1px solid var(--mp-border);
+  --mp-rule-strong: 2px solid var(--mp-foreground);
+  --mp-shadow-1: 0 1px 2px rgba(27, 25, 21, 0.05);
+  --mp-shadow-2: 0 10px 28px -12px rgba(27, 25, 21, 0.22);
+
+  /* —— 地铁线路识别色（数据语义色，非品牌色；取自北京地铁官方线路色）—— */
+  --mp-line-1: #c23a30;
+  --mp-line-2: #00619b;
+  --mp-line-4: #008c95;
+  --mp-line-5: #aa0061;
+
+  /* —— 地铁图绘制原语（SVG user-unit 数值，可按容器覆盖）—— */
+  --mp-map-line-width: 9;
+  --mp-station-r: 12;
+  --mp-transfer-r: 19;
+  --mp-corridor-r: 24;
+  --mp-label-size: 13px;
+}
+
+body {
+  font-family: var(--mp-font-sans);
+  font-size: var(--mp-text-body);
+  line-height: 1.65;
+  color: var(--mp-foreground);
+  background-color: var(--mp-background);
+  -webkit-font-smoothing: antialiased;
+}
+
+.mp-serif {
+  font-family: var(--mp-font-serif);
+}
+
+.mp-mono {
+  font-family: var(--mp-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.mp-num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 标题：中文衬线、短名词短语、断行保护 */
+.mp-title {
+  font-family: var(--mp-font-serif);
+  line-height: 1.22;
+  letter-spacing: 0.01em;
+  text-wrap: balance;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.mp-hair {
+  border-top: var(--mp-hairline);
+}
+
+.mp-rule-strong {
+  border-top: var(--mp-rule-strong);
+}
+
+.mp-eyebrow {
+  font-family: var(--mp-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mp-muted-foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--mp-background);
+    --color-foreground: var(--mp-foreground);
+    --color-card: var(--mp-card);
+    --color-card-foreground: var(--mp-card-foreground);
+    --color-popover: var(--mp-popover);
+    --color-popover-foreground: var(--mp-popover-foreground);
+    --color-primary: var(--mp-primary);
+    --color-primary-foreground: var(--mp-primary-foreground);
+    --color-muted: var(--mp-muted);
+    --color-muted-foreground: var(--mp-muted-foreground);
+    --color-border: var(--mp-border);
+    --color-input: var(--mp-input);
+    --color-ring: var(--mp-ring);
+    --radius-sm: var(--mp-radius-sm);
+    --radius-md: var(--mp-radius-md);
+    --radius-lg: var(--mp-radius-lg);
+  }
+  @layer base {
+    body { background: var(--mp-background); color: var(--mp-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--mp-background); }
+      .text-background { color: var(--mp-background); }
+      .border-background { border-color: var(--mp-background); }
+      .ring-background { --tw-ring-color: var(--mp-background); }
+      .bg-foreground { background-color: var(--mp-foreground); }
+      .text-foreground { color: var(--mp-foreground); }
+      .border-foreground { border-color: var(--mp-foreground); }
+      .ring-foreground { --tw-ring-color: var(--mp-foreground); }
+      .bg-card { background-color: var(--mp-card); }
+      .text-card { color: var(--mp-card); }
+      .border-card { border-color: var(--mp-card); }
+      .ring-card { --tw-ring-color: var(--mp-card); }
+      .bg-card-foreground { background-color: var(--mp-card-foreground); }
+      .text-card-foreground { color: var(--mp-card-foreground); }
+      .border-card-foreground { border-color: var(--mp-card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--mp-card-foreground); }
+      .bg-popover { background-color: var(--mp-popover); }
+      .text-popover { color: var(--mp-popover); }
+      .border-popover { border-color: var(--mp-popover); }
+      .ring-popover { --tw-ring-color: var(--mp-popover); }
+      .bg-popover-foreground { background-color: var(--mp-popover-foreground); }
+      .text-popover-foreground { color: var(--mp-popover-foreground); }
+      .border-popover-foreground { border-color: var(--mp-popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--mp-popover-foreground); }
+      .bg-primary { background-color: var(--mp-primary); }
+      .text-primary { color: var(--mp-primary); }
+      .border-primary { border-color: var(--mp-primary); }
+      .ring-primary { --tw-ring-color: var(--mp-primary); }
+      .bg-primary-foreground { background-color: var(--mp-primary-foreground); }
+      .text-primary-foreground { color: var(--mp-primary-foreground); }
+      .border-primary-foreground { border-color: var(--mp-primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--mp-primary-foreground); }
+      .bg-muted { background-color: var(--mp-muted); }
+      .text-muted { color: var(--mp-muted); }
+      .border-muted { border-color: var(--mp-muted); }
+      .ring-muted { --tw-ring-color: var(--mp-muted); }
+      .bg-muted-foreground { background-color: var(--mp-muted-foreground); }
+      .text-muted-foreground { color: var(--mp-muted-foreground); }
+      .border-muted-foreground { border-color: var(--mp-muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--mp-muted-foreground); }
+      .bg-border { background-color: var(--mp-border); }
+      .text-border { color: var(--mp-border); }
+      .border-border { border-color: var(--mp-border); }
+      .ring-border { --tw-ring-color: var(--mp-border); }
+      .bg-input { background-color: var(--mp-input); }
+      .text-input { color: var(--mp-input); }
+      .border-input { border-color: var(--mp-input); }
+      .ring-input { --tw-ring-color: var(--mp-input); }
+      .bg-ring { background-color: var(--mp-ring); }
+      .text-ring { color: var(--mp-ring); }
+      .border-ring { border-color: var(--mp-ring); }
+      .ring-ring { --tw-ring-color: var(--mp-ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <main>
+      <div class="mp-shell">
+        <section id="hero">
+          <p class="mp-eyebrow">线路 04 · 内城四线 · 车站 80</p>
+          <h1 class="mp-title">地铁拼图师</h1>
+          <p class="mp-lede">一条环线看内城，四张线路图看北京。把车站的方位、旧名与来历拼回它原本的位置。</p>
+          <p class="mp-meta mp-mono">1/2/4/5 号线 · 80 座车站 · 4 道谜面 · 80 篇站点档案</p>
+          <nav id="site-nav" aria-label="页面分区">
+            <a href="#puzzle-section">拼图</a>
+            <a href="#fullmap-section">全图</a>
+            <a href="#riddle-section">谜案</a>
+            <a href="#atlas-section">档案</a>
+          </nav>
+        </section>
+
+        <section id="puzzle-section">
+          <h2 class="mp-title">一 · 环线拼图</h2>
+          <p class="mp-note">下列字模属于 2 号线环线的十八座车站。先点字模，再点线路图上对应的圆点。拼合顺序不限，位置对了才落位。</p>
+          <div id="puzzle-board">
+            <svg id="ring-svg" viewBox="630 308 742 644" role="img" aria-label="2 号线环线线路图与十八个待拼车站位">
+              <polyline id="ring-line" fill="none" stroke="var(--mp-line-2)" stroke-width="var(--mp-map-line-width)" stroke-linejoin="round" stroke-linecap="round" points="770,420 875,420 945,420 1015,420 1120,420 1190,420 1190,560 1190,630 1190,700 1190,770 1120,840 980,840 910,840 840,840 770,770 770,700 770,560 770,490 770,420"></polyline>
+              <g class="station" data-name="西直门" data-x="770" data-y="420">
+                <circle cx="770" cy="420" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text x="770" y="404" text-anchor="middle" class="station-label mp-serif">西直门</text>
+              </g>
+              <g class="station" data-name="积水潭" data-x="875" data-y="420">
+                <circle cx="875" cy="420" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text x="875" y="404" text-anchor="middle" class="station-label mp-serif">积水潭</text>
+              </g>
+              <g class="station" data-name="鼓楼大街" data-x="945" data-y="420">
+                <circle cx="945" cy="420" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text x="945" y="404" text-anchor="middle" class="station-label mp-serif">鼓楼大街</text>
+              </g>
+              <g class="station" data-name="安定门" data-x="1015" data-y="420">
+                <circle cx="1015" cy="420" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text x="1015" y="404" text-anchor="middle" class="station-label mp-serif">安定门</text>
+              </g>
+              <g class="station" data-name="雍和宫" data-x="1120" data-y="420">
+                <circle cx="1120" cy="420" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text x="1120" y="404" text-anchor="middle" class="station-label mp-serif">雍和宫</text>
+              </g>
+              <g class="station" data-name="东直门" data-x="1190" data-y="420">
+                <circle cx="1190" cy="420" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text x="1190" y="404" text-anchor="middle" class="station-label mp-serif">东直门</text>
+              </g>
+              <g class="station" data-name="东四十条" data-x="1190" data-y="560">
+                <circle cx="1190" cy="560" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text x="1220" y="565" text-anchor="start" class="station-label mp-serif">东四十条</text>
+              </g>
+              <g class="station" data-name="朝阳门" data-x="1190" data-y="630">
+                <circle cx="1190" cy="630" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text x="1220" y="635" text-anchor="start" class="station-label mp-serif">朝阳门</text>
+              </g>
+              <g class="station" data-name="建国门" data-x="1190" data-y="700">
+                <circle cx="1190" cy="700" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text x="1220" y="705" text-anchor="start" class="station-label mp-serif">建国门</text>
+              </g>
+              <g class="station" data-name="北京站" data-x="1190" data-y="770">
+                <circle cx="1190" cy="770" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text x="1220" y="775" text-anchor="start" class="station-label mp-serif">北京站</text>
+              </g>
+              <g class="station" data-name="崇文门" data-x="1120" data-y="840">
+                <circle cx="1120" cy="840" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text x="1120" y="874" text-anchor="middle" class="station-label mp-serif">崇文门</text>
+              </g>
+              <g class="station" data-name="前门" data-x="980" data-y="840">
+                <circle cx="980" cy="840" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text x="980" y="874" text-anchor="middle" class="station-label mp-serif">前门</text>
+              </g>
+              <g class="station" data-name="和平门" data-x="910" data-y="840">
+                <circle cx="910" cy="840" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text x="910" y="874" text-anchor="middle" class="station-label mp-serif">和平门</text>
+              </g>
+              <g class="station" data-name="宣武门" data-x="840" data-y="840">
+                <circle cx="840" cy="840" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text x="840" y="874" text-anchor="middle" class="station-label mp-serif">宣武门</text>
+              </g>
+              <g class="station" data-name="长椿街" data-x="770" data-y="770">
+                <circle cx="770" cy="770" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text x="740" y="775" text-anchor="end" class="station-label mp-serif">长椿街</text>
+              </g>
+              <g class="station" data-name="复兴门" data-x="770" data-y="700">
+                <circle cx="770" cy="700" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text x="740" y="705" text-anchor="end" class="station-label mp-serif">复兴门</text>
+              </g>
+              <g class="station" data-name="阜成门" data-x="770" data-y="560">
+                <circle cx="770" cy="560" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text x="740" y="565" text-anchor="end" class="station-label mp-serif">阜成门</text>
+              </g>
+              <g class="station" data-name="车公庄" data-x="770" data-y="490">
+                <circle cx="770" cy="490" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text x="740" y="495" text-anchor="end" class="station-label mp-serif">车公庄</text>
+              </g>
+            </svg>
+          </div>
+          <div id="station-tray" role="group" aria-label="可拼合的车站字模">
+            <button class="tile" type="button" data-name="朝阳门">朝阳门</button>
+            <button class="tile" type="button" data-name="建国门">建国门</button>
+            <button class="tile" type="button" data-name="北京站">北京站</button>
+            <button class="tile" type="button" data-name="崇文门">崇文门</button>
+            <button class="tile" type="button" data-name="前门">前门</button>
+            <button class="tile" type="button" data-name="和平门">和平门</button>
+            <button class="tile" type="button" data-name="宣武门">宣武门</button>
+            <button class="tile" type="button" data-name="长椿街">长椿街</button>
+            <button class="tile" type="button" data-name="复兴门">复兴门</button>
+            <button class="tile" type="button" data-name="阜成门">阜成门</button>
+            <button class="tile" type="button" data-name="车公庄">车公庄</button>
+            <button class="tile" type="button" data-name="西直门">西直门</button>
+            <button class="tile" type="button" data-name="积水潭">积水潭</button>
+            <button class="tile" type="button" data-name="鼓楼大街">鼓楼大街</button>
+            <button class="tile" type="button" data-name="安定门">安定门</button>
+            <button class="tile" type="button" data-name="雍和宫">雍和宫</button>
+            <button class="tile" type="button" data-name="东直门">东直门</button>
+            <button class="tile" type="button" data-name="东四十条">东四十条</button>
+          </div>
+          <div class="mp-controls">
+            <button id="puzzle-hint" type="button" data-dom-id="puzzle-hint">给出提示 <span id="hint-count" class="mp-mono">2</span></button>
+            <button id="puzzle-restart" type="button" data-dom-id="puzzle-restart">重新开始</button>
+            <p id="puzzle-progress" class="mp-mono" aria-live="polite">已拼合 0 / 18</p>
+          </div>
+          <p id="puzzle-win" class="mp-win" hidden>十八站归位。这道环线自 1984 年起闭合成圈——2 号线是中国第一条环形地铁。</p>
+        </section>
+
+        <section id="fullmap-section">
+          <h2 class="mp-title">二 · 内城四线全图</h2>
+          <p class="mp-note">1 / 2 / 4 / 5 号线，八十座车站，八个换乘节点用双环标出。点击下方线路名可只看该线；点击任一车站，可跳到档案区对应的故事卡片。</p>
+          <div id="line-legend" role="group" aria-label="线路筛选">
+            <button class="legend-item" type="button" data-line="1" aria-pressed="false"><span class="legend-swatch" style="background:var(--mp-line-1)"></span><span class="legend-name">1 号线</span><span class="legend-count mp-mono">23</span></button>
+            <button class="legend-item" type="button" data-line="2" aria-pressed="false"><span class="legend-swatch" style="background:var(--mp-line-2)"></span><span class="legend-name">2 号线</span><span class="legend-count mp-mono">18</span></button>
+            <button class="legend-item" type="button" data-line="4" aria-pressed="false"><span class="legend-swatch" style="background:var(--mp-line-4)"></span><span class="legend-name">4 号线</span><span class="legend-count mp-mono">24</span></button>
+            <button class="legend-item" type="button" data-line="5" aria-pressed="false"><span class="legend-swatch" style="background:var(--mp-line-5)"></span><span class="legend-name">5 号线</span><span class="legend-count mp-mono">23</span></button>
+          </div>
+          <div class="mp-map-frame">
+            <svg id="fullmap-svg" viewBox="-40 -280 960 1040" role="img" aria-label="北京内城 1/2/4/5 号线线路全图，共八十座车站">
+              <polyline class="fm-line" data-line="1" fill="none" stroke="var(--mp-line-1)" stroke-width="var(--mp-map-line-width)" stroke-linejoin="round" stroke-linecap="round" points="0,400 40,400 80,400 120,400 160,400 200,400 240,400 280,400 320,400 360,400 400,400 440,400 480,400 520,400 560,400 600,400 640,400 680,400 720,400 760,400 800,400 840,400 880,400"></polyline>
+              <polyline class="fm-line" data-line="2" fill="none" stroke="var(--mp-line-2)" stroke-width="var(--mp-map-line-width)" stroke-linejoin="round" stroke-linecap="round" points="440,200 490,200 540,200 590,200 640,200 680,200 680,240 680,280 680,400 680,440 640,480 560,480 520,480 480,480 440,440 440,400 440,280 440,240 440,200"></polyline>
+              <polyline class="fm-line" data-line="4" fill="none" stroke="var(--mp-line-4)" stroke-width="var(--mp-map-line-width)" stroke-linejoin="round" stroke-linecap="round" points="440,-240 440,-200 440,-160 440,-120 440,-80 440,-40 440,0 440,40 440,80 440,120 440,160 440,200 480,240 480,280 480,320 480,360 480,400 480,480 480,520 480,560 480,600 480,640 480,680 480,720"></polyline>
+              <polyline class="fm-line" data-line="5" fill="none" stroke="var(--mp-line-5)" stroke-width="var(--mp-map-line-width)" stroke-linejoin="round" stroke-linecap="round" points="640,-240 640,-200 640,-160 640,-120 640,-80 640,-40 640,0 640,40 640,80 640,120 640,160 640,200 640,240 640,280 640,320 640,360 640,400 640,480 640,520 640,560 640,600 640,640 640,680"></polyline>
+
+              <g class="fm-station" data-lines="1">
+                <circle cx="0" cy="400" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-1)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="1" x="0" y="386" text-anchor="middle">苹果园</text>
+              </g>
+              <g class="fm-station" data-lines="1">
+                <circle cx="40" cy="400" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-1)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="1" x="40" y="422" text-anchor="middle">古城</text>
+              </g>
+              <g class="fm-station" data-lines="1">
+                <circle cx="80" cy="400" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-1)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="1" x="80" y="386" text-anchor="middle">八角游乐园</text>
+              </g>
+              <g class="fm-station" data-lines="1">
+                <circle cx="120" cy="400" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-1)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="1" x="120" y="422" text-anchor="middle">八宝山</text>
+              </g>
+              <g class="fm-station" data-lines="1">
+                <circle cx="160" cy="400" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-1)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="1" x="160" y="386" text-anchor="middle">玉泉路</text>
+              </g>
+              <g class="fm-station" data-lines="1">
+                <circle cx="200" cy="400" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-1)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="1" x="200" y="422" text-anchor="middle">五棵松</text>
+              </g>
+              <g class="fm-station" data-lines="1">
+                <circle cx="240" cy="400" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-1)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="1" x="240" y="386" text-anchor="middle">万寿路</text>
+              </g>
+              <g class="fm-station" data-lines="1">
+                <circle cx="280" cy="400" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-1)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="1" x="280" y="422" text-anchor="middle">公主坟</text>
+              </g>
+              <g class="fm-station" data-lines="1">
+                <circle cx="320" cy="400" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-1)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="1" x="320" y="386" text-anchor="middle">军事博物馆</text>
+              </g>
+              <g class="fm-station" data-lines="1">
+                <circle cx="360" cy="400" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-1)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="1" x="360" y="422" text-anchor="middle">木樨地</text>
+              </g>
+              <g class="fm-station" data-lines="1">
+                <circle cx="400" cy="400" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-1)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="1" x="400" y="386" text-anchor="middle">南礼士路</text>
+              </g>
+              <g class="fm-station fm-transfer" data-lines="1 2">
+                <circle cx="440" cy="400" r="var(--mp-transfer-r)" fill="var(--mp-card)" stroke="var(--mp-foreground)" stroke-width="3"></circle>
+                <circle cx="440" cy="400" r="4.5" fill="var(--mp-foreground)"></circle>
+                <text class="fm-label" data-lines="1 2" x="424" y="405" text-anchor="end">复兴门</text>
+              </g>
+              <g class="fm-station fm-transfer" data-lines="1 4">
+                <circle cx="480" cy="400" r="var(--mp-transfer-r)" fill="var(--mp-card)" stroke="var(--mp-foreground)" stroke-width="3"></circle>
+                <circle cx="480" cy="400" r="4.5" fill="var(--mp-foreground)"></circle>
+                <text class="fm-label" data-lines="1 4" x="496" y="405" text-anchor="start">西单</text>
+              </g>
+              <g class="fm-station" data-lines="1">
+                <circle cx="520" cy="400" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-1)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="1" x="520" y="422" text-anchor="middle">天安门西</text>
+              </g>
+              <g class="fm-station" data-lines="1">
+                <circle cx="560" cy="400" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-1)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="1" x="560" y="386" text-anchor="middle">天安门东</text>
+              </g>
+              <g class="fm-station" data-lines="1">
+                <circle cx="600" cy="400" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-1)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="1" x="600" y="422" text-anchor="middle">王府井</text>
+              </g>
+              <g class="fm-station fm-transfer" data-lines="1 5">
+                <circle cx="640" cy="400" r="var(--mp-transfer-r)" fill="var(--mp-card)" stroke="var(--mp-foreground)" stroke-width="3"></circle>
+                <circle cx="640" cy="400" r="4.5" fill="var(--mp-foreground)"></circle>
+                <text class="fm-label" data-lines="1 5" x="624" y="405" text-anchor="end">东单</text>
+              </g>
+              <g class="fm-station fm-transfer" data-lines="1 2">
+                <circle cx="680" cy="400" r="var(--mp-transfer-r)" fill="var(--mp-card)" stroke="var(--mp-foreground)" stroke-width="3"></circle>
+                <circle cx="680" cy="400" r="4.5" fill="var(--mp-foreground)"></circle>
+                <text class="fm-label" data-lines="1 2" x="696" y="405" text-anchor="start">建国门</text>
+              </g>
+              <g class="fm-station" data-lines="1">
+                <circle cx="720" cy="400" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-1)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="1" x="720" y="386" text-anchor="middle">永安里</text>
+              </g>
+              <g class="fm-station" data-lines="1">
+                <circle cx="760" cy="400" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-1)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="1" x="760" y="422" text-anchor="middle">国贸</text>
+              </g>
+              <g class="fm-station" data-lines="1">
+                <circle cx="800" cy="400" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-1)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="1" x="800" y="386" text-anchor="middle">大望路</text>
+              </g>
+              <g class="fm-station" data-lines="1">
+                <circle cx="840" cy="400" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-1)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="1" x="840" y="422" text-anchor="middle">四惠</text>
+              </g>
+              <g class="fm-station" data-lines="1">
+                <circle cx="880" cy="400" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-1)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="1" x="880" y="386" text-anchor="middle">四惠东</text>
+              </g>
+
+              <g class="fm-station" data-lines="4">
+                <circle cx="440" cy="-240" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-4)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="4" x="424" y="-235" text-anchor="end">安河桥北</text>
+              </g>
+              <g class="fm-station" data-lines="4">
+                <circle cx="440" cy="-200" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-4)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="4" x="424" y="-195" text-anchor="end">北宫门</text>
+              </g>
+              <g class="fm-station" data-lines="4">
+                <circle cx="440" cy="-160" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-4)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="4" x="424" y="-155" text-anchor="end">西苑</text>
+              </g>
+              <g class="fm-station" data-lines="4">
+                <circle cx="440" cy="-120" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-4)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="4" x="424" y="-115" text-anchor="end">圆明园</text>
+              </g>
+              <g class="fm-station" data-lines="4">
+                <circle cx="440" cy="-80" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-4)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="4" x="424" y="-75" text-anchor="end">北京大学东门</text>
+              </g>
+              <g class="fm-station" data-lines="4">
+                <circle cx="440" cy="-40" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-4)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="4" x="424" y="-35" text-anchor="end">中关村</text>
+              </g>
+              <g class="fm-station" data-lines="4">
+                <circle cx="440" cy="0" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-4)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="4" x="424" y="5" text-anchor="end">海淀黄庄</text>
+              </g>
+              <g class="fm-station" data-lines="4">
+                <circle cx="440" cy="40" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-4)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="4" x="424" y="45" text-anchor="end">人民大学</text>
+              </g>
+              <g class="fm-station" data-lines="4">
+                <circle cx="440" cy="80" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-4)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="4" x="424" y="85" text-anchor="end">魏公村</text>
+              </g>
+              <g class="fm-station" data-lines="4">
+                <circle cx="440" cy="120" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-4)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="4" x="424" y="125" text-anchor="end">国家图书馆</text>
+              </g>
+              <g class="fm-station" data-lines="4">
+                <circle cx="440" cy="160" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-4)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="4" x="424" y="165" text-anchor="end">动物园</text>
+              </g>
+
+              <g class="fm-station" data-lines="4">
+                <circle cx="480" cy="240" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-4)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="4" x="496" y="248" text-anchor="start">新街口</text>
+              </g>
+              <g class="fm-station" data-lines="4">
+                <circle cx="480" cy="280" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-4)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="4" x="496" y="285" text-anchor="start">平安里</text>
+              </g>
+              <g class="fm-station" data-lines="4">
+                <circle cx="480" cy="320" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-4)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="4" x="496" y="325" text-anchor="start">西四</text>
+              </g>
+              <g class="fm-station" data-lines="4">
+                <circle cx="480" cy="360" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-4)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="4" x="496" y="365" text-anchor="start">灵境胡同</text>
+              </g>
+              <g class="fm-station" data-lines="4">
+                <circle cx="480" cy="520" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-4)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="4" x="464" y="525" text-anchor="end">菜市口</text>
+              </g>
+              <g class="fm-station" data-lines="4">
+                <circle cx="480" cy="560" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-4)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="4" x="496" y="565" text-anchor="start">陶然亭</text>
+              </g>
+              <g class="fm-station" data-lines="4">
+                <circle cx="480" cy="600" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-4)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="4" x="496" y="605" text-anchor="start">北京南站</text>
+              </g>
+              <g class="fm-station" data-lines="4">
+                <circle cx="480" cy="640" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-4)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="4" x="496" y="645" text-anchor="start">马家堡</text>
+              </g>
+              <g class="fm-station" data-lines="4">
+                <circle cx="480" cy="680" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-4)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="4" x="496" y="685" text-anchor="start">角门西</text>
+              </g>
+              <g class="fm-station" data-lines="4">
+                <circle cx="480" cy="720" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-4)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="4" x="496" y="725" text-anchor="start">公益西桥</text>
+              </g>
+
+              <g class="fm-station fm-transfer" data-lines="2 4">
+                <circle cx="440" cy="200" r="var(--mp-transfer-r)" fill="var(--mp-card)" stroke="var(--mp-foreground)" stroke-width="3"></circle>
+                <circle cx="440" cy="200" r="4.5" fill="var(--mp-foreground)"></circle>
+                <text class="fm-label" data-lines="2 4" x="424" y="205" text-anchor="end">西直门</text>
+              </g>
+              <g class="fm-station" data-lines="2">
+                <circle cx="440" cy="240" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="2" x="424" y="245" text-anchor="end">车公庄</text>
+              </g>
+              <g class="fm-station" data-lines="2">
+                <circle cx="440" cy="280" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="2" x="424" y="285" text-anchor="end">阜成门</text>
+              </g>
+              <g class="fm-station" data-lines="2">
+                <circle cx="440" cy="440" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="2" x="424" y="445" text-anchor="end">长椿街</text>
+              </g>
+
+              <g class="fm-station" data-lines="2">
+                <circle cx="490" cy="200" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="2" x="490" y="186" text-anchor="middle">积水潭</text>
+              </g>
+              <g class="fm-station" data-lines="2">
+                <circle cx="540" cy="200" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="2" x="540" y="222" text-anchor="middle">鼓楼大街</text>
+              </g>
+              <g class="fm-station" data-lines="2">
+                <circle cx="590" cy="200" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="2" x="590" y="186" text-anchor="middle">安定门</text>
+              </g>
+              <g class="fm-station fm-transfer" data-lines="2 5">
+                <circle cx="640" cy="200" r="var(--mp-transfer-r)" fill="var(--mp-card)" stroke="var(--mp-foreground)" stroke-width="3"></circle>
+                <circle cx="640" cy="200" r="4.5" fill="var(--mp-foreground)"></circle>
+                <text class="fm-label" data-lines="2 5" x="640" y="222" text-anchor="middle">雍和宫</text>
+              </g>
+              <g class="fm-station" data-lines="2">
+                <circle cx="680" cy="200" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="2" x="680" y="186" text-anchor="middle">东直门</text>
+              </g>
+
+              <g class="fm-station" data-lines="2">
+                <circle cx="680" cy="240" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="2" x="696" y="245" text-anchor="start">东四十条</text>
+              </g>
+              <g class="fm-station" data-lines="2">
+                <circle cx="680" cy="280" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="2" x="696" y="285" text-anchor="start">朝阳门</text>
+              </g>
+              <g class="fm-station" data-lines="2">
+                <circle cx="680" cy="440" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="2" x="696" y="445" text-anchor="start">北京站</text>
+              </g>
+
+              <g class="fm-station fm-transfer" data-lines="2 4">
+                <circle cx="480" cy="480" r="var(--mp-transfer-r)" fill="var(--mp-card)" stroke="var(--mp-foreground)" stroke-width="3"></circle>
+                <circle cx="480" cy="480" r="4.5" fill="var(--mp-foreground)"></circle>
+                <text class="fm-label" data-lines="2 4" x="480" y="502" text-anchor="middle">宣武门</text>
+              </g>
+              <g class="fm-station" data-lines="2">
+                <circle cx="520" cy="480" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="2" x="520" y="518" text-anchor="middle">和平门</text>
+              </g>
+              <g class="fm-station" data-lines="2">
+                <circle cx="560" cy="480" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-2)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="2" x="560" y="502" text-anchor="middle">前门</text>
+              </g>
+              <g class="fm-station fm-transfer" data-lines="2 5">
+                <circle cx="640" cy="480" r="var(--mp-transfer-r)" fill="var(--mp-card)" stroke="var(--mp-foreground)" stroke-width="3"></circle>
+                <circle cx="640" cy="480" r="4.5" fill="var(--mp-foreground)"></circle>
+                <text class="fm-label" data-lines="2 5" x="666" y="502" text-anchor="start">崇文门</text>
+              </g>
+
+              <g class="fm-station" data-lines="5">
+                <circle cx="640" cy="-240" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-5)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="5" x="624" y="-235" text-anchor="end">天通苑北</text>
+              </g>
+              <g class="fm-station" data-lines="5">
+                <circle cx="640" cy="-200" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-5)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="5" x="624" y="-195" text-anchor="end">天通苑</text>
+              </g>
+              <g class="fm-station" data-lines="5">
+                <circle cx="640" cy="-160" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-5)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="5" x="624" y="-155" text-anchor="end">天通苑南</text>
+              </g>
+              <g class="fm-station" data-lines="5">
+                <circle cx="640" cy="-120" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-5)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="5" x="624" y="-115" text-anchor="end">立水桥</text>
+              </g>
+              <g class="fm-station" data-lines="5">
+                <circle cx="640" cy="-80" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-5)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="5" x="624" y="-75" text-anchor="end">立水桥南</text>
+              </g>
+              <g class="fm-station" data-lines="5">
+                <circle cx="640" cy="-40" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-5)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="5" x="624" y="-35" text-anchor="end">北苑路北</text>
+              </g>
+              <g class="fm-station" data-lines="5">
+                <circle cx="640" cy="0" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-5)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="5" x="624" y="5" text-anchor="end">大屯路东</text>
+              </g>
+              <g class="fm-station" data-lines="5">
+                <circle cx="640" cy="40" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-5)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="5" x="624" y="45" text-anchor="end">惠新西街北口</text>
+              </g>
+              <g class="fm-station" data-lines="5">
+                <circle cx="640" cy="80" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-5)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="5" x="624" y="85" text-anchor="end">惠新西街南口</text>
+              </g>
+              <g class="fm-station" data-lines="5">
+                <circle cx="640" cy="120" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-5)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="5" x="624" y="125" text-anchor="end">和平西桥</text>
+              </g>
+              <g class="fm-station" data-lines="5">
+                <circle cx="640" cy="160" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-5)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="5" x="624" y="165" text-anchor="end">和平里北街</text>
+              </g>
+              <g class="fm-station" data-lines="5">
+                <circle cx="640" cy="240" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-5)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="5" x="624" y="245" text-anchor="end">北新桥</text>
+              </g>
+              <g class="fm-station" data-lines="5">
+                <circle cx="640" cy="280" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-5)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="5" x="624" y="285" text-anchor="end">张自忠路</text>
+              </g>
+              <g class="fm-station" data-lines="5">
+                <circle cx="640" cy="320" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-5)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="5" x="624" y="325" text-anchor="end">东四</text>
+              </g>
+              <g class="fm-station" data-lines="5">
+                <circle cx="640" cy="360" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-5)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="5" x="624" y="365" text-anchor="end">灯市口</text>
+              </g>
+              <g class="fm-station" data-lines="5">
+                <circle cx="640" cy="520" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-5)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="5" x="624" y="525" text-anchor="end">磁器口</text>
+              </g>
+              <g class="fm-station" data-lines="5">
+                <circle cx="640" cy="560" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-5)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="5" x="624" y="565" text-anchor="end">天坛东门</text>
+              </g>
+              <g class="fm-station" data-lines="5">
+                <circle cx="640" cy="600" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-5)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="5" x="624" y="605" text-anchor="end">蒲黄榆</text>
+              </g>
+              <g class="fm-station" data-lines="5">
+                <circle cx="640" cy="640" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-5)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="5" x="624" y="645" text-anchor="end">刘家窑</text>
+              </g>
+              <g class="fm-station" data-lines="5">
+                <circle cx="640" cy="680" r="var(--mp-station-r)" fill="var(--mp-card)" stroke="var(--mp-line-5)" stroke-width="3"></circle>
+                <text class="fm-label" data-lines="5" x="624" y="685" text-anchor="end">宋家庄</text>
+              </g>
+            </svg>
+          </div>
+        </section>
+        <section id="riddle-section">
+          <h2 class="mp-title">三 · 四道旧城谜面</h2>
+          <p class="mp-note">四道谜面分别指向环线的四个城角。全部答对，环线图上会把四角连成一个矩形。</p>
+          <ol id="riddle-list">
+            <li class="riddle" data-answer="西直门">
+              <span class="riddle-index mp-mono">01</span>
+              <p class="riddle-text">明清内城西垣之门，运水车自此出城赴玉泉山；今有 2、4、13 三条线在此交汇。</p>
+              <div class="riddle-row">
+                <input class="riddle-input" type="text" placeholder="填入站名" aria-label="谜面 01 的答案" />
+                <button class="riddle-submit" type="button">核验</button>
+                <p class="riddle-state mp-mono" data-state="pending">未答</p>
+              </div>
+            </li>
+            <li class="riddle" data-answer="东直门">
+              <span class="riddle-index mp-mono">02</span>
+              <p class="riddle-text">内城东北角之门，旧时木材由此入城；今首都机场线自此始发。</p>
+              <div class="riddle-row">
+                <input class="riddle-input" type="text" placeholder="填入站名" aria-label="谜面 02 的答案" />
+                <button class="riddle-submit" type="button">核验</button>
+                <p class="riddle-state mp-mono" data-state="pending">未答</p>
+              </div>
+            </li>
+            <li class="riddle" data-answer="建国门">
+              <span class="riddle-index mp-mono">03</span>
+              <p class="riddle-text">并非古门：1939 年城墙开豁口而成，取「建国」之名；今为 1、2 号线交汇处，扼长安街东端。</p>
+              <div class="riddle-row">
+                <input class="riddle-input" type="text" placeholder="填入站名" aria-label="谜面 03 的答案" />
+                <button class="riddle-submit" type="button">核验</button>
+                <p class="riddle-state mp-mono" data-state="pending">未答</p>
+              </div>
+            </li>
+            <li class="riddle" data-answer="复兴门">
+              <span class="riddle-index mp-mono">04</span>
+              <p class="riddle-text">与上一道同年开豁口，1946 年取名「复兴」；今为 1、2 号线交汇处，扼长安街西端。</p>
+              <div class="riddle-row">
+                <input class="riddle-input" type="text" placeholder="填入站名" aria-label="谜面 04 的答案" />
+                <button class="riddle-submit" type="button">核验</button>
+                <p class="riddle-state mp-mono" data-state="pending">未答</p>
+              </div>
+            </li>
+          </ol>
+          <div class="reveal-block">
+            <p id="riddle-verdict" hidden></p>
+            <p id="ring-reveal" hidden>四角归位——西直门、东直门、建国门、复兴门。2 号线沿明清北京内城城墙而建，十八站多是内城城门与墙角，这就是「环」的来历。</p>
+          </div>
+        </section>
+
+        <section id="atlas-section">
+          <h2 class="mp-title">四 · 八十站档案</h2>
+          <p class="mp-note">四线八十站，逐站一卡：方位定位、地名来历、今日换乘。环线十八站为详写，其余各站各据一线的旧事与今貌。全图上的车站可点击，直达此处的对应卡片。</p>
+          <div id="atlas-list">
+            <div class="ls-group" data-line="2">
+              <h3 class="ls-head"><span class="legend-swatch" style="background:var(--mp-line-2)"></span>2 号线<span class="ls-count mp-mono">环线 18 站 · 详写</span></h3>
+              <div class="atlas-grid">
+              <article class="atlas-card" data-name="西直门">
+                <h4 class="mp-title">西直门 <span class="mp-mono atlas-line">L2</span></h4>
+                <p class="atlas-gate">内城西垣北门 · 运水门</p>
+                <p class="atlas-note">其址可溯至元大都的和义门，明清两代是内城西垣北侧的门。旧时自玉泉山运水入城的水车都走此门，故有「运水门」之称。1906 年京张铁路在西直门外设站，铁路与城门并立了半个多世纪。1969 年修建地铁时城楼与瓮城被拆除，城垣今已无存。如今 2、4、13 号线在此交汇，是环线上客流最大的节点之一。</p>
+                <p class="atlas-transfer mp-mono">换乘 · 2 / 4 / 13 号线</p>
+              </article>
+              <article class="atlas-card" data-name="积水潭">
+                <h4 class="mp-title">积水潭 <span class="mp-mono atlas-line">L2</span></h4>
+                <p class="atlas-gate">北垣水关 · 元代码头</p>
+                <p class="atlas-note">元代这里是京杭大运河的北端终点，南来的粮船在此卸货。郭守敬引白浮泉水入大都，积水潭一度是城北最大的水陆码头，水面辽阔，舳舻蔽水。明初改筑城墙、运河淤塞后，水面逐渐缩小，清代成为内城北垣的排水水关。今站旁有郭守敬纪念馆与什刹西海，水面仍在。</p>
+                <p class="atlas-transfer mp-mono">换乘 · 2 / 19 号线</p>
+              </article>
+              <article class="atlas-card" data-name="鼓楼大街">
+                <h4 class="mp-title">鼓楼大街 <span class="mp-mono atlas-line">L2</span></h4>
+                <p class="atlas-gate">中轴近地 · 报时之楼</p>
+                <p class="atlas-note">紧邻元大都中轴线上的鼓楼，是这条中轴在城北的标志。元代钟鼓楼一线是全城最热闹的商业区，报时、开市皆以此为号。明代北京城南移之后，鼓楼仍在原处，周边的斜街与市集延续数百年而不衰。出站北望即是灰砖的鼓楼与钟楼。今为 2、8 号线换乘站，也是中轴线北段的门户。</p>
+                <p class="atlas-transfer mp-mono">换乘 · 2 / 8 号线</p>
+              </article>
+              <article class="atlas-card" data-name="安定门">
+                <h4 class="mp-title">安定门 <span class="mp-mono atlas-line">L2</span></h4>
+                <p class="atlas-gate">内城北垣东门 · 出兵门</p>
+                <p class="atlas-note">内城北垣东侧的门，与西侧的德胜门东西相对。明清两代出师北征多走安定门，取「安定天下」之意，故民间称其为出兵门。门内原建有城楼、箭楼与瓮城，规格俱全。1969 年因修建地铁，城楼与箭楼被相继拆除，城门仅存地名。今护城河一线与雍和宫周边的旧城肌理仍可辨认，车站则仅有 2 号线经停。</p>
+                <p class="atlas-transfer mp-mono">换乘 · 仅 2 号线</p>
+              </article>
+              <article class="atlas-card" data-name="雍和宫">
+                <h4 class="mp-title">雍和宫 <span class="mp-mono atlas-line">L2</span></h4>
+                <p class="atlas-gate">北垣东段 · 王府改寺</p>
+                <p class="atlas-note">原为清康熙帝第四子胤禛的府邸，即雍亲王府。胤禛即位为雍正帝后，此处既是潜邸便不可再作民居，遂改为行宫。乾隆年间进一步改为藏传佛教寺院，成为北京规格最高的喇嘛庙。万福阁内矗立一尊由整根白檀雕成的弥勒大佛，高逾十八米，为镇寺之宝。今为 2、5 号线换乘站，出站即是香火鼎盛的雍和宫与国子监街。</p>
+                <p class="atlas-transfer mp-mono">换乘 · 2 / 5 号线</p>
+              </article>
+              <article class="atlas-card" data-name="东直门">
+                <h4 class="mp-title">东直门 <span class="mp-mono atlas-line">L2</span></h4>
+                <p class="atlas-gate">内城东北门 · 运木门</p>
+                <p class="atlas-note">内城东北角的门，也是明清两代木材进京的主要通道。南方木材经大运河北运至通州，再自此门运入城内堆放，故有「东直门走木材车」之说。门内的东直门内大街是元大都以来就有的干道，街市一直延续至今。1950 年代城楼、箭楼相继拆除，只余地名与街巷格局。今为 2、13 号线与首都机场线的交汇处，是北京最早的交通枢纽之一。</p>
+                <p class="atlas-transfer mp-mono">换乘 · 2 / 13 号线 / 首都机场线</p>
+              </article>
+              <article class="atlas-card" data-name="东四十条">
+                <h4 class="mp-title">东四十条 <span class="mp-mono atlas-line">L2</span></h4>
+                <p class="atlas-gate">东四牌楼一带 · 仓场</p>
+                <p class="atlas-note">站名取自东四牌楼以北的第十条胡同。明代在东四路口立有「大市街」牌楼四座，故有东四之名。牌楼以北的胡同按序命名，十条即其中一条，街区肌理至今完整。明代这一带仓场聚集，是漕粮转运与储存之地。1990 年代在此发现的明代东四牌楼遗址被原址保护。今站台旁即是保利大厦与工人体育场一带，车站仅有 2 号线经停。</p>
+                <p class="atlas-transfer mp-mono">换乘 · 仅 2 号线</p>
+              </article>
+              <article class="atlas-card" data-name="朝阳门">
+                <h4 class="mp-title">朝阳门 <span class="mp-mono atlas-line">L2</span></h4>
+                <p class="atlas-gate">内城东门 · 运粮门</p>
+                <p class="atlas-note">内城东垣的门，元代旧称齐化门。明清漕粮自通州经运河运抵后，多由此门入城，故有「朝阳门走粮车」之说。门内旧有禄米仓、海运仓等一批粮仓，是京师的粮储中心。仓墙与「禄米仓」这样的地名至今仍留在街巷里。1970 年代修建地铁时城楼被拆除。今为 2、6 号线换乘站，出站即是朝阳门内大街与史家胡同一线。</p>
+                <p class="atlas-transfer mp-mono">换乘 · 2 / 6 号线</p>
+              </article>
+              <article class="atlas-card" data-name="建国门">
+                <h4 class="mp-title">建国门 <span class="mp-mono atlas-line">L2</span></h4>
+                <p class="atlas-gate">1939 年开豁口 · 东门</p>
+                <p class="atlas-note">这里并非古门，原为明清城墙的东南转角。1939 年在城墙上开豁口以通行，1946 年取「建国」之名正式辟为城门。门外的古观象台至今仍立于城东南，是明清两代观测天象的所在。日坛则在东北方向，是明清皇帝祭祀太阳的场所。今为 1、2 号线的换乘节点，扼长安街东端。</p>
+                <p class="atlas-transfer mp-mono">换乘 · 1 / 2 号线</p>
+              </article>
+              <article class="atlas-card" data-name="北京站">
+                <h4 class="mp-title">北京站 <span class="mp-mono atlas-line">L2</span></h4>
+                <p class="atlas-gate">城墙东南角楼之侧</p>
+                <p class="atlas-note">紧邻明清内城城墙的东南角楼，出站即可望见角楼与一段残存的城墙。1959 年作为国庆十大建筑之一建成北京站，是当时全国最大的铁路客运站。更早以前，庚子年后的京奉铁路曾在此设正阳门东站，北京由此接入全国铁路网。地铁 2 号线在此与车站大厅直接连通，旅客可自环线一步进站。这一站仅有 2 号线经停。</p>
+                <p class="atlas-transfer mp-mono">换乘 · 仅 2 号线</p>
+              </article>
+              <article class="atlas-card" data-name="崇文门">
+                <h4 class="mp-title">崇文门 <span class="mp-mono atlas-line">L2</span></h4>
+                <p class="atlas-gate">内城南垣东门 · 税关</p>
+                <p class="atlas-note">内城南垣东侧的门，元代称文明门，民间俗称哈德门。明清两代在此设崇文门税关，商货入城须在此纳税，是当时京师最重要的税关。门外的崇文门外大街一度是繁华的商业街，酒肆与货栈云集。1950 年代城楼与箭楼被拆除，护城河一线今成明城墙遗址公园。今为 2、5 号线换乘站。</p>
+                <p class="atlas-transfer mp-mono">换乘 · 2 / 5 号线</p>
+              </article>
+              <article class="atlas-card" data-name="前门">
+                <h4 class="mp-title">前门 <span class="mp-mono atlas-line">L2</span></h4>
+                <p class="atlas-gate">正阳门 · 中轴南端</p>
+                <p class="atlas-note">明代北京内城的正南门，即正阳门，是北京中轴线上的内城正门。正阳门城楼与箭楼是内城九门中规格最高的一组，也是唯一保留至今的城门楼。门外的正阳门东站曾是京奉铁路的终点，北京由此接入了全国铁路网。前门大街与廊房头条的商业街市就在门外，是老北京最热闹的地段。今为 2、8 号线换乘站。</p>
+                <p class="atlas-transfer mp-mono">换乘 · 2 / 8 号线</p>
+              </article>
+              <article class="atlas-card" data-name="和平门">
+                <h4 class="mp-title">和平门 <span class="mp-mono atlas-line">L2</span></h4>
+                <p class="atlas-gate">1926 年新辟之门</p>
+                <p class="atlas-note">并非古门。1926 年在此新开一座城门，位置在正阳门与宣武门之间，取名「和平」。门名寄托了当时对时局的期望，也带有几分民间的口彩。此门开通后，南新华街得以贯通南北，师范大学一带的通行大为便利。今仅有 2 号线经停，站旁即是琉璃厂文化街与和平门一带。</p>
+                <p class="atlas-transfer mp-mono">换乘 · 仅 2 号线</p>
+              </article>
+              <article class="atlas-card" data-name="宣武门">
+                <h4 class="mp-title">宣武门 <span class="mp-mono atlas-line">L2</span></h4>
+                <p class="atlas-gate">内城南垣西门 · 囚车之门</p>
+                <p class="atlas-note">内城南垣西侧的门，元代称顺承门。明清两代这里是京师押解行刑的必经之门，故有「宣武门走囚车」之说，门外即是菜市口刑场。门内东侧建有明万历年间始建的天主教堂，即今宣武门天主堂（南堂），是北京最古老的天主教堂。1950 年代城楼被拆除，教堂至今仍在。今为 2、4 号线换乘站。</p>
+                <p class="atlas-transfer mp-mono">换乘 · 2 / 4 号线</p>
+              </article>
+              <article class="atlas-card" data-name="长椿街">
+                <h4 class="mp-title">长椿街 <span class="mp-mono atlas-line">L2</span></h4>
+                <p class="atlas-gate">西南隅 · 因寺得名</p>
+                <p class="atlas-note">因明代的长椿寺而得名，寺中旧有长椿树，寺遂以此命名。长椿寺建于万历二十年，相传为万历帝之母李太后所建，是宣南一带的名刹。清末民初，这里属于宣南士人聚居之地，会馆与报馆在周边聚集，文风颇盛。长椿寺今已修复开放，就在车站南侧。车站仅有 2 号线经停。</p>
+                <p class="atlas-transfer mp-mono">换乘 · 仅 2 号线</p>
+              </article>
+              <article class="atlas-card" data-name="复兴门">
+                <h4 class="mp-title">复兴门 <span class="mp-mono atlas-line">L2</span></h4>
+                <p class="atlas-gate">1939 年开豁口 · 西门</p>
+                <p class="atlas-note">与建国门同为 1939 年在城墙上开豁口而成，位置在明清城墙的西垣南段。1946 年取「复兴」之名正式辟为城门，与东侧的建国门东西对望。门外的复兴门外大街向西直达京西宾馆、军事博物馆一线。1970 年代修建地铁时城楼亦被拆除，仅存地名与路口格局。今为 1、2 号线换乘站，扼长安街西端。</p>
+                <p class="atlas-transfer mp-mono">换乘 · 1 / 2 号线</p>
+              </article>
+              <article class="atlas-card" data-name="阜成门">
+                <h4 class="mp-title">阜成门 <span class="mp-mono atlas-line">L2</span></h4>
+                <p class="atlas-gate">内城西门 · 运煤门</p>
+                <p class="atlas-note">内城西垣中段的门，元代旧称平则门。门头沟一带所产的煤自西运来，多经阜成门入城，故有「阜成门走煤车」之说。门内的阜成门内大街是西城通往中轴的老街，白塔寺（妙应寺）的元代白塔即在街北。1970 年代修建地铁时城楼与箭楼被拆除，白塔与地名保留至今。车站仅有 2 号线经停。</p>
+                <p class="atlas-transfer mp-mono">换乘 · 仅 2 号线</p>
+              </article>
+              <article class="atlas-card" data-name="车公庄">
+                <h4 class="mp-title">车公庄 <span class="mp-mono atlas-line">L2</span></h4>
+                <p class="atlas-gate">西垣北段 · 因庙得名</p>
+                <p class="atlas-note">因明代此处有一座车公庙而得名，是西直门以南、阜成门以北的一个地名。清代这里仍在西垣附近的村落范围之内，民国以后才逐渐并入城区。地铁 2 号线在此设站，与 4 号线在西直门至阜成门之间并行。今为 2、6 号线换乘站，站旁是车公庄大街与北京展览馆一带。</p>
+                <p class="atlas-transfer mp-mono">换乘 · 2 / 6 号线</p>
+              </article>
+              </div>
+            </div>
+
+            <div class="ls-group" data-line="1">
+              <h3 class="ls-head"><span class="legend-swatch" style="background:var(--mp-line-1)"></span>1 号线<span class="ls-count mp-mono">沿线 21 站 · 换乘 2 站见环线</span></h3>
+              <div class="atlas-grid">
+                <article class="atlas-card" data-name="苹果园">
+                  <h4 class="mp-title">苹果园 <span class="mp-mono atlas-line">L1</span></h4>
+                  <p class="atlas-gate">西端起点 · 首钢故地</p>
+                  <p class="atlas-note">1 号线的西端起点，位于石景山。1950 年代因首钢兴建而设站，是北京最早开通的地铁线路的西端终点。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 1 / 6 号线 / S1 线</p>
+                </article>
+                <article class="atlas-card" data-name="古城">
+                  <h4 class="mp-title">古城 <span class="mp-mono atlas-line">L1</span></h4>
+                  <p class="atlas-gate">首钢旧址 · 今为首钢园</p>
+                  <p class="atlas-note">因旧时的古城村得名。周边是首钢旧址，今已改造为首钢园。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 1 号线</p>
+                </article>
+                <article class="atlas-card" data-name="八角游乐园">
+                  <h4 class="mp-title">八角游乐园 <span class="mp-mono atlas-line">L1</span></h4>
+                  <p class="atlas-gate">石景山游乐园之侧</p>
+                  <p class="atlas-note">得名于附近的石景山游乐园，旧称八角游乐园。出站即达游乐园与八角一带的居民区。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 1 号线</p>
+                </article>
+                <article class="atlas-card" data-name="八宝山">
+                  <h4 class="mp-title">八宝山 <span class="mp-mono atlas-line">L1</span></h4>
+                  <p class="atlas-gate">革命公墓 · 老山南麓</p>
+                  <p class="atlas-note">得名于八宝山，站北是八宝山革命公墓与老山。地名源自山间产八种可制颜料的矿石之说。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 1 号线</p>
+                </article>
+                <article class="atlas-card" data-name="玉泉路">
+                  <h4 class="mp-title">玉泉路 <span class="mp-mono atlas-line">L1</span></h4>
+                  <p class="atlas-gate">通往玉泉山的大道</p>
+                  <p class="atlas-note">因通往玉泉山的大道得名。旧时自玉泉山取水入城的车马曾走这条路。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 1 号线</p>
+                </article>
+                <article class="atlas-card" data-name="五棵松">
+                  <h4 class="mp-title">五棵松 <span class="mp-mono atlas-line">L1</span></h4>
+                  <p class="atlas-gate">五松故地 · 体育馆</p>
+                  <p class="atlas-note">旧时此地有五棵古松，是西郊大路上的一处地标。今站旁是五棵松体育馆与华熙商圈。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 1 号线</p>
+                </article>
+                <article class="atlas-card" data-name="万寿路">
+                  <h4 class="mp-title">万寿路 <span class="mp-mono atlas-line">L1</span></h4>
+                  <p class="atlas-gate">万寿寺外 · 机关大院</p>
+                  <p class="atlas-note">得名于附近的万寿寺，寺建于明代。站旁是万寿路一带的机关与居民区。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 1 号线</p>
+                </article>
+                <article class="atlas-card" data-name="公主坟">
+                  <h4 class="mp-title">公主坟 <span class="mp-mono atlas-line">L1</span></h4>
+                  <p class="atlas-gate">清代公主陵园 · 西三环</p>
+                  <p class="atlas-note">因清嘉庆帝两位公主的陵园在此而得名。1965 年修建地铁时曾发掘出公主墓。今为西三环的重要换乘与商圈。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 1 / 10 号线</p>
+                </article>
+                <article class="atlas-card" data-name="军事博物馆">
+                  <h4 class="mp-title">军事博物馆 <span class="mp-mono atlas-line">L1</span></h4>
+                  <p class="atlas-gate">1959 年国庆十大建筑</p>
+                  <p class="atlas-note">以中国人民革命军事博物馆命名。馆舍建于 1959 年，是国庆十大建筑之一。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 1 / 9 号线</p>
+                </article>
+                <article class="atlas-card" data-name="木樨地">
+                  <h4 class="mp-title">木樨地 <span class="mp-mono atlas-line">L1</span></h4>
+                  <p class="atlas-gate">木樨成林 · 玉渊潭畔</p>
+                  <p class="atlas-note">因旧时此地多木樨（桂花）而得名。站旁是玉渊潭与钓鱼台一线。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 1 / 16 号线</p>
+                </article>
+                <article class="atlas-card" data-name="南礼士路">
+                  <h4 class="mp-title">南礼士路 <span class="mp-mono atlas-line">L1</span></h4>
+                  <p class="atlas-gate">驴市雅化 · 月坛之侧</p>
+                  <p class="atlas-note">「礼士」二字取自旧时「驴市」的雅化谐音。这一带是月坛附近的旧街市。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 1 号线</p>
+                </article>
+                <article class="atlas-card" data-name="天安门西">
+                  <h4 class="mp-title">天安门西 <span class="mp-mono atlas-line">L1</span></h4>
+                  <p class="atlas-gate">广场西侧 · 大会堂</p>
+                  <p class="atlas-note">位于天安门广场西侧，紧邻人民大会堂。是长安街上最具政治地理意义的车站之一。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 1 号线</p>
+                </article>
+                <article class="atlas-card" data-name="天安门东">
+                  <h4 class="mp-title">天安门东 <span class="mp-mono atlas-line">L1</span></h4>
+                  <p class="atlas-gate">广场东侧 · 国家博物馆</p>
+                  <p class="atlas-note">位于广场东侧，紧邻中国国家博物馆。与天安门西共同承担广场两侧的客流。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 1 号线</p>
+                </article>
+                <article class="atlas-card" data-name="王府井">
+                  <h4 class="mp-title">王府井 <span class="mp-mono atlas-line">L1</span></h4>
+                  <p class="atlas-gate">王府与水井 · 商业街</p>
+                  <p class="atlas-note">因明代此处有王府与水井而得名。今是北京最著名的商业街之一，步行街就在站口。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 1 / 8 号线</p>
+                </article>
+                <article class="atlas-card" data-name="永安里">
+                  <h4 class="mp-title">永安里 <span class="mp-mono atlas-line">L1</span></h4>
+                  <p class="atlas-gate">建国门外 · 使馆区</p>
+                  <p class="atlas-note">地处建国门外大街，站名取「永安」之吉意。周边是建国门外使馆区一带。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 1 号线</p>
+                </article>
+                <article class="atlas-card" data-name="国贸">
+                  <h4 class="mp-title">国贸 <span class="mp-mono atlas-line">L1</span></h4>
+                  <p class="atlas-gate">国际贸易中心 · CBD</p>
+                  <p class="atlas-note">以中国国际贸易中心命名。1990 年代后这里是北京的商务中心区，CBD 由此得名。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 1 / 10 号线</p>
+                </article>
+                <article class="atlas-card" data-name="大望路">
+                  <h4 class="mp-title">大望路 <span class="mp-mono atlas-line">L1</span></h4>
+                  <p class="atlas-gate">华贸中心 · 东郊门户</p>
+                  <p class="atlas-note">得名于附近的大望路。站旁是华贸中心，向东可至 798 一线的东郊。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 1 / 14 号线</p>
+                </article>
+                <article class="atlas-card" data-name="四惠">
+                  <h4 class="mp-title">四惠 <span class="mp-mono atlas-line">L1</span></h4>
+                  <p class="atlas-gate">通惠河 · 八通线节点</p>
+                  <p class="atlas-note">得名于附近的四惠桥，处在通惠河与京通快速路交汇处。是 1 号线与八通线的换乘节点。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 1 号线 / 八通线</p>
+                </article>
+                <article class="atlas-card" data-name="四惠东">
+                  <h4 class="mp-title">四惠东 <span class="mp-mono atlas-line">L1</span></h4>
+                  <p class="atlas-gate">东端终点 · 通州方向</p>
+                  <p class="atlas-note">1 号线的东端终点之一，位于通惠河东侧。承担由城区前往通州的换乘客流。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 1 号线 / 八通线</p>
+                </article>
+                <article class="atlas-card" data-name="西单">
+                  <h4 class="mp-title">西单 <span class="mp-mono atlas-line">L1</span></h4>
+                  <p class="atlas-gate">西单牌楼 · 与东单相对</p>
+                  <p class="atlas-note">因旧时的西单牌楼而得名，与东单东西相对。今是西单商圈的枢纽，与 4 号线在此交汇。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 1 / 4 号线</p>
+                </article>
+                <article class="atlas-card" data-name="东单">
+                  <h4 class="mp-title">东单 <span class="mp-mono atlas-line">L1</span></h4>
+                  <p class="atlas-gate">东单牌楼 · 长安街东段</p>
+                  <p class="atlas-note">因旧时的东单牌楼而得名。位于长安街东段，与 5 号线在此交汇。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 1 / 5 号线</p>
+                </article>
+              </div>
+            </div>
+
+            <div class="ls-group" data-line="4">
+              <h3 class="ls-head"><span class="legend-swatch" style="background:var(--mp-line-4)"></span>4 号线<span class="ls-count mp-mono">沿线 21 站 · 换乘 3 站见环线</span></h3>
+              <div class="atlas-grid">
+                <article class="atlas-card" data-name="安河桥北">
+                  <h4 class="mp-title">安河桥北 <span class="mp-mono atlas-line">L4</span></h4>
+                  <p class="atlas-gate">北端起点 · 海淀</p>
+                  <p class="atlas-note">4 号线的北端起点，位于海淀区。旧时此处有安河桥，是前往西山路上的一处渡口。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 4 号线</p>
+                </article>
+                <article class="atlas-card" data-name="北宫门">
+                  <h4 class="mp-title">北宫门 <span class="mp-mono atlas-line">L4</span></h4>
+                  <p class="atlas-gate">颐和园北宫门</p>
+                  <p class="atlas-note">因颐和园北宫门而得名。出站即达颐和园后山与青龙桥一带。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 4 号线</p>
+                </article>
+                <article class="atlas-card" data-name="西苑">
+                  <h4 class="mp-title">西苑 <span class="mp-mono atlas-line">L4</span></h4>
+                  <p class="atlas-gate">清代西郊苑囿</p>
+                  <p class="atlas-note">清代西郊苑囿一带，因「西苑」之名沿用至今。今站旁是圆明园西侧的西苑街区。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 4 / 16 号线</p>
+                </article>
+                <article class="atlas-card" data-name="圆明园">
+                  <h4 class="mp-title">圆明园 <span class="mp-mono atlas-line">L4</span></h4>
+                  <p class="atlas-gate">遗址公园 · 大水法</p>
+                  <p class="atlas-note">以圆明园遗址公园命名。1860 年园毁于英法联军，今存大水法等遗址。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 4 号线</p>
+                </article>
+                <article class="atlas-card" data-name="北京大学东门">
+                  <h4 class="mp-title">北京大学东门 <span class="mp-mono atlas-line">L4</span></h4>
+                  <p class="atlas-gate">燕园东侧 · 中关园</p>
+                  <p class="atlas-note">因北京大学东门而得名。出站即达燕园东侧与中关园一带。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 4 号线</p>
+                </article>
+                <article class="atlas-card" data-name="中关村">
+                  <h4 class="mp-title">中关村 <span class="mp-mono atlas-line">L4</span></h4>
+                  <p class="atlas-gate">中官村雅化 · 科技园</p>
+                  <p class="atlas-note">原名中官村，因明清太监的墓地与田产得名，后雅化为中关村。今是中国最早的科技园区。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 4 号线</p>
+                </article>
+                <article class="atlas-card" data-name="海淀黄庄">
+                  <h4 class="mp-title">海淀黄庄 <span class="mp-mono atlas-line">L4</span></h4>
+                  <p class="atlas-gate">海淀中部枢纽</p>
+                  <p class="atlas-note">因海淀黄庄这一地名得名。这里是海淀区中部的交通枢纽，与 10 号线交汇。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 4 / 10 号线</p>
+                </article>
+                <article class="atlas-card" data-name="人民大学">
+                  <h4 class="mp-title">人民大学 <span class="mp-mono atlas-line">L4</span></h4>
+                  <p class="atlas-gate">陕北公学一脉</p>
+                  <p class="atlas-note">以中国人民大学命名。学校的前身是 1937 年创办于延安的陕北公学。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 4 号线</p>
+                </article>
+                <article class="atlas-card" data-name="魏公村">
+                  <h4 class="mp-title">魏公村 <span class="mp-mono atlas-line">L4</span></h4>
+                  <p class="atlas-gate">魏国公墓地 · 民族大学</p>
+                  <p class="atlas-note">得名于明代魏国公的墓地。今是中央民族大学一带的街区。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 4 号线</p>
+                </article>
+                <article class="atlas-card" data-name="国家图书馆">
+                  <h4 class="mp-title">国家图书馆 <span class="mp-mono atlas-line">L4</span></h4>
+                  <p class="atlas-gate">京师图书馆一脉</p>
+                  <p class="atlas-note">以国家图书馆命名。馆藏可溯源至 1909 年创办的京师图书馆。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 4 / 9 / 16 号线</p>
+                </article>
+                <article class="atlas-card" data-name="动物园">
+                  <h4 class="mp-title">动物园 <span class="mp-mono atlas-line">L4</span></h4>
+                  <p class="atlas-gate">乐善园 · 万牲园</p>
+                  <p class="atlas-note">以北京动物园命名。园址原为清代的乐善园与万牲园，1906 年对外开放。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 4 号线</p>
+                </article>
+                <article class="atlas-card" data-name="新街口">
+                  <h4 class="mp-title">新街口 <span class="mp-mono atlas-line">L4</span></h4>
+                  <p class="atlas-gate">西直门内大街</p>
+                  <p class="atlas-note">得名于旧时此处新开的街口。是西直门内大街的一处商业节点。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 4 号线</p>
+                </article>
+                <article class="atlas-card" data-name="平安里">
+                  <h4 class="mp-title">平安里 <span class="mp-mono atlas-line">L4</span></h4>
+                  <p class="atlas-gate">取「平安」之意</p>
+                  <p class="atlas-note">因旧时的平安里这一地名得名，取「平安」之意。与 6 号线在此交汇。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 4 / 6 / 19 号线</p>
+                </article>
+                <article class="atlas-card" data-name="西四">
+                  <h4 class="mp-title">西四 <span class="mp-mono atlas-line">L4</span></h4>
+                  <p class="atlas-gate">明代西四牌楼</p>
+                  <p class="atlas-note">因明代的西四牌楼得名，牌楼原立于西四路口。今为西四街区与地质博物馆一带。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 4 号线</p>
+                </article>
+                <article class="atlas-card" data-name="灵境胡同">
+                  <h4 class="mp-title">灵境胡同 <span class="mp-mono atlas-line">L4</span></h4>
+                  <p class="atlas-gate">灵济宫谐音 · 最宽胡同</p>
+                  <p class="atlas-note">是北京最宽的胡同之一，明代称灵济宫，后谐音为灵境。胡同肌理今仍保存。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 4 号线</p>
+                </article>
+                <article class="atlas-card" data-name="菜市口">
+                  <h4 class="mp-title">菜市口 <span class="mp-mono atlas-line">L4</span></h4>
+                  <p class="atlas-gate">明清刑场 · 戊戌六君子</p>
+                  <p class="atlas-note">明清两代京师的行刑之地，清代戊戌六君子即在此就义。今站旁是菜市口大街与旧时会馆。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 4 / 7 号线</p>
+                </article>
+                <article class="atlas-card" data-name="陶然亭">
+                  <h4 class="mp-title">陶然亭 <span class="mp-mono atlas-line">L4</span></h4>
+                  <p class="atlas-gate">康熙年间名亭</p>
+                  <p class="atlas-note">以陶然亭公园命名。园内的陶然亭建于清康熙年间，是宣南士人游宴之地。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 4 号线</p>
+                </article>
+                <article class="atlas-card" data-name="北京南站">
+                  <h4 class="mp-title">北京南站 <span class="mp-mono atlas-line">L4</span></h4>
+                  <p class="atlas-gate">京沪高铁起点 · 南大门</p>
+                  <p class="atlas-note">以北京南站命名。这里是京沪高铁与京津城际的起点，也是北京的南大门。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 4 / 14 号线</p>
+                </article>
+                <article class="atlas-card" data-name="马家堡">
+                  <h4 class="mp-title">马家堡 <span class="mp-mono atlas-line">L4</span></h4>
+                  <p class="atlas-gate">清末京奉铁路车站</p>
+                  <p class="atlas-note">得名于马家堡村，清末京奉铁路曾在此设马家堡站。是中国最早的火车站之一。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 4 号线</p>
+                </article>
+                <article class="atlas-card" data-name="角门西">
+                  <h4 class="mp-title">角门西 <span class="mp-mono atlas-line">L4</span></h4>
+                  <p class="atlas-gate">南苑角门之西</p>
+                  <p class="atlas-note">得名于旧时南苑的角门。这一带是明清南苑苑囿的西侧门户。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 4 / 10 号线</p>
+                </article>
+                <article class="atlas-card" data-name="公益西桥">
+                  <h4 class="mp-title">公益西桥 <span class="mp-mono atlas-line">L4</span></h4>
+                  <p class="atlas-gate">南端终点 · 丰台</p>
+                  <p class="atlas-note">4 号线的南端终点，位于丰台区。桥名取自附近的公益西桥这一地名。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 4 号线</p>
+                </article>
+              </div>
+            </div>
+
+            <div class="ls-group" data-line="5">
+              <h3 class="ls-head"><span class="legend-swatch" style="background:var(--mp-line-5)"></span>5 号线<span class="ls-count mp-mono">沿线 20 站 · 换乘 3 站见环线</span></h3>
+              <div class="atlas-grid">
+                <article class="atlas-card" data-name="天通苑北">
+                  <h4 class="mp-title">天通苑北 <span class="mp-mono atlas-line">L5</span></h4>
+                  <p class="atlas-gate">北端起点 · 昌平</p>
+                  <p class="atlas-note">5 号线的北端起点，位于昌平区。天通苑是北京最早兴建的大型居住区之一。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 5 号线</p>
+                </article>
+                <article class="atlas-card" data-name="天通苑">
+                  <h4 class="mp-title">天通苑 <span class="mp-mono atlas-line">L5</span></h4>
+                  <p class="atlas-gate">最早的大型居住区</p>
+                  <p class="atlas-note">因天通苑居住区得名。这一带原为立水桥以北的农田，1990 年代后建起大型社区。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 5 号线</p>
+                </article>
+                <article class="atlas-card" data-name="天通苑南">
+                  <h4 class="mp-title">天通苑南 <span class="mp-mono atlas-line">L5</span></h4>
+                  <p class="atlas-gate">社区南侧 · 通勤</p>
+                  <p class="atlas-note">位于天通苑居住区南侧。承担北部社区前往城区的通勤客流。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 5 号线</p>
+                </article>
+                <article class="atlas-card" data-name="立水桥">
+                  <h4 class="mp-title">立水桥 <span class="mp-mono atlas-line">L5</span></h4>
+                  <p class="atlas-gate">跨清河 · 13 号线</p>
+                  <p class="atlas-note">得名于跨清河的立水桥。是 5 号线与 13 号线的换乘节点。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 5 / 13 号线</p>
+                </article>
+                <article class="atlas-card" data-name="立水桥南">
+                  <h4 class="mp-title">立水桥南 <span class="mp-mono atlas-line">L5</span></h4>
+                  <p class="atlas-gate">立水桥以南 · 北苑</p>
+                  <p class="atlas-note">位于立水桥以南。周边是北苑一带的居住与商业区。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 5 号线</p>
+                </article>
+                <article class="atlas-card" data-name="北苑路北">
+                  <h4 class="mp-title">北苑路北 <span class="mp-mono atlas-line">L5</span></h4>
+                  <p class="atlas-gate">皇家苑囿「北苑」旧址</p>
+                  <p class="atlas-note">得名于北苑路。这一带靠近元明清皇家苑囿「北苑」的旧址。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 5 号线</p>
+                </article>
+                <article class="atlas-card" data-name="大屯路东">
+                  <h4 class="mp-title">大屯路东 <span class="mp-mono atlas-line">L5</span></h4>
+                  <p class="atlas-gate">屯兵屯田 · 亚运村</p>
+                  <p class="atlas-note">得名于大屯路。大屯是明清时屯兵屯田之地，今为亚运村与奥林匹克公园一带。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 5 / 15 号线</p>
+                </article>
+                <article class="atlas-card" data-name="惠新西街北口">
+                  <h4 class="mp-title">惠新西街北口 <span class="mp-mono atlas-line">L5</span></h4>
+                  <p class="atlas-gate">惠新里 · 高校一带</p>
+                  <p class="atlas-note">得名于惠新西街北口。周边是惠新里一带的高校与居民区。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 5 号线</p>
+                </article>
+                <article class="atlas-card" data-name="惠新西街南口">
+                  <h4 class="mp-title">惠新西街南口 <span class="mp-mono atlas-line">L5</span></h4>
+                  <p class="atlas-gate">北三环节点</p>
+                  <p class="atlas-note">位于惠新西街南口，与 10 号线在此交汇。是北三环沿线的重要节点。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 5 / 10 号线</p>
+                </article>
+                <article class="atlas-card" data-name="和平西桥">
+                  <h4 class="mp-title">和平西桥 <span class="mp-mono atlas-line">L5</span></h4>
+                  <p class="atlas-gate">和平街 · 中日友好医院</p>
+                  <p class="atlas-note">得名于跨北三环的和平西桥。站旁是和平街与中日友好医院一带。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 5 号线</p>
+                </article>
+                <article class="atlas-card" data-name="和平里北街">
+                  <h4 class="mp-title">和平里北街 <span class="mp-mono atlas-line">L5</span></h4>
+                  <p class="atlas-gate">1950 年代住宅区</p>
+                  <p class="atlas-note">得名于和平里北街。和平里是 1950 年代兴建的大型住宅区之一。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 5 号线</p>
+                </article>
+                <article class="atlas-card" data-name="北新桥">
+                  <h4 class="mp-title">北新桥 <span class="mp-mono atlas-line">L5</span></h4>
+                  <p class="atlas-gate">元代石桥 · 锁龙井</p>
+                  <p class="atlas-note">得名于元代所建的北新桥。传说桥下有锁龙井，是北京最著名的地名传说之一。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 5 号线 / 首都机场线</p>
+                </article>
+                <article class="atlas-card" data-name="张自忠路">
+                  <h4 class="mp-title">张自忠路 <span class="mp-mono atlas-line">L5</span></h4>
+                  <p class="atlas-gate">铁狮子胡同</p>
+                  <p class="atlas-note">以抗日将领张自忠命名，此路原称铁狮子胡同。段祺瑞执政府旧址即在路口。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 5 号线</p>
+                </article>
+                <article class="atlas-card" data-name="东四">
+                  <h4 class="mp-title">东四 <span class="mp-mono atlas-line">L5</span></h4>
+                  <p class="atlas-gate">明代东四牌楼</p>
+                  <p class="atlas-note">因明代的东四牌楼得名。东四一线是元大都以来的老城街区，胡同肌理完整。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 5 / 6 号线</p>
+                </article>
+                <article class="atlas-card" data-name="灯市口">
+                  <h4 class="mp-title">灯市口 <span class="mp-mono atlas-line">L5</span></h4>
+                  <p class="atlas-gate">明代正月灯市</p>
+                  <p class="atlas-note">因明代此处正月设灯市而得名。灯市口大街至今仍是老城东部的街道。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 5 号线</p>
+                </article>
+                <article class="atlas-card" data-name="磁器口">
+                  <h4 class="mp-title">磁器口 <span class="mp-mono atlas-line">L5</span></h4>
+                  <p class="atlas-gate">旧时瓷器市集</p>
+                  <p class="atlas-note">得名于此处旧时的瓷器市集。明清时崇文门外一线是手工业与商贸聚集地。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 5 / 7 号线</p>
+                </article>
+                <article class="atlas-card" data-name="天坛东门">
+                  <h4 class="mp-title">天坛东门 <span class="mp-mono atlas-line">L5</span></h4>
+                  <p class="atlas-gate">天坛东门 · 祭天之所</p>
+                  <p class="atlas-note">出站即达天坛公园东门。天坛建于明永乐年间，是明清两代帝王祭天的场所。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 5 号线</p>
+                </article>
+                <article class="atlas-card" data-name="蒲黄榆">
+                  <h4 class="mp-title">蒲黄榆 <span class="mp-mono atlas-line">L5</span></h4>
+                  <p class="atlas-gate">蒲黄与榆树 · 南城节点</p>
+                  <p class="atlas-note">得名于蒲黄榆这一地名，旧时此地多蒲黄与榆树。是南城的一处交通节点。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 5 / 14 号线</p>
+                </article>
+                <article class="atlas-card" data-name="刘家窑">
+                  <h4 class="mp-title">刘家窑 <span class="mp-mono atlas-line">L5</span></h4>
+                  <p class="atlas-gate">旧时窑业与农田</p>
+                  <p class="atlas-note">得名于旧时的刘家窑村。这一带曾是南郊的窑业与农田。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 仅 5 号线</p>
+                </article>
+                <article class="atlas-card" data-name="宋家庄">
+                  <h4 class="mp-title">宋家庄 <span class="mp-mono atlas-line">L5</span></h4>
+                  <p class="atlas-gate">南端终点 · 三线交汇</p>
+                  <p class="atlas-note">5 号线的南端终点，与 10 号线、亦庄线交汇。是北京东南部的重要换乘枢纽。</p>
+                  <p class="atlas-transfer mp-mono">换乘 · 5 / 10 号线 / 亦庄线</p>
+                </article>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="notes-section">
+          <p class="mp-eyebrow">说明</p>
+          <p class="notes-text">线路走向为示意地铁图网格坐标，非地理坐标。四条线的站点顺序与站名取自北京地铁 1 / 2 / 4 / 5 号线的官方线路资料，线路识别色使用北京地铁官方线路色，仅作数据语义色，不参与界面强调。车站来历与人文注为公开城市史料综述。</p>
+          <p class="mp-mono notes-sig">地铁拼图师 · 北京环城记 — 四线全图版 · 单页作品</p>
+        </section>
+
+      </div>
+
+      <script>
+        (function () {
+          var CORNERS = ['西直门', '东直门', '建国门', '复兴门'];
+
+          function q(sel, root) { try { return (root || document).querySelector(sel); } catch (e) { return null; } }
+          function qa(sel, root) { try { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); } catch (e) { return []; } }
+          function byName(list, name) {
+            for (var i = 0; i < list.length; i += 1) {
+              if (list[i].getAttribute('data-name') === name) { return list[i]; }
+            }
+            return null;
+          }
+
+          var progressEl = q('#puzzle-progress');
+          var winEl = q('#puzzle-win');
+          var ringLine = q('#ring-line');
+          var hintBtn = q('#puzzle-hint');
+          var hintCountEl = q('#hint-count');
+          var restartBtn = q('#puzzle-restart');
+          var tray = q('#station-tray');
+          var fullmap = q('#fullmap-svg');
+          var tiles = qa('.tile');
+          var stations = qa('#ring-svg .station');
+          var cards = qa('.atlas-card');
+          var riddles = qa('.riddle');
+          var legendItems = qa('#line-legend .legend-item');
+
+          var cardIndex = {};
+          var ci;
+          for (ci = 0; ci < cards.length; ci += 1) {
+            var cardName = cards[ci].getAttribute('data-name');
+            if (cardName) { cardIndex[cardName] = cards[ci]; }
+          }
+
+          var focusTimer = null;
+          function focusCard(name) {
+            var card = cardIndex[name];
+            if (!card) { return; }
+            var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (card.scrollIntoView) {
+              card.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+            }
+            for (var c = 0; c < cards.length; c += 1) { cards[c].classList.remove('is-focus'); }
+            card.classList.add('is-focus');
+            if (focusTimer) { window.clearTimeout(focusTimer); }
+            focusTimer = window.setTimeout(function () { card.classList.remove('is-focus'); }, 2400);
+          }
+
+          var mapStations = qa('#fullmap-svg .fm-station');
+          var mi;
+          for (mi = 0; mi < mapStations.length; mi += 1) {
+            (function (st) {
+              var label = st.querySelector('.fm-label');
+              var name = label ? label.textContent.replace(/^\s+|\s+$/g, '') : '';
+              if (!name) { return; }
+              st.setAttribute('data-name', name);
+              st.setAttribute('role', 'button');
+              st.setAttribute('tabindex', '0');
+              st.setAttribute('aria-label', name + '，查看站点档案');
+              st.addEventListener('click', function () { focusCard(name); });
+              st.addEventListener('keydown', function (e) {
+                var key = e.key || e.keyCode;
+                if (key === 'Enter' || key === 13 || key === ' ' || key === 'Spacebar' || key === 32) {
+                  e.preventDefault();
+                  focusCard(name);
+                }
+              });
+            }(mapStations[mi]));
+          }
+
+          var total = stations.length;
+          var placed = 0;
+          var selected = null;
+          var hintLeft = 2;
+
+          function setProgress() {
+            if (progressEl) { progressEl.textContent = '已拼合 ' + placed + ' / ' + total; }
+          }
+
+          function clearSelection() {
+            for (var i = 0; i < tiles.length; i += 1) { tiles[i].classList.remove('is-selected'); }
+            selected = null;
+          }
+
+          function place(name) {
+            var st = byName(stations, name);
+            var tile = byName(tiles, name);
+            var card = byName(cards, name);
+            if (st) { st.classList.add('is-placed'); st.classList.remove('is-hinted'); }
+            if (tile) {
+              tile.classList.add('is-used');
+              tile.classList.remove('is-selected', 'is-hinted');
+              tile.disabled = true;
+            }
+            if (card) { card.classList.add('is-placed'); }
+            placed += 1;
+            setProgress();
+            if (placed >= total) {
+              if (ringLine) { ringLine.classList.add('is-complete'); }
+              if (winEl) { winEl.hidden = false; }
+            }
+          }
+
+          var ti;
+          for (ti = 0; ti < tiles.length; ti += 1) {
+            (function (tile) {
+              tile.addEventListener('click', function () {
+                if (tile.classList.contains('is-used')) { return; }
+                clearSelection();
+                tile.classList.add('is-selected');
+                selected = tile.getAttribute('data-name');
+              });
+            }(tiles[ti]));
+          }
+
+          var si;
+          for (si = 0; si < stations.length; si += 1) {
+            (function (st) {
+              st.addEventListener('click', function () {
+                if (st.classList.contains('is-placed')) { return; }
+                if (!selected) { return; }
+                var name = st.getAttribute('data-name');
+                if (name === selected) {
+                  place(name);
+                } else {
+                  st.classList.add('is-wrong');
+                  window.setTimeout(function () { st.classList.remove('is-wrong'); }, 400);
+                }
+                clearSelection();
+              });
+            }(stations[si]));
+          }
+
+          if (hintBtn) {
+            hintBtn.addEventListener('click', function () {
+              if (hintLeft <= 0) { return; }
+              var target = null;
+              for (var i = 0; i < stations.length; i += 1) {
+                if (!stations[i].classList.contains('is-placed')) { target = stations[i]; break; }
+              }
+              if (!target) { return; }
+              var name = target.getAttribute('data-name');
+              var tile = byName(tiles, name);
+              target.classList.add('is-hinted');
+              if (tile) { tile.classList.add('is-hinted'); }
+              hintLeft -= 1;
+              if (hintCountEl) { hintCountEl.textContent = String(hintLeft); }
+              if (hintLeft <= 0) { hintBtn.disabled = true; }
+              window.setTimeout(function () {
+                target.classList.remove('is-hinted');
+                if (tile) { tile.classList.remove('is-hinted'); }
+              }, 1200);
+            });
+          }
+
+          if (restartBtn) {
+            restartBtn.addEventListener('click', function () {
+              placed = 0;
+              setProgress();
+              clearSelection();
+              for (var i = 0; i < stations.length; i += 1) {
+                stations[i].classList.remove('is-placed', 'is-wrong', 'is-hinted');
+              }
+              var j;
+              for (j = 0; j < tiles.length; j += 1) {
+                tiles[j].classList.remove('is-used', 'is-selected', 'is-hinted');
+                tiles[j].disabled = false;
+              }
+              for (j = 0; j < cards.length; j += 1) { cards[j].classList.remove('is-placed'); }
+              if (ringLine) { ringLine.classList.remove('is-complete'); }
+              if (winEl) { winEl.hidden = true; }
+              hintLeft = 2;
+              if (hintCountEl) { hintCountEl.textContent = '2'; }
+              if (hintBtn) { hintBtn.disabled = false; }
+              if (tray) {
+                var arr = tiles.slice();
+                for (var m = arr.length - 1; m > 0; m -= 1) {
+                  var n = Math.floor(Math.random() * (m + 1));
+                  var tmp = arr[m]; arr[m] = arr[n]; arr[n] = tmp;
+                }
+                for (var p = 0; p < arr.length; p += 1) { tray.appendChild(arr[p]); }
+              }
+            });
+          }
+
+          function updateVerdict() {
+            var solved = 0;
+            for (var i = 0; i < riddles.length; i += 1) {
+              if (riddles[i].classList.contains('is-solved')) { solved += 1; }
+            }
+            var verdict = q('#riddle-verdict');
+            var reveal = q('#ring-reveal');
+            if (!verdict) { return; }
+            if (solved >= riddles.length && riddles.length > 0) {
+              verdict.hidden = false;
+              verdict.textContent = '四道谜面全部答对。四个城角归位，环线的骨相在此显现。';
+              if (reveal) { reveal.hidden = false; }
+              for (var c = 0; c < CORNERS.length; c += 1) {
+                var st = byName(stations, CORNERS[c]);
+                if (st) { st.classList.add('is-corner'); }
+              }
+            } else if (solved >= 1) {
+              verdict.hidden = false;
+              verdict.textContent = '已答对 ' + solved + ' / ' + riddles.length + ' 道谜面。';
+            }
+          }
+
+          function checkRiddle(li) {
+            if (!li || li.classList.contains('is-solved')) { return; }
+            var input = li.querySelector('.riddle-input');
+            var state = li.querySelector('.riddle-state');
+            if (!input || !state) { return; }
+            var raw = (input.value || '').replace(/^\s+|\s+$/g, '');
+            var answer = li.getAttribute('data-answer') || '';
+            if (raw !== '' && raw === answer) {
+              li.classList.add('is-solved');
+              state.textContent = '已答对';
+              state.setAttribute('data-state', 'correct');
+              input.disabled = true;
+              var btn = li.querySelector('.riddle-submit');
+              if (btn) { btn.disabled = true; }
+            } else {
+              state.textContent = '再想想';
+              state.setAttribute('data-state', 'wrong');
+              li.classList.add('is-miss');
+              window.setTimeout(function () { li.classList.remove('is-miss'); }, 400);
+            }
+            updateVerdict();
+          }
+
+          var submits = qa('.riddle-submit');
+          var ri;
+          for (ri = 0; ri < submits.length; ri += 1) {
+            (function (btn) {
+              btn.addEventListener('click', function () {
+                var li = btn.closest ? btn.closest('.riddle') : null;
+                checkRiddle(li);
+              });
+            }(submits[ri]));
+          }
+
+          var inputs = qa('.riddle-input');
+          var ii;
+          for (ii = 0; ii < inputs.length; ii += 1) {
+            (function (input) {
+              input.addEventListener('keydown', function (e) {
+                var key = e.key || e.keyCode;
+                if (key === 'Enter' || key === 13) {
+                  e.preventDefault();
+                  var li = input.closest ? input.closest('.riddle') : null;
+                  checkRiddle(li);
+                }
+              });
+            }(inputs[ii]));
+          }
+
+          for (var li = 0; li < legendItems.length; li += 1) {
+            (function (item) {
+              item.addEventListener('click', function () {
+                var pressed = item.getAttribute('aria-pressed') === 'true';
+                for (var k = 0; k < legendItems.length; k += 1) {
+                  legendItems[k].setAttribute('aria-pressed', 'false');
+                }
+                if (pressed) {
+                  if (fullmap) { fullmap.removeAttribute('data-focus'); }
+                } else {
+                  item.setAttribute('aria-pressed', 'true');
+                  if (fullmap) { fullmap.setAttribute('data-focus', item.getAttribute('data-line')); }
+                }
+              });
+            }(legendItems[li]));
+          }
+
+          setProgress();
+        }());
+      </script>
+    </main>
+    <style id="page-critical-layout">
+.mp-shell{max-width:1280px;margin:0 auto;padding:0 24px 96px;display:grid;gap:64px}
+#hero{padding-top:72px;display:grid;gap:12px}
+#hero .mp-lede{max-width:52ch;color:var(--mp-foreground)}
+#hero .mp-meta{color:var(--mp-muted-foreground);font-size:var(--mp-text-caption)}
+#site-nav{border-top:var(--mp-hairline);border-bottom:var(--mp-hairline);padding:12px 0;display:flex;gap:24px;flex-wrap:wrap}
+#site-nav a{color:var(--mp-foreground);text-decoration:none;border-bottom:1px solid transparent}
+#site-nav a:hover,#site-nav a:focus-visible{border-bottom-color:var(--mp-primary);color:var(--mp-primary)}
+section{display:grid;gap:16px;border-top:var(--mp-hairline);padding-top:32px}
+h1{font-size:var(--mp-text-display)}h2{font-size:var(--mp-text-h2)}.mp-note{color:var(--mp-muted-foreground);max-width:60ch}
+#puzzle-board{overflow-x:auto;--mp-label-size:15px;border:1px solid var(--mp-border);background:var(--mp-card);padding:16px;border-radius:var(--mp-radius-md)}
+#ring-svg{display:block;width:100%;height:auto;max-width:1180px;margin:0 auto}
+#ring-line{opacity:.16;transition:opacity .4s ease}
+#ring-line.is-complete{opacity:1}
+.station{cursor:pointer}
+.station-label{font-size:var(--mp-label-size);fill:var(--mp-foreground);display:none}
+.station.is-placed .station-label{display:block}
+.station.is-placed circle{fill:var(--mp-line-2)}
+.station.is-corner circle{stroke:var(--mp-primary);stroke-width:5}
+.station.is-wrong{animation:mp-shake .3s ease}
+@keyframes mp-shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+#station-tray{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.tile{min-height:44px;background:var(--mp-card);border:1px solid var(--mp-border);border-radius:var(--mp-radius-md);color:var(--mp-foreground);font:inherit;cursor:pointer}
+.tile.is-selected{border-color:var(--mp-primary);color:var(--mp-primary)}
+.tile:disabled{opacity:.34;cursor:default}
+.mp-controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.mp-controls button{min-height:40px;padding:8px 16px;background:transparent;border:1px solid var(--mp-foreground);border-radius:var(--mp-radius-md);color:var(--mp-foreground);font:inherit;cursor:pointer}
+.mp-controls button:hover{border-color:var(--mp-primary);color:var(--mp-primary)}
+.mp-win{border-left:var(--mp-rule-strong);padding-left:16px}
+#line-legend{display:flex;gap:8px;flex-wrap:wrap}
+.legend-item{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:6px 12px;background:var(--mp-card);border:1px solid var(--mp-border);border-radius:var(--mp-radius-md);color:var(--mp-foreground);font:inherit;cursor:pointer}
+.legend-item[aria-pressed="true"]{border-color:var(--mp-primary)}
+.legend-swatch{width:14px;height:14px;border-radius:2px;display:inline-block}
+.legend-count{color:var(--mp-muted-foreground);font-size:var(--mp-text-caption)}
+.mp-map-frame{overflow-x:auto}
+#fullmap-svg{display:block;width:100%;height:auto;max-width:940px;margin:0 auto;--mp-map-line-width:7;--mp-station-r:9;--mp-transfer-r:13;--mp-label-size:12px}
+.fm-label{font-size:var(--mp-label-size);fill:var(--mp-foreground);font-family:var(--mp-font-sans)}
+#fullmap-svg[data-focus] .fm-line,#fullmap-svg[data-focus] .fm-station,#fullmap-svg[data-focus] .fm-label{opacity:.14}
+#fullmap-svg[data-focus="1"] .fm-line[data-line="1"],#fullmap-svg[data-focus="1"] .fm-station[data-lines~="1"],#fullmap-svg[data-focus="1"] .fm-label[data-lines~="1"]{opacity:1}
+#fullmap-svg[data-focus="2"] .fm-line[data-line="2"],#fullmap-svg[data-focus="2"] .fm-station[data-lines~="2"],#fullmap-svg[data-focus="2"] .fm-label[data-lines~="2"]{opacity:1}
+#fullmap-svg[data-focus="4"] .fm-line[data-line="4"],#fullmap-svg[data-focus="4"] .fm-station[data-lines~="4"],#fullmap-svg[data-focus="4"] .fm-label[data-lines~="4"]{opacity:1}
+#fullmap-svg[data-focus="5"] .fm-line[data-line="5"],#fullmap-svg[data-focus="5"] .fm-station[data-lines~="5"],#fullmap-svg[data-focus="5"] .fm-label[data-lines~="5"]{opacity:1}
+.fm-line,.fm-station,.fm-label{transition:opacity .3s ease}
+.legend-item[aria-pressed="true"] .legend-name{color:var(--mp-primary)}
+.station.is-hinted circle{stroke:var(--mp-primary);stroke-width:5}
+.tile.is-hinted{border-color:var(--mp-primary);border-style:dashed}
+#riddle-list{list-style:none;margin:0;padding:0;display:grid}
+.riddle{border-top:var(--mp-hairline);padding:16px 0;display:grid;grid-template-columns:56px 1fr;gap:8px 16px;align-items:start}
+.riddle-index{color:var(--mp-muted-foreground);font-size:var(--mp-text-caption);padding-top:2px}
+.riddle-text{margin:0;max-width:64ch}
+.riddle-row{grid-column:2;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.riddle-input{min-height:40px;min-width:200px;padding:8px 12px;background:var(--mp-card);border:1px solid var(--mp-border);border-radius:var(--mp-radius-md);color:var(--mp-foreground);font:inherit}
+.riddle-input:focus-visible{outline:2px solid var(--mp-primary);outline-offset:1px}
+.riddle-input:disabled{opacity:.6}
+.riddle-submit{min-height:40px;padding:8px 16px;background:transparent;border:1px solid var(--mp-foreground);border-radius:var(--mp-radius-md);color:var(--mp-foreground);font:inherit;cursor:pointer}
+.riddle-submit:hover{border-color:var(--mp-primary);color:var(--mp-primary)}
+.riddle-submit:disabled{opacity:.4;cursor:default}
+.riddle-state{margin:0;font-size:var(--mp-text-caption);color:var(--mp-muted-foreground)}
+.riddle-state[data-state="correct"]{color:var(--mp-primary)}
+.riddle.is-miss{animation:mp-shake .3s ease}
+.riddle.is-solved .riddle-text{color:var(--mp-muted-foreground)}
+.reveal-block{display:grid;gap:8px}
+#riddle-verdict,#ring-reveal{margin:0;border-left:var(--mp-rule-strong);padding-left:16px;max-width:64ch}
+#atlas-list{display:grid;gap:40px}
+.atlas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:24px 40px}
+.atlas-card{border-top:var(--mp-hairline);padding-top:16px;display:grid;gap:6px;align-content:start;scroll-margin-top:24px}
+.atlas-card h4{margin:0;font-size:var(--mp-text-h3);font-weight:600;display:flex;align-items:baseline;gap:8px}
+.atlas-line{font-size:var(--mp-text-caption);color:var(--mp-primary)}
+.atlas-gate{margin:0;font-size:var(--mp-text-caption);color:var(--mp-muted-foreground)}
+.atlas-note{margin:0}
+.atlas-transfer{margin:0;font-size:var(--mp-text-caption);color:var(--mp-muted-foreground)}
+.atlas-card.is-placed h4{color:var(--mp-primary)}
+.atlas-card.is-focus{border-top-color:var(--mp-primary)}
+.atlas-card.is-focus h4{color:var(--mp-primary)}
+#fullmap-svg .fm-station{cursor:pointer}
+#fullmap-svg .fm-station:hover .fm-label,#fullmap-svg .fm-station:focus-visible .fm-label{fill:var(--mp-primary)}
+#fullmap-svg .fm-station:focus-visible{outline:none}
+.ls-group{display:grid;gap:12px}
+.ls-head{margin:0;display:flex;align-items:center;gap:10px;font-family:var(--mp-font-serif);font-size:var(--mp-text-h3);font-weight:600}
+.ls-head .legend-swatch{width:18px;height:6px;border-radius:1px}
+.ls-count{margin-left:auto;font-size:var(--mp-text-caption);font-weight:400;color:var(--mp-muted-foreground)}
+#notes-section{display:grid;gap:12px}
+.notes-text{margin:0;max-width:72ch;color:var(--mp-muted-foreground)}
+.notes-sig{margin:0;font-size:var(--mp-text-caption);color:var(--mp-muted-foreground)}
+@media (prefers-reduced-motion: no-preference){html{scroll-behavior:smooth}}
+@media (max-width:760px){.mp-shell{padding:0 16px 64px;gap:48px}}
+@media (prefers-reduced-motion:reduce){.station.is-wrong{animation:none}}
+    </style>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地铁拼图师 · 北京环城记</title>
+    <style id="theme-vars">
+/* ============================================================
+   《地铁拼图师 · 北京环城记》设计令牌
+   方向：印刷品 / 编辑排版风 —— 纸白底、墨黑字、单一赭橙强调色、
+        发丝分隔线、极小圆角、中文衬线标题 + 无衬线正文。
+   单一品牌色原则：全站仅 --mp-primary 一个强调色。
+   ============================================================ */
+
+:root {
+  /* —— 语义颜色（脚本解析必需）—— */
+  --mp-background: #f4f1e8;
+  --mp-foreground: #1b1915;
+  --mp-card: #fbf9f3;
+  --mp-card-foreground: #1b1915;
+  --mp-popover: #fffdf8;
+  --mp-popover-foreground: #1b1915;
+  --mp-primary: #a63a2a;
+  --mp-primary-foreground: #fdfaf5;
+  --mp-muted: #e9e4d7;
+  --mp-muted-foreground: #6b6455;
+  --mp-border: #d6cfbe;
+  --mp-input: #d6cfbe;
+  --mp-ring: #a63a2a;
+
+  /* —— 圆角阶梯（脚本解析必需）—— */
+  --mp-radius-sm: 2px;
+  --mp-radius-md: 4px;
+  --mp-radius-lg: 8px;
+
+  /* —— 字体 —— */
+  --mp-font-serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "SimSun", serif;
+  --mp-font-sans: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --mp-font-mono: "SFMono-Regular", "JetBrains Mono", "Menlo", "Consolas", monospace;
+
+  /* —— 版式阶梯 —— */
+  --mp-text-display: clamp(34px, 4.6vw, 58px);
+  --mp-text-h1: clamp(26px, 3.2vw, 40px);
+  --mp-text-h2: clamp(20px, 2.2vw, 27px);
+  --mp-text-h3: 18px;
+  --mp-text-body: 15px;
+  --mp-text-caption: 13px;
+
+  /* —— 8pt 间距 —— */
+  --mp-s1: 4px;
+  --mp-s2: 8px;
+  --mp-s3: 12px;
+  --mp-s4: 16px;
+  --mp-s5: 24px;
+  --mp-s6: 32px;
+  --mp-s7: 48px;
+  --mp-s8: 80px;
+
+  /* —— 分隔与阴影（静态面仅发丝线与极浅阴影）—— */
+  --mp-hairline: 1px solid var(--mp-border);
+  --mp-rule-strong: 2px solid var(--mp-foreground);
+  --mp-shadow-1: 0 1px 2px rgba(27, 25, 21, 0.05);
+  --mp-shadow-2: 0 10px 28px -12px rgba(27, 25, 21, 0.22);
+
+  /* —— 地铁线路识别色（数据身份色，低饱和以贴合纸面）—— */
+  --mp-line-1: #b6483a;
+  --mp-line-2: #2f6b8f;
+  --mp-line-4: #2f7d78;
+  --mp-line-5: #8d3f6b;
+}
+
+body {
+  font-family: var(--mp-font-sans);
+  font-size: var(--mp-text-body);
+  line-height: 1.65;
+  color: var(--mp-foreground);
+  background-color: var(--mp-background);
+  -webkit-font-smoothing: antialiased;
+}
+
+.mp-serif {
+  font-family: var(--mp-font-serif);
+}
+
+.mp-mono {
+  font-family: var(--mp-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.mp-num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 标题：中文衬线、短名词短语、断行保护 */
+.mp-title {
+  font-family: var(--mp-font-serif);
+  line-height: 1.22;
+  letter-spacing: 0.01em;
+  text-wrap: balance;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.mp-hair {
+  border-top: var(--mp-hairline);
+}
+
+.mp-rule-strong {
+  border-top: var(--mp-rule-strong);
+}
+
+.mp-eyebrow {
+  font-family: var(--mp-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mp-muted-foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--mp-background);
+    --color-foreground: var(--mp-foreground);
+    --color-card: var(--mp-card);
+    --color-card-foreground: var(--mp-card-foreground);
+    --color-popover: var(--mp-popover);
+    --color-popover-foreground: var(--mp-popover-foreground);
+    --color-primary: var(--mp-primary);
+    --color-primary-foreground: var(--mp-primary-foreground);
+    --color-muted: var(--mp-muted);
+    --color-muted-foreground: var(--mp-muted-foreground);
+    --color-border: var(--mp-border);
+    --color-input: var(--mp-input);
+    --color-ring: var(--mp-ring);
+    --radius-sm: var(--mp-radius-sm);
+    --radius-md: var(--mp-radius-md);
+    --radius-lg: var(--mp-radius-lg);
+  }
+  @layer base {
+    body { background: var(--mp-background); color: var(--mp-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--mp-background); }
+      .text-background { color: var(--mp-background); }
+      .border-background { border-color: var(--mp-background); }
+      .ring-background { --tw-ring-color: var(--mp-background); }
+      .bg-foreground { background-color: var(--mp-foreground); }
+      .text-foreground { color: var(--mp-foreground); }
+      .border-foreground { border-color: var(--mp-foreground); }
+      .ring-foreground { --tw-ring-color: var(--mp-foreground); }
+      .bg-card { background-color: var(--mp-card); }
+      .text-card { color: var(--mp-card); }
+      .border-card { border-color: var(--mp-card); }
+      .ring-card { --tw-ring-color: var(--mp-card); }
+      .bg-card-foreground { background-color: var(--mp-card-foreground); }
+      .text-card-foreground { color: var(--mp-card-foreground); }
+      .border-card-foreground { border-color: var(--mp-card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--mp-card-foreground); }
+      .bg-popover { background-color: var(--mp-popover); }
+      .text-popover { color: var(--mp-popover); }
+      .border-popover { border-color: var(--mp-popover); }
+      .ring-popover { --tw-ring-color: var(--mp-popover); }
+      .bg-popover-foreground { background-color: var(--mp-popover-foreground); }
+      .text-popover-foreground { color: var(--mp-popover-foreground); }
+      .border-popover-foreground { border-color: var(--mp-popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--mp-popover-foreground); }
+      .bg-primary { background-color: var(--mp-primary); }
+      .text-primary { color: var(--mp-primary); }
+      .border-primary { border-color: var(--mp-primary); }
+      .ring-primary { --tw-ring-color: var(--mp-primary); }
+      .bg-primary-foreground { background-color: var(--mp-primary-foreground); }
+      .text-primary-foreground { color: var(--mp-primary-foreground); }
+      .border-primary-foreground { border-color: var(--mp-primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--mp-primary-foreground); }
+      .bg-muted { background-color: var(--mp-muted); }
+      .text-muted { color: var(--mp-muted); }
+      .border-muted { border-color: var(--mp-muted); }
+      .ring-muted { --tw-ring-color: var(--mp-muted); }
+      .bg-muted-foreground { background-color: var(--mp-muted-foreground); }
+      .text-muted-foreground { color: var(--mp-muted-foreground); }
+      .border-muted-foreground { border-color: var(--mp-muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--mp-muted-foreground); }
+      .bg-border { background-color: var(--mp-border); }
+      .text-border { color: var(--mp-border); }
+      .border-border { border-color: var(--mp-border); }
+      .ring-border { --tw-ring-color: var(--mp-border); }
+      .bg-input { background-color: var(--mp-input); }
+      .text-input { color: var(--mp-input); }
+      .border-input { border-color: var(--mp-input); }
+      .ring-input { --tw-ring-color: var(--mp-input); }
+      .bg-ring { background-color: var(--mp-ring); }
+      .text-ring { color: var(--mp-ring); }
+      .border-ring { border-color: var(--mp-ring); }
+      .ring-ring { --tw-ring-color: var(--mp-ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <main>
+      <div class="mp-shell">
+
+        <section id="hero">
+          <div class="hero-head">
+            <span class="hero-mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="8.6"></circle><circle cx="12" cy="12" r="3.1"></circle></svg>
+            </span>
+            <p class="mp-eyebrow">线路 02 · 环线 · 内城十八站</p>
+          </div>
+          <h1 class="mp-title hero-title">地铁拼图师</h1>
+          <p class="mp-title hero-sub">北京环城记</p>
+          <p class="hero-lead">沿 2 号线走一圈，把十八座车站拼回它们原本的位置，再借四道旧城谜面，读出这条环线的来处。</p>
+          <div class="hero-meta">
+            <span class="mp-mono">车站 18 · 谜面 4 · 提示 2 次</span>
+            <span class="mp-mono">数据口径：示意网格坐标，非地理坐标</span>
+          </div>
+          <nav id="site-nav">
+            <a href="#puzzle-section">拼图</a>
+            <a href="#riddle-section">谜案</a>
+            <a href="#atlas-section">档案</a>
+            <a href="#notes-section">说明</a>
+          </nav>
+        </section>
+
+        <section id="puzzle-section" class="section">
+          <div class="section-head">
+            <h2 class="mp-title section-title">壹 · 拼回环线</h2>
+            <p class="section-note">点右侧字模，再点图中空站；对则落版，错则退回。</p>
+          </div>
+
+          <div class="puzzle-grid">
+            <div id="puzzle-board">
+              <svg id="metro-svg" viewBox="0 0 720 720" role="img" aria-label="北京地铁 2 号线环形线路示意网格">
+                <polyline id="ring-line" points="60,60 210,60 310,60 410,60 560,60 660,60 660,260 660,360 660,460 660,560 560,660 360,660 260,660 160,660 60,560 60,460 60,260 60,160 60,60" fill="none" stroke="var(--mp-border)" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 10"></polyline>
+                <rect id="ring-rect" x="60" y="60" width="600" height="400" fill="none" stroke="var(--mp-primary)" stroke-width="3" stroke-dasharray="8 6" opacity="0"></rect>
+
+                <g class="station" data-station-id="xizhimen">
+                  <circle class="station-hit" cx="60" cy="60" r="26" fill="transparent"></circle>
+                  <circle class="station-corner-ring" cx="60" cy="60" r="22" fill="none" stroke="var(--mp-primary)" stroke-width="1.5"></circle>
+                  <circle class="station-dot" cx="60" cy="60" r="15" fill="var(--mp-background)" stroke="var(--mp-border)" stroke-width="3"></circle>
+                  <text class="station-label" x="60" y="60" dy="-26" text-anchor="middle" fill="var(--mp-muted-foreground)" font-size="17" font-family="var(--mp-font-serif)"></text>
+                </g>
+                <g class="station" data-station-id="jishuitan">
+                  <circle class="station-hit" cx="210" cy="60" r="26" fill="transparent"></circle>
+                  <circle class="station-dot" cx="210" cy="60" r="15" fill="var(--mp-background)" stroke="var(--mp-border)" stroke-width="3"></circle>
+                  <text class="station-label" x="210" y="60" dy="-26" text-anchor="middle" fill="var(--mp-muted-foreground)" font-size="17" font-family="var(--mp-font-serif)"></text>
+                </g>
+                <g class="station" data-station-id="guloudajie">
+                  <circle class="station-hit" cx="310" cy="60" r="26" fill="transparent"></circle>
+                  <circle class="station-dot" cx="310" cy="60" r="15" fill="var(--mp-background)" stroke="var(--mp-border)" stroke-width="3"></circle>
+                  <text class="station-label" x="310" y="60" dy="-26" text-anchor="middle" fill="var(--mp-muted-foreground)" font-size="17" font-family="var(--mp-font-serif)"></text>
+                </g>
+                <g class="station" data-station-id="andingmen">
+                  <circle class="station-hit" cx="410" cy="60" r="26" fill="transparent"></circle>
+                  <circle class="station-dot" cx="410" cy="60" r="15" fill="var(--mp-background)" stroke="var(--mp-border)" stroke-width="3"></circle>
+                  <text class="station-label" x="410" y="60" dy="-26" text-anchor="middle" fill="var(--mp-muted-foreground)" font-size="17" font-family="var(--mp-font-serif)"></text>
+                </g>
+                <g class="station" data-station-id="yonghegong">
+                  <circle class="station-hit" cx="560" cy="60" r="26" fill="transparent"></circle>
+                  <circle class="station-dot" cx="560" cy="60" r="15" fill="var(--mp-background)" stroke="var(--mp-border)" stroke-width="3"></circle>
+                  <text class="station-label" x="560" y="60" dy="-26" text-anchor="middle" fill="var(--mp-muted-foreground)" font-size="17" font-family="var(--mp-font-serif)"></text>
+                </g>
+                <g class="station" data-station-id="dongzhimen">
+                  <circle class="station-hit" cx="660" cy="60" r="26" fill="transparent"></circle>
+                  <circle class="station-corner-ring" cx="660" cy="60" r="22" fill="none" stroke="var(--mp-primary)" stroke-width="1.5"></circle>
+                  <circle class="station-dot" cx="660" cy="60" r="15" fill="var(--mp-background)" stroke="var(--mp-border)" stroke-width="3"></circle>
+                  <text class="station-label" x="660" y="60" dy="-26" text-anchor="middle" fill="var(--mp-muted-foreground)" font-size="17" font-family="var(--mp-font-serif)"></text>
+                </g>
+                <g class="station" data-station-id="dongssitiao">
+                  <circle class="station-hit" cx="660" cy="260" r="26" fill="transparent"></circle>
+                  <circle class="station-dot" cx="660" cy="260" r="15" fill="var(--mp-background)" stroke="var(--mp-border)" stroke-width="3"></circle>
+                  <text class="station-label" x="660" y="260" dx="24" text-anchor="start" dominant-baseline="middle" fill="var(--mp-muted-foreground)" font-size="17" font-family="var(--mp-font-serif)"></text>
+                </g>
+                <g class="station" data-station-id="chaoyangmen">
+                  <circle class="station-hit" cx="660" cy="360" r="26" fill="transparent"></circle>
+                  <circle class="station-dot" cx="660" cy="360" r="15" fill="var(--mp-background)" stroke="var(--mp-border)" stroke-width="3"></circle>
+                  <text class="station-label" x="660" y="360" dx="24" text-anchor="start" dominant-baseline="middle" fill="var(--mp-muted-foreground)" font-size="17" font-family="var(--mp-font-serif)"></text>
+                </g>
+                <g class="station" data-station-id="jianguomen">
+                  <circle class="station-hit" cx="660" cy="460" r="26" fill="transparent"></circle>
+                  <circle class="station-corner-ring" cx="660" cy="460" r="22" fill="none" stroke="var(--mp-primary)" stroke-width="1.5"></circle>
+                  <circle class="station-dot" cx="660" cy="460" r="15" fill="var(--mp-background)" stroke="var(--mp-border)" stroke-width="3"></circle>
+                  <text class="station-label" x="660" y="460" dx="24" text-anchor="start" dominant-baseline="middle" fill="var(--mp-muted-foreground)" font-size="17" font-family="var(--mp-font-serif)"></text>
+                </g>
+                <g class="station" data-station-id="beijingzhan">
+                  <circle class="station-hit" cx="660" cy="560" r="26" fill="transparent"></circle>
+                  <circle class="station-dot" cx="660" cy="560" r="15" fill="var(--mp-background)" stroke="var(--mp-border)" stroke-width="3"></circle>
+                  <text class="station-label" x="660" y="560" dx="24" text-anchor="start" dominant-baseline="middle" fill="var(--mp-muted-foreground)" font-size="17" font-family="var(--mp-font-serif)"></text>
+                </g>
+                <g class="station" data-station-id="chongwenmen">
+                  <circle class="station-hit" cx="560" cy="660" r="26" fill="transparent"></circle>
+                  <circle class="station-dot" cx="560" cy="660" r="15" fill="var(--mp-background)" stroke="var(--mp-border)" stroke-width="3"></circle>
+                  <text class="station-label" x="560" y="660" dy="44" text-anchor="middle" fill="var(--mp-muted-foreground)" font-size="17" font-family="var(--mp-font-serif)"></text>
+                </g>
+                <g class="station" data-station-id="qianmen">
+                  <circle class="station-hit" cx="360" cy="660" r="26" fill="transparent"></circle>
+                  <circle class="station-dot" cx="360" cy="660" r="15" fill="var(--mp-background)" stroke="var(--mp-border)" stroke-width="3"></circle>
+                  <text class="station-label" x="360" y="660" dy="44" text-anchor="middle" fill="var(--mp-muted-foreground)" font-size="17" font-family="var(--mp-font-serif)"></text>
+                </g>
+                <g class="station" data-station-id="hepingmen">
+                  <circle class="station-hit" cx="260" cy="660" r="26" fill="transparent"></circle>
+                  <circle class="station-dot" cx="260" cy="660" r="15" fill="var(--mp-background)" stroke="var(--mp-border)" stroke-width="3"></circle>
+                  <text class="station-label" x="260" y="660" dy="44" text-anchor="middle" fill="var(--mp-muted-foreground)" font-size="17" font-family="var(--mp-font-serif)"></text>
+                </g>
+                <g class="station" data-station-id="xuanwumen">
+                  <circle class="station-hit" cx="160" cy="660" r="26" fill="transparent"></circle>
+                  <circle class="station-dot" cx="160" cy="660" r="15" fill="var(--mp-background)" stroke="var(--mp-border)" stroke-width="3"></circle>
+                  <text class="station-label" x="160" y="660" dy="44" text-anchor="middle" fill="var(--mp-muted-foreground)" font-size="17" font-family="var(--mp-font-serif)"></text>
+                </g>
+                <g class="station" data-station-id="changchunjie">
+                  <circle class="station-hit" cx="60" cy="560" r="26" fill="transparent"></circle>
+                  <circle class="station-dot" cx="60" cy="560" r="15" fill="var(--mp-background)" stroke="var(--mp-border)" stroke-width="3"></circle>
+                  <text class="station-label" x="60" y="560" dx="-24" text-anchor="end" dominant-baseline="middle" fill="var(--mp-muted-foreground)" font-size="17" font-family="var(--mp-font-serif)"></text>
+                </g>
+                <g class="station" data-station-id="fuxingmen">
+                  <circle class="station-hit" cx="60" cy="460" r="26" fill="transparent"></circle>
+                  <circle class="station-corner-ring" cx="60" cy="460" r="22" fill="none" stroke="var(--mp-primary)" stroke-width="1.5"></circle>
+                  <circle class="station-dot" cx="60" cy="460" r="15" fill="var(--mp-background)" stroke="var(--mp-border)" stroke-width="3"></circle>
+                  <text class="station-label" x="60" y="460" dx="-24" text-anchor="end" dominant-baseline="middle" fill="var(--mp-muted-foreground)" font-size="17" font-family="var(--mp-font-serif)"></text>
+                </g>
+                <g class="station" data-station-id="fuchengmen">
+                  <circle class="station-hit" cx="60" cy="260" r="26" fill="transparent"></circle>
+                  <circle class="station-dot" cx="60" cy="260" r="15" fill="var(--mp-background)" stroke="var(--mp-border)" stroke-width="3"></circle>
+                  <text class="station-label" x="60" y="260" dx="-24" text-anchor="end" dominant-baseline="middle" fill="var(--mp-muted-foreground)" font-size="17" font-family="var(--mp-font-serif)"></text>
+                </g>
+                <g class="station" data-station-id="chegongzhuang">
+                  <circle class="station-hit" cx="60" cy="160" r="26" fill="transparent"></circle>
+                  <circle class="station-dot" cx="60" cy="160" r="15" fill="var(--mp-background)" stroke="var(--mp-border)" stroke-width="3"></circle>
+                  <text class="station-label" x="60" y="160" dx="-24" text-anchor="end" dominant-baseline="middle" fill="var(--mp-muted-foreground)" font-size="17" font-family="var(--mp-font-serif)"></text>
+                </g>
+              </svg>
+
+              <div class="board-status mp-mono">已落版 <span id="puzzle-progress">0</span> / 18</div>
+              <p id="puzzle-win" hidden>十八站归位。2 号线沿明清北京内城墙而建：1984 年通车、1987 年成环，是中国第一条环形地铁。你刚拼出的这条环，就是六百年内城的墙线。</p>
+            </div>
+
+            <div id="station-tray">
+              <p class="mp-eyebrow">字模盘 · 十八块</p>
+              <p class="tray-note">每块附一句旧城线索</p>
+              <div class="tray-grid">
+                <button class="tile" type="button" data-station-id="chaoyangmen"><span class="tile-name">朝阳门</span><span class="tile-clue">运粮入城之门</span></button>
+                <button class="tile" type="button" data-station-id="jianguomen"><span class="tile-name">建国门</span><span class="tile-clue">1939 年开豁口</span></button>
+                <button class="tile" type="button" data-station-id="beijingzhan"><span class="tile-name">北京站</span><span class="tile-clue">城墙东南角楼之侧</span></button>
+                <button class="tile" type="button" data-station-id="chongwenmen"><span class="tile-name">崇文门</span><span class="tile-clue">旧时税关所在</span></button>
+                <button class="tile" type="button" data-station-id="qianmen"><span class="tile-name">前门</span><span class="tile-clue">中轴线南端正门</span></button>
+                <button class="tile" type="button" data-station-id="hepingmen"><span class="tile-name">和平门</span><span class="tile-clue">1926 年新辟</span></button>
+                <button class="tile" type="button" data-station-id="xuanwumen"><span class="tile-name">宣武门</span><span class="tile-clue">门外即菜市口</span></button>
+                <button class="tile" type="button" data-station-id="changchunjie"><span class="tile-name">长椿街</span><span class="tile-clue">因长椿寺得名</span></button>
+                <button class="tile" type="button" data-station-id="fuxingmen"><span class="tile-name">复兴门</span><span class="tile-clue">1939 年开豁口</span></button>
+                <button class="tile" type="button" data-station-id="fuchengmen"><span class="tile-name">阜成门</span><span class="tile-clue">运煤入城之门</span></button>
+                <button class="tile" type="button" data-station-id="chegongzhuang"><span class="tile-name">车公庄</span><span class="tile-clue">因车公庙得名</span></button>
+                <button class="tile" type="button" data-station-id="xizhimen"><span class="tile-name">西直门</span><span class="tile-clue">运水赴玉泉山</span></button>
+                <button class="tile" type="button" data-station-id="jishuitan"><span class="tile-name">积水潭</span><span class="tile-clue">元代漕运码头</span></button>
+                <button class="tile" type="button" data-station-id="guloudajie"><span class="tile-name">鼓楼大街</span><span class="tile-clue">明清击鼓报时</span></button>
+                <button class="tile" type="button" data-station-id="andingmen"><span class="tile-name">安定门</span><span class="tile-clue">出兵取“安定”</span></button>
+                <button class="tile" type="button" data-station-id="yonghegong"><span class="tile-name">雍和宫</span><span class="tile-clue">雍正潜邸改寺</span></button>
+                <button class="tile" type="button" data-station-id="dongzhimen"><span class="tile-name">东直门</span><span class="tile-clue">运木材入城之门</span></button>
+                <button class="tile" type="button" data-station-id="dongssitiao"><span class="tile-name">东四十条</span><span class="tile-clue">东四牌楼仓场</span></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="puzzle-actions">
+            <button id="puzzle-hint" type="button">提示（剩 <span id="hint-count">2</span> 次）</button>
+            <button id="puzzle-restart" type="button">重开</button>
+          </div>
+        </section>
+
+        <section id="riddle-section" class="section">
+          <div class="section-head">
+            <h2 class="mp-title section-title">贰 · 四道旧城谜面</h2>
+            <p class="section-note">四道谜面分别指向内城的四个城角。全部答对，图上会连出一个矩形。</p>
+          </div>
+
+          <ol id="riddle-list">
+            <li class="riddle" data-answer="xizhimen">
+              <span class="riddle-index mp-mono">01</span>
+              <p class="riddle-text">明清内城西垣之门，运水车自此出城赴玉泉山；今有 2、4、13 三条线在此交汇。</p>
+              <div class="riddle-row">
+                <input class="riddle-input" type="text" inputmode="text" placeholder="填入站名" aria-label="谜面 1 的答案" />
+                <button class="riddle-submit" type="button" data-riddle-index="1">核验</button>
+                <p class="riddle-state" data-state="pending">未答</p>
+              </div>
+            </li>
+            <li class="riddle" data-answer="dongzhimen">
+              <span class="riddle-index mp-mono">02</span>
+              <p class="riddle-text">内城东北角之门，旧时木材由此入城；今首都机场线自此始发。</p>
+              <div class="riddle-row">
+                <input class="riddle-input" type="text" inputmode="text" placeholder="填入站名" aria-label="谜面 2 的答案" />
+                <button class="riddle-submit" type="button" data-riddle-index="2">核验</button>
+                <p class="riddle-state" data-state="pending">未答</p>
+              </div>
+            </li>
+            <li class="riddle" data-answer="jianguomen">
+              <span class="riddle-index mp-mono">03</span>
+              <p class="riddle-text">并非古门：1939 年城墙开豁口而成，取“建国”之名；今为 1、2 号线交汇处，扼长安街东端。</p>
+              <div class="riddle-row">
+                <input class="riddle-input" type="text" inputmode="text" placeholder="填入站名" aria-label="谜面 3 的答案" />
+                <button class="riddle-submit" type="button" data-riddle-index="3">核验</button>
+                <p class="riddle-state" data-state="pending">未答</p>
+              </div>
+            </li>
+            <li class="riddle" data-answer="fuxingmen">
+              <span class="riddle-index mp-mono">04</span>
+              <p class="riddle-text">与上一道同年开豁口，1946 年取名“复兴”；今为 1、2 号线交汇处，扼长安街西端。</p>
+              <div class="riddle-row">
+                <input class="riddle-input" type="text" inputmode="text" placeholder="填入站名" aria-label="谜面 4 的答案" />
+                <button class="riddle-submit" type="button" data-riddle-index="4">核验</button>
+                <p class="riddle-state" data-state="pending">未答</p>
+              </div>
+            </li>
+          </ol>
+
+          <div class="reveal-block">
+            <p id="riddle-verdict" hidden></p>
+            <p id="ring-reveal" hidden>2 号线沿明清北京内城墙而建，18 站多是内城城门与墙角——这就是“环”的来历。</p>
+          </div>
+        </section>
+
+        <section id="atlas-section" class="section">
+          <div class="section-head">
+            <h2 class="mp-title section-title">叁 · 十八站档案</h2>
+            <p class="section-note">站名、旧城方位、一句人文注、今日换乘。</p>
+          </div>
+
+          <div id="atlas-list">
+            <article class="atlas-card" data-station-id="xizhimen">
+              <h3 class="mp-title">西直门 <span class="mp-mono atlas-line">L2</span></h3>
+              <p class="atlas-gate">内城西北门 · 运水门</p>
+              <p class="atlas-note">出此门西行赴玉泉山取水，故称运水门。今 2、4、13 号线在此交汇，也是环线的起点站。</p>
+              <p class="atlas-transfer mp-mono">换乘 · 2 / 4 / 13 号线</p>
+            </article>
+            <article class="atlas-card" data-station-id="jishuitan">
+              <h3 class="mp-title">积水潭 <span class="mp-mono atlas-line">L2</span></h3>
+              <p class="atlas-gate">北垣水关 · 元代码头</p>
+              <p class="atlas-note">元代大运河北端的终点码头，郭守敬引白浮泉水入城，此处为城北水关。</p>
+              <p class="atlas-transfer mp-mono">换乘 · 2 / 19 号线</p>
+            </article>
+            <article class="atlas-card" data-station-id="guloudajie">
+              <h3 class="mp-title">鼓楼大街 <span class="mp-mono atlas-line">L2</span></h3>
+              <p class="atlas-gate">中轴近地 · 报时之楼</p>
+              <p class="atlas-note">紧邻元大都中轴线上的鼓楼，明清两代在此击鼓报时。</p>
+              <p class="atlas-transfer mp-mono">换乘 · 2 / 8 号线</p>
+            </article>
+            <article class="atlas-card" data-station-id="andingmen">
+              <h3 class="mp-title">安定门 <span class="mp-mono atlas-line">L2</span></h3>
+              <p class="atlas-gate">内城北垣东门 · 出兵门</p>
+              <p class="atlas-note">旧时出征多出安定门，取“安定”之意。</p>
+              <p class="atlas-transfer mp-mono">换乘 · 仅 2 号线</p>
+            </article>
+            <article class="atlas-card" data-station-id="yonghegong">
+              <h3 class="mp-title">雍和宫 <span class="mp-mono atlas-line">L2</span></h3>
+              <p class="atlas-gate">北垣东段 · 王府改寺</p>
+              <p class="atlas-note">原为清雍正帝潜邸，后改为藏传佛教寺院，今香火极盛。</p>
+              <p class="atlas-transfer mp-mono">换乘 · 2 / 5 号线</p>
+            </article>
+            <article class="atlas-card" data-station-id="dongzhimen">
+              <h3 class="mp-title">东直门 <span class="mp-mono atlas-line">L2</span></h3>
+              <p class="atlas-gate">内城东北门 · 运木门</p>
+              <p class="atlas-note">旧时木材自东直门入城，故有“东直门走木材车”之说。</p>
+              <p class="atlas-transfer mp-mono">换乘 · 2 / 13 号线 / 首都机场线</p>
+            </article>
+            <article class="atlas-card" data-station-id="dongssitiao">
+              <h3 class="mp-title">东四十条 <span class="mp-mono atlas-line">L2</span></h3>
+              <p class="atlas-gate">东四牌楼一带 · 仓场</p>
+              <p class="atlas-note">明代东四牌楼附近仓场聚集，是漕粮转运之地。</p>
+              <p class="atlas-transfer mp-mono">换乘 · 仅 2 号线</p>
+            </article>
+            <article class="atlas-card" data-station-id="chaoyangmen">
+              <h3 class="mp-title">朝阳门 <span class="mp-mono atlas-line">L2</span></h3>
+              <p class="atlas-gate">内城东门 · 运粮门</p>
+              <p class="atlas-note">漕粮自通州入城多走朝阳门，故有“朝阳门走粮车”之说。</p>
+              <p class="atlas-transfer mp-mono">换乘 · 2 / 6 号线</p>
+            </article>
+            <article class="atlas-card" data-station-id="jianguomen">
+              <h3 class="mp-title">建国门 <span class="mp-mono atlas-line">L2</span></h3>
+              <p class="atlas-gate">1939 年开豁口 · 东门</p>
+              <p class="atlas-note">原为明清城墙东南隅，1939 年开豁口通行，后辟为城门。</p>
+              <p class="atlas-transfer mp-mono">换乘 · 1 / 2 号线</p>
+            </article>
+            <article class="atlas-card" data-station-id="beijingzhan">
+              <h3 class="mp-title">北京站 <span class="mp-mono atlas-line">L2</span></h3>
+              <p class="atlas-gate">城墙东南角楼之侧</p>
+              <p class="atlas-note">1959 年十大建筑之一，出站即见明城墙东南角楼。</p>
+              <p class="atlas-transfer mp-mono">换乘 · 仅 2 号线</p>
+            </article>
+            <article class="atlas-card" data-station-id="chongwenmen">
+              <h3 class="mp-title">崇文门 <span class="mp-mono atlas-line">L2</span></h3>
+              <p class="atlas-gate">内城南垣东门 · 税关</p>
+              <p class="atlas-note">旧称哈德门，明清设崇文门税关，商货入城在此纳税。</p>
+              <p class="atlas-transfer mp-mono">换乘 · 2 / 5 号线</p>
+            </article>
+            <article class="atlas-card" data-station-id="qianmen">
+              <h3 class="mp-title">前门 <span class="mp-mono atlas-line">L2</span></h3>
+              <p class="atlas-gate">正阳门 · 中轴南端</p>
+              <p class="atlas-note">北京中轴线上的内城正门，京奉铁路正阳门东站即在南侧。</p>
+              <p class="atlas-transfer mp-mono">换乘 · 2 / 8 号线</p>
+            </article>
+            <article class="atlas-card" data-station-id="hepingmen">
+              <h3 class="mp-title">和平门 <span class="mp-mono atlas-line">L2</span></h3>
+              <p class="atlas-gate">1926 年新辟之门</p>
+              <p class="atlas-note">1926 年新开城门，取名“和平”。</p>
+              <p class="atlas-transfer mp-mono">换乘 · 仅 2 号线</p>
+            </article>
+            <article class="atlas-card" data-station-id="xuanwumen">
+              <h3 class="mp-title">宣武门 <span class="mp-mono atlas-line">L2</span></h3>
+              <p class="atlas-gate">内城南垣西门 · 囚车之门</p>
+              <p class="atlas-note">旧称顺承门，门外即菜市口；天主教南堂在门内东侧。</p>
+              <p class="atlas-transfer mp-mono">换乘 · 2 / 4 号线</p>
+            </article>
+            <article class="atlas-card" data-station-id="changchunjie">
+              <h3 class="mp-title">长椿街 <span class="mp-mono atlas-line">L2</span></h3>
+              <p class="atlas-gate">西南隅 · 因寺得名</p>
+              <p class="atlas-note">因明代长椿寺得名，寺今尚存。</p>
+              <p class="atlas-transfer mp-mono">换乘 · 仅 2 号线</p>
+            </article>
+            <article class="atlas-card" data-station-id="fuxingmen">
+              <h3 class="mp-title">复兴门 <span class="mp-mono atlas-line">L2</span></h3>
+              <p class="atlas-gate">1939 年开豁口 · 西门</p>
+              <p class="atlas-note">与建国门同年开豁口，1946 年取名“复兴”。</p>
+              <p class="atlas-transfer mp-mono">换乘 · 1 / 2 号线</p>
+            </article>
+            <article class="atlas-card" data-station-id="fuchengmen">
+              <h3 class="mp-title">阜成门 <span class="mp-mono atlas-line">L2</span></h3>
+              <p class="atlas-gate">内城西门 · 运煤门</p>
+              <p class="atlas-note">门头沟之煤自阜成门入城，故有“阜成门走煤车”之说。</p>
+              <p class="atlas-transfer mp-mono">换乘 · 仅 2 号线</p>
+            </article>
+            <article class="atlas-card" data-station-id="chegongzhuang">
+              <h3 class="mp-title">车公庄 <span class="mp-mono atlas-line">L2</span></h3>
+              <p class="atlas-gate">西垣北段 · 因庙得名</p>
+              <p class="atlas-note">因明代车公庙得名。</p>
+              <p class="atlas-transfer mp-mono">换乘 · 2 / 6 号线</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="notes-section" class="section">
+          <p class="mp-eyebrow">说明</p>
+          <p class="notes-text">线路走向为示意网格坐标，站点顺序与站名取自北京地铁 2 号线环线；旧城方位与人文注为公开的城市史料综述。</p>
+          <p class="mp-mono notes-sig">地铁拼图师 · 北京环城记 · 单页作品</p>
+        </section>
+
+      </div>
+
+      <script>
+        (function () {
+          var NAMES = {
+            xizhimen: '西直门', jishuitan: '积水潭', guloudajie: '鼓楼大街', andingmen: '安定门',
+            yonghegong: '雍和宫', dongzhimen: '东直门', dongssitiao: '东四十条', chaoyangmen: '朝阳门',
+            jianguomen: '建国门', beijingzhan: '北京站', chongwenmen: '崇文门', qianmen: '前门',
+            hepingmen: '和平门', xuanwumen: '宣武门', changchunjie: '长椿街', fuxingmen: '复兴门',
+            fuchengmen: '阜成门', chegongzhuang: '车公庄'
+          };
+          function q(sel, root) { try { return (root || document).querySelector(sel); } catch (e) { return null; } }
+          function qa(sel, root) { try { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); } catch (e) { return []; } }
+
+          var progressEl = q('#puzzle-progress');
+          var winEl = q('#puzzle-win');
+          var ringLine = q('#ring-line');
+          var ringRect = q('#ring-rect');
+          var hintBtn = q('#puzzle-hint');
+          var hintCountEl = q('#hint-count');
+          var restartBtn = q('#puzzle-restart');
+          var trayGrid = q('.tray-grid');
+          var tiles = qa('.tile');
+          var stations = qa('.station');
+
+          var placed = 0;
+          var selectedTileId = null;
+          var hintLeft = 2;
+
+          function tileFor(id) {
+            for (var i = 0; i < tiles.length; i += 1) {
+              if (tiles[i].getAttribute('data-station-id') === id) { return tiles[i]; }
+            }
+            return null;
+          }
+          function stationFor(id) {
+            for (var i = 0; i < stations.length; i += 1) {
+              if (stations[i].getAttribute('data-station-id') === id) { return stations[i]; }
+            }
+            return null;
+          }
+          function atlasFor(id) {
+            return q('.atlas-card[data-station-id="' + id + '"]');
+          }
+          function setProgress() {
+            if (progressEl) { progressEl.textContent = String(placed); }
+          }
+          function clearSelection() {
+            for (var i = 0; i < tiles.length; i += 1) { tiles[i].classList.remove('is-selected'); }
+            selectedTileId = null;
+          }
+
+          function place(id) {
+            var st = stationFor(id);
+            var tile = tileFor(id);
+            var card = atlasFor(id);
+            if (st) {
+              st.classList.add('is-placed');
+              st.classList.remove('is-hinted');
+              var label = st.querySelector('.station-label');
+              if (label) { label.textContent = NAMES[id] || ''; }
+            }
+            if (tile) {
+              tile.classList.add('is-used');
+              tile.classList.remove('is-selected', 'is-hinted');
+              tile.disabled = true;
+            }
+            if (card) { card.classList.add('is-placed'); }
+            placed += 1;
+            setProgress();
+            if (placed >= 18) {
+              if (ringLine) { ringLine.classList.add('is-complete'); }
+              if (winEl) { winEl.hidden = false; }
+            }
+          }
+
+          for (var ti = 0; ti < tiles.length; ti += 1) {
+            (function (tile) {
+              tile.addEventListener('click', function () {
+                if (tile.classList.contains('is-used')) { return; }
+                clearSelection();
+                tile.classList.add('is-selected');
+                selectedTileId = tile.getAttribute('data-station-id');
+              });
+            }(tiles[ti]));
+          }
+
+          for (var si = 0; si < stations.length; si += 1) {
+            (function (st) {
+              st.addEventListener('click', function () {
+                if (st.classList.contains('is-placed')) { return; }
+                if (!selectedTileId) { return; }
+                var id = st.getAttribute('data-station-id');
+                if (id === selectedTileId) {
+                  place(id);
+                } else {
+                  st.classList.add('is-miss');
+                  window.setTimeout(function () { st.classList.remove('is-miss'); }, 400);
+                }
+                clearSelection();
+              });
+            }(stations[si]));
+          }
+
+          if (hintBtn) {
+            hintBtn.addEventListener('click', function () {
+              if (hintLeft <= 0) { return; }
+              var target = null;
+              for (var i = 0; i < stations.length; i += 1) {
+                if (!stations[i].classList.contains('is-placed')) { target = stations[i]; break; }
+              }
+              if (!target) { return; }
+              var id = target.getAttribute('data-station-id');
+              var tile = tileFor(id);
+              target.classList.add('is-hinted');
+              if (tile) { tile.classList.add('is-hinted'); }
+              hintLeft -= 1;
+              if (hintCountEl) { hintCountEl.textContent = String(hintLeft); }
+              if (hintLeft <= 0) { hintBtn.disabled = true; }
+              window.setTimeout(function () {
+                target.classList.remove('is-hinted');
+                if (tile) { tile.classList.remove('is-hinted'); }
+              }, 900);
+            });
+          }
+
+          if (restartBtn) {
+            restartBtn.addEventListener('click', function () {
+              placed = 0;
+              setProgress();
+              clearSelection();
+              for (var i = 0; i < stations.length; i += 1) {
+                stations[i].classList.remove('is-placed', 'is-miss', 'is-hinted');
+                var label = stations[i].querySelector('.station-label');
+                if (label) { label.textContent = ''; }
+              }
+              for (var j = 0; j < tiles.length; j += 1) {
+                tiles[j].classList.remove('is-used', 'is-selected', 'is-hinted');
+                tiles[j].disabled = false;
+              }
+              var cards = qa('.atlas-card');
+              for (var k = 0; k < cards.length; k += 1) { cards[k].classList.remove('is-placed'); }
+              if (ringLine) { ringLine.classList.remove('is-complete'); }
+              if (winEl) { winEl.hidden = true; }
+              hintLeft = 2;
+              if (hintCountEl) { hintCountEl.textContent = '2'; }
+              if (hintBtn) { hintBtn.disabled = false; }
+              if (trayGrid) {
+                var arr = tiles.slice();
+                for (var m = arr.length - 1; m > 0; m -= 1) {
+                  var n = Math.floor(Math.random() * (m + 1));
+                  var tmp = arr[m]; arr[m] = arr[n]; arr[n] = tmp;
+                }
+                for (var p = 0; p < arr.length; p += 1) { trayGrid.appendChild(arr[p]); }
+              }
+            });
+          }
+
+          function updateVerdict() {
+            var solved = 0;
+            var items = qa('.riddle');
+            for (var i = 0; i < items.length; i += 1) {
+              if (items[i].classList.contains('is-solved')) { solved += 1; }
+            }
+            var verdict = q('#riddle-verdict');
+            var reveal = q('#ring-reveal');
+            if (solved >= 4) {
+              if (verdict) {
+                verdict.hidden = false;
+                verdict.textContent = '四个城角归位。连成的矩形，正是内城环线的骨相。';
+                verdict.classList.add('is-complete');
+              }
+              if (reveal) { reveal.hidden = false; }
+              if (ringRect) { ringRect.classList.add('is-shown'); }
+              var corners = ['xizhimen', 'dongzhimen', 'jianguomen', 'fuxingmen'];
+              for (var c = 0; c < corners.length; c += 1) {
+                var st = stationFor(corners[c]);
+                if (st) { st.classList.add('is-corner'); }
+              }
+            } else if (solved >= 1 && verdict) {
+              verdict.hidden = false;
+              verdict.textContent = '已答对 ' + solved + ' / 4 道谜面。';
+            }
+          }
+
+          function checkRiddle(li) {
+            if (!li || li.classList.contains('is-solved')) { return; }
+            var input = li.querySelector('.riddle-input');
+            var state = li.querySelector('.riddle-state');
+            if (!input || !state) { return; }
+            var raw = (input.value || '').replace(/^\s+|\s+$/g, '');
+            var ansId = li.getAttribute('data-answer') || '';
+            var ansName = NAMES[ansId] || '';
+            var ok = raw !== '' && (raw === ansId || raw === ansName);
+            if (ok) {
+              li.classList.add('is-solved');
+              state.textContent = '已答对';
+              state.setAttribute('data-state', 'correct');
+              state.classList.remove('is-miss');
+              state.classList.add('is-correct');
+              input.disabled = true;
+              var btn = li.querySelector('.riddle-submit');
+              if (btn) { btn.disabled = true; }
+            } else {
+              state.textContent = '再想想';
+              state.setAttribute('data-state', 'wrong');
+              state.classList.remove('is-correct');
+              li.classList.add('is-miss');
+              window.setTimeout(function () { li.classList.remove('is-miss'); }, 400);
+            }
+            updateVerdict();
+          }
+
+          var submits = qa('.riddle-submit');
+          for (var ri = 0; ri < submits.length; ri += 1) {
+            (function (btn) {
+              btn.addEventListener('click', function () {
+                var li = btn.closest ? btn.closest('.riddle') : null;
+                checkRiddle(li);
+              });
+            }(submits[ri]));
+          }
+
+          var inputs = qa('.riddle-input');
+          for (var ii = 0; ii < inputs.length; ii += 1) {
+            (function (input) {
+              input.addEventListener('keydown', function (e) {
+                var key = e.key || e.keyCode;
+                if (key === 'Enter' || key === 13) {
+                  e.preventDefault();
+                  var li = input.closest ? input.closest('.riddle') : null;
+                  checkRiddle(li);
+                }
+              });
+            }(inputs[ii]));
+          }
+
+          setProgress();
+        }());
+      </script>
+    </main>
+    <style id="page-critical-layout">
+      /* —— 全局与几何骨架（页面内静态 CSS，不依赖 Tailwind 运行时）—— */
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body { margin: 0; }
+
+      .mp-shell {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      /* —— 报头 —— */
+      #hero { padding: var(--mp-s8) 0 var(--mp-s7); }
+      .hero-head { display: flex; align-items: center; gap: var(--mp-s2); }
+      .hero-mark { display: inline-flex; align-items: center; color: var(--mp-primary); }
+      .hero-head .mp-eyebrow { margin: 0; }
+      .hero-title { font-size: var(--mp-text-display); margin: var(--mp-s3) 0 0; }
+      .hero-sub { font-size: var(--mp-text-h1); margin: var(--mp-s2) 0 0; }
+      .hero-lead { max-width: 64ch; margin: var(--mp-s4) 0 0; font-size: 17px; line-height: 1.75; }
+      .hero-meta {
+        margin-top: var(--mp-s7);
+        border-top: var(--mp-hairline);
+        padding-top: var(--mp-s3);
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: var(--mp-s3);
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        color: var(--mp-muted-foreground);
+      }
+      #site-nav { margin-top: var(--mp-s4); display: flex; flex-wrap: wrap; gap: var(--mp-s5); }
+      #site-nav a {
+        font-family: var(--mp-font-mono);
+        font-size: 12px;
+        letter-spacing: 0.16em;
+        color: var(--mp-foreground);
+        text-decoration: none;
+        padding-bottom: 3px;
+        border-bottom: 1px solid transparent;
+      }
+      #site-nav a:hover { border-bottom-color: var(--mp-primary); color: var(--mp-primary); }
+
+      /* —— 区块 —— */
+      .section { border-top: var(--mp-hairline); padding: var(--mp-s7) 0; }
+      .section-title { font-size: var(--mp-text-h2); margin: 0; }
+      .section-note { margin: var(--mp-s2) 0 0; color: var(--mp-muted-foreground); font-size: var(--mp-text-caption); }
+
+      /* —— 拼图两栏骨架 —— */
+      .puzzle-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.55fr) minmax(300px, 1fr);
+        gap: var(--mp-s6);
+        align-items: start;
+        margin-top: var(--mp-s5);
+      }
+      #puzzle-board { min-width: 0; }
+      #station-tray { min-width: 0; }
+
+      #metro-svg { width: 100%; height: auto; max-width: 100%; display: block; overflow: visible; }
+      #metro-svg text { user-select: none; }
+
+      .station { cursor: pointer; }
+      .station-hit { pointer-events: all; }
+      .station-dot {
+        fill: var(--mp-background);
+        stroke: var(--mp-border);
+        stroke-width: 3;
+        transition: fill 0.25s ease, stroke 0.25s ease;
+      }
+      .station-corner-ring { opacity: 0; transition: opacity 0.3s ease; }
+      .station.is-corner .station-corner-ring { opacity: 1; }
+      .station-label {
+        fill: var(--mp-muted-foreground);
+        font-size: 17px;
+        font-family: var(--mp-font-serif);
+        opacity: 0;
+        transition: opacity 0.25s ease;
+      }
+      #ring-line { stroke: var(--mp-border); stroke-width: 6; fill: none; transition: stroke 0.35s ease; }
+      #ring-rect { opacity: 0; transition: opacity 0.4s ease; }
+
+      .station.is-placed .station-dot { fill: var(--mp-primary); stroke: var(--mp-primary); }
+      .station.is-placed .station-label { opacity: 1; }
+      #ring-line.is-complete { stroke: var(--mp-primary); stroke-dasharray: none; }
+      #ring-rect.is-shown { opacity: 1; }
+
+      .board-status {
+        margin-top: var(--mp-s3);
+        border-top: var(--mp-hairline);
+        padding-top: var(--mp-s2);
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        color: var(--mp-muted-foreground);
+      }
+      #puzzle-win {
+        margin: var(--mp-s4) 0 0;
+        padding-left: 14px;
+        border-left: 2px solid var(--mp-primary);
+        font-family: var(--mp-font-serif);
+        font-size: var(--mp-text-h3);
+        line-height: 1.7;
+        color: var(--mp-foreground);
+      }
+
+      /* —— 字模盘 —— */
+      .tray-note { margin: var(--mp-s1) 0 0; font-size: 13px; color: var(--mp-muted-foreground); }
+      .tray-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--mp-s2);
+        max-height: 520px;
+        overflow-y: auto;
+        margin-top: var(--mp-s3);
+        padding-right: 4px;
+      }
+      .tile {
+        appearance: none;
+        -webkit-appearance: none;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        text-align: left;
+        border: 1px solid var(--mp-border);
+        border-radius: var(--mp-radius-sm);
+        background: var(--mp-card);
+        padding: 8px 10px;
+        min-height: 56px;
+        color: var(--mp-foreground);
+        font-family: var(--mp-font-sans);
+        cursor: pointer;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+      }
+      .tile-name { font-family: var(--mp-font-serif); font-size: 16px; line-height: 1.3; }
+      .tile-clue { font-size: 13px; line-height: 1.4; color: var(--mp-muted-foreground); }
+      .tile:hover { border-color: var(--mp-primary); }
+      .tile.is-selected {
+        border-color: var(--mp-primary);
+        box-shadow: inset 0 0 0 1px var(--mp-primary);
+      }
+      .tile.is-used { opacity: 0.34; text-decoration: line-through; pointer-events: none; }
+      .tile.is-hinted {
+        border-color: var(--mp-primary);
+        box-shadow: inset 0 0 0 1px var(--mp-primary);
+        animation: mpPulse 0.9s ease-in-out 1;
+      }
+      .station.is-hinted .station-dot { stroke: var(--mp-primary); stroke-width: 4; }
+      .station.is-hinted { animation: mpPulse 0.9s ease-in-out 1; }
+
+      /* —— 操作行 —— */
+      .puzzle-actions {
+        margin-top: var(--mp-s5);
+        border-top: var(--mp-hairline);
+        padding-top: var(--mp-s4);
+        display: flex;
+        gap: var(--mp-s3);
+      }
+      #puzzle-hint,
+      #puzzle-restart {
+        appearance: none;
+        -webkit-appearance: none;
+        background: transparent;
+        border: 1px solid var(--mp-border);
+        border-radius: var(--mp-radius-sm);
+        padding: 6px 12px;
+        font-family: var(--mp-font-mono);
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        color: var(--mp-foreground);
+        cursor: pointer;
+        transition: border-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+      }
+      #puzzle-hint:hover,
+      #puzzle-restart:hover { border-color: var(--mp-primary); color: var(--mp-primary); }
+      #puzzle-hint:disabled { opacity: 0.4; cursor: not-allowed; }
+      #puzzle-hint:disabled:hover { border-color: var(--mp-border); color: var(--mp-foreground); }
+
+      /* —— 谜案 —— */
+      #riddle-list { list-style: none; margin: var(--mp-s5) 0 0; padding: 0; }
+      .riddle { border-top: var(--mp-hairline); padding: var(--mp-s4) 0; }
+      .riddle-index { font-size: 11px; letter-spacing: 0.16em; color: var(--mp-primary); }
+      .riddle-text { font-family: var(--mp-font-serif); font-size: 18px; line-height: 1.65; margin: var(--mp-s1) 0 0; }
+      .riddle-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--mp-s2); margin-top: var(--mp-s3); }
+      .riddle-input {
+        border: 1px solid var(--mp-border);
+        border-radius: var(--mp-radius-sm);
+        background: var(--mp-card);
+        padding: 6px 10px;
+        font-family: var(--mp-font-sans);
+        font-size: 14px;
+        color: var(--mp-foreground);
+        min-width: 200px;
+      }
+      .riddle-input:focus { outline: none; border-color: var(--mp-primary); }
+      .riddle-input:disabled { opacity: 0.6; }
+      .riddle-submit {
+        appearance: none;
+        -webkit-appearance: none;
+        background: transparent;
+        border: 1px solid var(--mp-border);
+        border-radius: var(--mp-radius-sm);
+        padding: 6px 12px;
+        font-family: var(--mp-font-mono);
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        color: var(--mp-foreground);
+        cursor: pointer;
+        transition: border-color 0.2s ease, color 0.2s ease;
+      }
+      .riddle-submit:hover { border-color: var(--mp-primary); color: var(--mp-primary); }
+      .riddle-state {
+        margin: 0;
+        font-family: var(--mp-font-mono);
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        color: var(--mp-muted-foreground);
+      }
+      .riddle-state.is-correct { color: var(--mp-primary); }
+      .riddle.is-miss { animation: mpShake 0.4s ease 1; }
+      .station.is-miss { animation: mpShake 0.4s ease 1; }
+
+      .reveal-block { margin-top: var(--mp-s4); }
+      #riddle-verdict {
+        margin: 0;
+        padding-left: 14px;
+        border-left: 2px solid var(--mp-primary);
+        font-family: var(--mp-font-serif);
+        font-size: var(--mp-text-h3);
+        line-height: 1.7;
+        color: var(--mp-foreground);
+      }
+      #ring-reveal {
+        margin: var(--mp-s3) 0 0;
+        padding-left: 14px;
+        border-left: 2px solid var(--mp-primary);
+        font-size: var(--mp-text-body);
+        line-height: 1.7;
+      }
+
+      /* —— 城市档案 —— */
+      #atlas-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: var(--mp-s4);
+        margin-top: var(--mp-s5);
+      }
+      .atlas-card { position: relative; border-top: 2px solid var(--mp-foreground); padding-top: 12px; }
+      .atlas-card h3 { margin: 0; font-size: var(--mp-text-h3); display: flex; align-items: baseline; gap: 8px; }
+      .atlas-line { font-size: 11px; letter-spacing: 0.12em; color: var(--mp-muted-foreground); }
+      .atlas-gate { margin: var(--mp-s1) 0 0; font-family: var(--mp-font-mono); font-size: 13px; letter-spacing: 0.04em; color: var(--mp-primary); }
+      .atlas-note { margin: var(--mp-s2) 0 0; font-size: 15px; line-height: 1.65; }
+      .atlas-transfer { margin: var(--mp-s3) 0 0; font-size: 12px; letter-spacing: 0.06em; color: var(--mp-muted-foreground); }
+      .atlas-card.is-placed::after {
+        content: "";
+        position: absolute;
+        top: 12px;
+        right: 0;
+        width: 4px;
+        height: 4px;
+        background: var(--mp-primary);
+      }
+
+      /* —— 说明 —— */
+      .notes-text { margin: var(--mp-s3) 0 0; max-width: 74ch; line-height: 1.7; }
+      .notes-sig { margin: var(--mp-s4) 0 0; font-size: 12px; letter-spacing: 0.12em; color: var(--mp-muted-foreground); }
+
+      /* —— 动效 —— */
+      @keyframes mpShake {
+        0%, 100% { transform: translateX(0); }
+        20% { transform: translateX(-3px); }
+        40% { transform: translateX(3px); }
+        60% { transform: translateX(-2px); }
+        80% { transform: translateX(2px); }
+      }
+      @keyframes mpPulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.42; }
+      }
+
+      /* —— 响应式 —— */
+      @media (max-width: 1023px) {
+        .puzzle-grid { grid-template-columns: minmax(0, 1fr); }
+        .tray-grid { max-height: 360px; }
+      }
+      @media (max-width: 639px) {
+        .mp-shell { padding: 0 16px; }
+        .tray-grid { grid-template-columns: minmax(0, 1fr); }
+        #hero { padding: var(--mp-s7) 0 var(--mp-s6); }
+        .section { padding: var(--mp-s6) 0; }
+        .riddle-input { min-width: 0; flex: 1 1 160px; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+      }
+    </style>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

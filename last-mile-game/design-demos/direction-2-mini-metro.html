@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>最后一公里 · 方向二 Mini Metro 交通图</title>
+<!--
+  ASSUMPTIONS：与方向一相同的游戏数据与交互范围（找车阶段，点击切换详情）
+  REASONING
+  - 参照：Mini Metro (2015) / Mini Motorways (2019)，Dinosaur Polo Club（BAFTA 提名）
+    视觉语言 = 现代交通图式：奶油底、粗圆角彩色线路、圆形/方形站点几何、极简克制
+  - 色彩论证：奶油纸底 = 纸质交通图的记忆；每条街道用一条不同粉彩「线路色」，
+    直接把「地图」画成「通勤线路图」——形式和题材（通勤）是同一件事。
+  - 骨架：全幅出血地图 + 底部抽屉式详情卡（与方向一的侧栏骨架结构互异）
+  - form 来自内容的哪里：单车 = 线路上的「站点圆点」，公司 = 终点站方块，
+    家 = 起点站圆点——整张地图就是一张「上班线路图」，找车=选站上车。
+-->
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EFE6; --ink:#33312E; --sub:#8B8578;
+    --l1:#E8734A; --l2:#3E7CB1; --l3:#7A9E43; --l4:#D9A441; --danger:#D64545;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden}
+  body{background:var(--paper);font-family:'Nunito','Noto Sans SC',sans-serif;color:var(--ink);position:relative}
+
+  /* 顶部极简 HUD：交通图图例气质 */
+  .hud{
+    position:absolute;top:0;left:0;right:0;height:64px;z-index:20;
+    display:flex;align-items:center;gap:26px;padding:0 28px;
+    background:var(--paper);border-bottom:3px solid var(--ink);
+  }
+  .logo{font-weight:900;font-size:20px;letter-spacing:.02em}
+  .logo i{display:inline-block;width:14px;height:14px;border-radius:50%;background:var(--l1);margin-right:8px}
+  .hud .sep{width:2px;height:24px;background:#D8D0BF}
+  .stat{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700}
+  .stat .k{color:var(--sub);font-weight:700;font-size:12px}
+  .pill{min-width:34px;text-align:center;padding:3px 10px;border-radius:99px;font-weight:900;font-size:15px;border:2.5px solid var(--ink);background:#fff}
+  .pill.time{border-color:var(--danger);color:var(--danger);font-variant-numeric:tabular-nums}
+  .hud .goal{margin-left:auto;font-size:13px;color:var(--sub);font-weight:700}
+  .hud .goal b{color:var(--ink)}
+
+  /* 全幅地图 */
+  .map{position:absolute;inset:64px 0 0 0}
+  svg.network{position:absolute;inset:0;width:100%;height:100%}
+  .map-caption{position:absolute;left:28px;top:18px;font-size:12px;color:var(--sub);font-weight:700;letter-spacing:.1em}
+
+  .st{position:absolute;transform:translate(-50%,-50%);cursor:pointer;z-index:6}
+  .st .ring{
+    width:46px;height:46px;border-radius:50%;background:#fff;border:5px solid var(--ink);
+    display:flex;align-items:center;justify-content:center;font-weight:900;font-size:17px;
+    transition:transform .15s; box-shadow:0 3px 0 rgba(51,49,46,.25);
+  }
+  .st:hover .ring{transform:scale(1.12)}
+  .st.active .ring{background:var(--ink);color:#fff}
+  .st .wt{
+    position:absolute;top:50px;left:50%;transform:translateX(-50%);
+    font-size:11px;font-weight:800;color:var(--sub);white-space:nowrap;background:var(--paper);
+    padding:1px 7px;border-radius:99px;border:1.5px solid #D8D0BF;
+  }
+  .st.unknown .ring{color:var(--sub)}
+
+  .term{position:absolute;transform:translate(-50%,-50%);z-index:5;text-align:center}
+  .term .shp{margin:0 auto;display:flex;align-items:center;justify-content:center;font-weight:900}
+  .term.home .shp{width:54px;height:54px;border-radius:50%;background:var(--ink);color:#fff;font-size:19px}
+  .term.work .shp{width:58px;height:58px;background:var(--danger);color:#fff;font-size:19px;border-radius:10px;box-shadow:0 4px 0 rgba(51,49,46,.25)}
+  .term .lb{font-size:13px;font-weight:800;margin-top:8px}
+  .term .sb{font-size:11px;color:var(--sub);font-weight:700}
+
+  /* 底部抽屉详情卡 */
+  .sheet{
+    position:absolute;left:50%;transform:translateX(-50%);bottom:0;z-index:30;
+    width:min(860px,92%);background:#fff;border:3px solid var(--ink);border-bottom:none;
+    border-radius:20px 20px 0 0;padding:18px 26px 22px;
+    display:grid;grid-template-columns:250px 1fr auto;gap:24px;align-items:center;
+    box-shadow:0 -6px 0 rgba(51,49,46,.08);
+  }
+  .sheet .grab{position:absolute;top:7px;left:50%;transform:translateX(-50%);width:44px;height:5px;border-radius:99px;background:#D8D0BF}
+  .sheet h2{font-size:22px;font-weight:900}
+  .sheet .meta{font-size:13px;color:var(--sub);font-weight:700;margin-top:2px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .chip{font-size:13px;font-weight:800;padding:4px 12px;border-radius:99px;border:2px solid var(--ink)}
+  .chip.ok{background:var(--l3);color:#fff;border-color:var(--l3)}
+  .chip.bad{background:var(--danger);color:#fff;border-color:var(--danger)}
+  .chip.hint{border-style:dashed;color:var(--sub);border-color:#C9C0AC}
+  .go{
+    border:3px solid var(--ink);background:var(--l2);color:#fff;border-radius:14px;
+    font-family:inherit;font-weight:900;font-size:16px;padding:14px 22px;cursor:pointer;
+    box-shadow:0 4px 0 var(--ink);transition:all .1s;white-space:nowrap;
+  }
+  .go:active{transform:translateY(4px);box-shadow:none}
+</style>
+</head>
+<body>
+
+<header class="hud">
+  <div class="logo"><i></i>最后一公里</div>
+  <div class="sep"></div>
+  <div class="stat"><span class="k">剩余时间</span><span class="pill time" id="timer">04:32</span></div>
+  <div class="stat"><span class="k">体力</span><span class="pill">100</span></div>
+  <div class="stat"><span class="k">心情</span><span class="pill">86</span></div>
+  <div class="goal">目标：<b>09:00 前</b>抵达终点站「公司」打卡</div>
+</header>
+
+<div class="map" id="map">
+  <svg class="network" viewBox="0 0 1440 836" preserveAspectRatio="none">
+    <!-- 交通图式粗圆角线路 -->
+    <path d="M-20 300 L 420 300 L 560 180 L 1460 180" stroke="#E8734A" stroke-width="16" fill="none" stroke-linecap="round" opacity=".9"/>
+    <path d="M-20 620 L 700 620 L 860 470 L 1460 470" stroke="#3E7CB1" stroke-width="16" fill="none" stroke-linecap="round" opacity=".9"/>
+    <path d="M420 -20 L 420 300 L 520 400 L 520 860" stroke="#7A9E43" stroke-width="16" fill="none" stroke-linecap="round" opacity=".9"/>
+    <path d="M960 -20 L 960 300 L 1060 400 L 1060 860" stroke="#D9A441" stroke-width="16" fill="none" stroke-linecap="round" opacity=".9"/>
+    <path d="M-20 300 L 300 300" stroke="#E8734A" stroke-width="16" fill="none" opacity=".9"/>
+    <!-- 街区点缀 -->
+    <rect x="120" y="380" width="150" height="110" rx="10" fill="#E9E2D2"/>
+    <rect x="640" y="240" width="180" height="120" rx="10" fill="#E9E2D2"/>
+    <rect x="1140" y="240" width="160" height="130" rx="10" fill="#E9E2D2"/>
+    <rect x="180" y="680" width="200" height="110" rx="10" fill="#E9E2D2"/>
+    <rect x="700" y="680" width="170" height="100" rx="10" fill="#E9E2D2"/>
+    <circle cx="1250" cy="640" r="70" fill="#DCE5D0"/>
+  </svg>
+  <div class="map-caption">COMMUTE MAP · 早高峰 08:55 · 每站即一辆单车</div>
+
+  <div class="term home" style="left:12%;top:78%"><div class="shp">家</div><div class="lb">起点站</div><div class="sb">当前位置</div></div>
+  <div class="term work" style="left:88%;top:15%"><div class="shp">司</div><div class="lb">终点站 · 公司</div><div class="sb">09:00 打卡</div></div>
+</div>
+
+<div class="sheet" id="sheet"><div class="grab"></div></div>
+
+<script>
+const BIKES = [
+  {id:'A', x:24, y:30, walk:20, visible:['外观完好'], clue:'刹车线垂落', hidden:'刹车失灵',
+   dmg:{handle:true,saddle:true,chain:true}, droopCable:true},
+  {id:'B', x:36, y:52, walk:35, visible:['无坐垫'], clue:null, hidden:null,
+   dmg:{handle:true,saddle:false,chain:true}},
+  {id:'C', x:47, y:21, walk:45, visible:['外观完好'], clue:'链条松垮下垂', hidden:'链条断',
+   dmg:{handle:true,saddle:true,chain:false}, sagChain:true},
+  {id:'D', x:60, y:56, walk:60, visible:['坐垫湿'], clue:'坐垫有水渍反光', hidden:null,
+   dmg:{handle:true,saddle:true,chain:true}, wet:true},
+  {id:'E', x:73, y:36, walk:75, visible:['无把手'], clue:null, hidden:null,
+   dmg:{handle:false,saddle:true,chain:true}},
+  {id:'F', x:85, y:60, walk:90, visible:['外观完好'], clue:'这辆……好像真的没问题？', hidden:null,
+   dmg:{handle:true,saddle:true,chain:true}},
+];
+let cur='A';
+const LINES=['#E8734A','#3E7CB1','#7A9E43','#D9A441','#B565A7','#4AB0A8'];
+
+function bikeSVG(b,accent){
+  const ink='#33312E', sub='#8B8578', bad='#D64545';
+  const saddle=b.dmg.saddle
+    ?`<line x1="95" y1="52" x2="95" y2="70" stroke="${ink}" stroke-width="3"/>
+      <rect x="82" y="44" width="26" height="9" rx="4.5" fill="${accent}" stroke="${ink}" stroke-width="2.5"/>
+      ${b.wet?`<ellipse cx="95" cy="47" rx="9" ry="3" fill="#7FC4E8"/><circle cx="89" cy="46" r="1.4" fill="#fff"/>`:''}`
+    :`<line x1="95" y1="52" x2="95" y2="70" stroke="${bad}" stroke-width="3" stroke-dasharray="3 3"/>`;
+  const handle=b.dmg.handle
+    ?`<line x1="205" y1="46" x2="205" y2="72" stroke="${ink}" stroke-width="3"/>
+      <line x1="193" y1="46" x2="217" y2="46" stroke="${ink}" stroke-width="4.5" stroke-linecap="round"/>
+      ${b.droopCable?`<path d="M210 48 Q 224 74 214 92" stroke="${bad}" stroke-width="2" fill="none" stroke-dasharray="4 3"/>`:''}`
+    :`<line x1="205" y1="46" x2="205" y2="72" stroke="${ink}" stroke-width="3"/><circle cx="205" cy="44" r="3" fill="${bad}"/>`;
+  const chain=b.dmg.chain
+    ?`<line x1="95" y1="100" x2="150" y2="100" stroke="${sub}" stroke-width="2.5"/>`
+    :`<path d="M95 100 Q 122 116 150 100" stroke="${bad}" stroke-width="2.5" fill="none" stroke-dasharray="4 3"/>`;
+  return `<svg viewBox="0 0 260 150" width="100%">
+    <circle cx="70" cy="105" r="34" fill="#fff" stroke="${ink}" stroke-width="5"/>
+    <circle cx="190" cy="105" r="34" fill="#fff" stroke="${ink}" stroke-width="5"/>
+    <path d="M70 105 L110 105 L150 68 L95 68 Z" fill="none" stroke="${accent}" stroke-width="5" stroke-linejoin="round"/>
+    <line x1="150" y1="68" x2="190" y2="105" stroke="${accent}" stroke-width="5"/>
+    <line x1="110" y1="105" x2="95" y2="68" stroke="${accent}" stroke-width="5"/>
+    <circle cx="110" cy="105" r="7" fill="${accent}" stroke="${ink}" stroke-width="2.5"/>
+    ${chain}${saddle}${handle}</svg>`;
+}
+
+function renderNodes(){
+  document.querySelectorAll('.st').forEach(n=>n.remove());
+  const map=document.getElementById('map');
+  BIKES.forEach((b,i)=>{
+    const d=document.createElement('div');
+    d.className='st'+(b.id===cur?' active':'');
+    d.style.left=b.x+'%'; d.style.top=b.y+'%';
+    d.innerHTML=`<div class="ring" style="border-color:${LINES[i]}">${b.visible[0]==='外观完好'?'?':b.id}</div>
+                 <div class="wt">步行 ${b.walk}s</div>`;
+    d.onclick=()=>{cur=b.id;renderNodes();renderSheet();};
+    map.appendChild(d);
+  });
+}
+function renderSheet(){
+  const i=BIKES.findIndex(x=>x.id===cur), b=BIKES[i];
+  document.getElementById('sheet').innerHTML=`
+    <div class="grab"></div>
+    <div>${bikeSVG(b,LINES[i])}</div>
+    <div>
+      <h2>${b.id} 站 · 单车 ${b.id}</h2>
+      <div class="meta">距离起点步行 ${b.walk} 秒 · 车况${b.visible[0]==='外观完好'?'未知（盲盒）':'部分可见'}</div>
+      <div class="chips">
+        ${b.visible.map(v=>`<span class="chip ${v==='外观完好'?'ok':'bad'}">${v}</span>`).join('')}
+        ${b.clue?`<span class="chip hint">细看：${b.clue}</span>`:''}
+        ${b.hidden?`<span class="chip hint">? 可能有未发现的问题</span>`:''}
+      </div>
+    </div>
+    <button class="go">步行前往 →<br><span style="font-size:12px;font-weight:700">-${b.walk}s</span></button>`;
+}
+let t=272;
+setInterval(()=>{if(t>0){t--;const m=String(Math.floor(t/60)).padStart(2,'0'),s=String(t%60).padStart(2,'0');
+  document.getElementById('timer').textContent=m+':'+s;}},1000);
+renderNodes();renderSheet();
+</script>
+</body>
+</html>

@@ -1,0 +1,1742 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>地铁拼图师 · 北京环城记 — 三幕解谜版</title>
+<style id="theme-vars">
+/* ============================================================
+   《地铁拼图师 · 北京环城记》设计令牌
+   印刷品 / 编辑排版风：纸白底、墨黑字、单一赭橙强调色、
+   发丝分隔线、中文衬线标题 + 无衬线正文。
+   ============================================================ */
+:root{
+  --mp-background:#f4f1e8;
+  --mp-foreground:#1b1915;
+  --mp-card:#fbf9f3;
+  --mp-card-foreground:#1b1915;
+  --mp-popover:#fffdf8;
+  --mp-popover-foreground:#1b1915;
+  --mp-primary:#a63a2a;
+  --mp-primary-foreground:#fdfaf5;
+  --mp-muted:#e9e4d7;
+  --mp-muted-foreground:#6b6455;
+  --mp-border:#d6cfbe;
+  --mp-input:#d6cfbe;
+  --mp-ring:#a63a2a;
+
+  --mp-radius-sm:2px;
+  --mp-radius-md:4px;
+  --mp-radius-lg:8px;
+
+  --mp-font-serif:"Noto Serif SC","Source Han Serif SC","Songti SC","SimSun",serif;
+  --mp-font-sans:"Inter","Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --mp-font-mono:"SFMono-Regular","JetBrains Mono","Menlo","Consolas",monospace;
+
+  --mp-text-display:clamp(34px,4.6vw,58px);
+  --mp-text-h1:clamp(26px,3.2vw,40px);
+  --mp-text-h2:clamp(20px,2.2vw,27px);
+  --mp-text-h3:18px;
+  --mp-text-body:15px;
+  --mp-text-caption:13px;
+
+  --mp-s1:4px;--mp-s2:8px;--mp-s3:12px;--mp-s4:16px;
+  --mp-s5:24px;--mp-s6:32px;--mp-s7:48px;--mp-s8:80px;
+
+  --mp-hairline:1px solid var(--mp-border);
+  --mp-rule-strong:2px solid var(--mp-foreground);
+  --mp-shadow-1:0 1px 2px rgba(27,25,21,.05);
+
+  --mp-line-1:#c23a30;
+  --mp-line-2:#00619b;
+  --mp-line-4:#008c95;
+  --mp-line-5:#aa0061;
+
+  --mp-map-line-width:9;
+  --mp-station-r:12;
+  --mp-transfer-r:19;
+}
+
+/* 页面局部令牌：纸色与线条 */
+:root{
+  --paper:#f4f1e8;
+  --paper-deep:#ece7d9;
+  --paper-card:#fbf8f1;
+  --ink:#1b1915;
+  --ink-soft:#3c372e;
+  --muted:#6b6455;
+  --line:#d6cfbe;
+  --line-strong:#b7ad98;
+  --accent:#a63a2a;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--mp-font-sans);
+  font-size:var(--mp-text-body);
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+button{font:inherit;color:inherit}
+a{color:inherit}
+svg text{user-select:none}
+.mono{font-family:var(--mp-font-mono);font-variant-numeric:tabular-nums}
+.serif{font-family:var(--mp-font-serif)}
+.eyebrow{
+  margin:0;
+  font-family:var(--mp-font-mono);
+  font-size:10.5px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+.eyebrow .tick{display:inline-block;width:7px;height:7px;background:var(--accent);margin-right:8px;vertical-align:1px}
+
+/* ---------- 顶栏 ---------- */
+.topbar{
+  position:sticky;top:0;z-index:60;
+  background:rgba(244,241,232,.94);
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--line-strong);
+}
+.topbar-inner{
+  max-width:1180px;margin:0 auto;padding:0 24px;height:56px;
+  display:flex;align-items:center;gap:24px;
+}
+.brand{
+  font-family:var(--mp-font-serif);font-size:17px;letter-spacing:.09em;
+  text-decoration:none;white-space:nowrap;
+}
+.brand i{font-style:normal;color:var(--accent)}
+.topnav{display:flex;gap:18px;overflow:auto;scrollbar-width:none}
+.topnav::-webkit-scrollbar{display:none}
+.topnav a{
+  font-family:var(--mp-font-mono);font-size:10.5px;letter-spacing:.08em;
+  color:var(--muted);text-decoration:none;white-space:nowrap;
+  padding:3px 0;border-bottom:1px solid transparent;
+}
+.topnav a:hover{color:var(--ink);border-bottom-color:var(--accent)}
+.hud{
+  margin-left:auto;display:flex;align-items:center;gap:8px;
+  border-left:1px solid var(--line);padding-left:18px;
+  font-family:var(--mp-font-mono);font-size:10.5px;color:var(--muted);white-space:nowrap;
+}
+.hud b{color:var(--ink);font-weight:600}
+.hud .sep{color:var(--line-strong)}
+
+/* ---------- 封面 ---------- */
+.cover{
+  max-width:1180px;margin:0 auto;padding:76px 24px 56px;
+  display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);
+  gap:52px;align-items:center;border-bottom:1px solid var(--line);
+}
+.cover-copy{display:grid;gap:0}
+.cover-title{
+  margin:14px 0 0;
+  font-family:var(--mp-font-serif);
+  font-size:clamp(48px,7.4vw,90px);
+  line-height:.98;
+  letter-spacing:.05em;
+  font-weight:600;
+}
+.cover-sub{
+  margin:14px 0 0;
+  font-family:var(--mp-font-serif);
+  font-size:clamp(19px,2.2vw,26px);
+  letter-spacing:.18em;
+  color:var(--accent);
+}
+.cover-lede{
+  margin:20px 0 0;max-width:46ch;color:var(--ink-soft);
+  font-size:15.5px;line-height:1.8;
+}
+.cover-actions{display:flex;gap:12px;margin-top:28px;flex-wrap:wrap}
+.cover-meta{
+  margin:22px 0 0;font-size:10.5px;letter-spacing:.12em;
+  color:var(--muted);border-top:1px solid var(--line);padding-top:10px;
+}
+
+/* 票样 */
+.cover-ticket{justify-self:end;width:310px;max-width:100%}
+.ticket-stub{
+  position:relative;
+  background:var(--paper-card);
+  border:1px solid var(--ink);
+  padding:18px 18px 14px 38px;
+  transform:rotate(-3deg);
+  box-shadow:var(--mp-shadow-1);
+}
+.ticket-stub::before{
+  content:"";position:absolute;left:22px;top:0;bottom:0;
+  border-left:1px dashed var(--line-strong);
+}
+.ticket-stub::after{
+  content:"";position:absolute;left:16px;top:-5px;width:11px;height:11px;
+  background:var(--paper);border:1px solid var(--ink);border-radius:50%;
+}
+.stub-head{display:flex;justify-content:space-between;gap:12px;font-size:9px;letter-spacing:.1em;color:var(--muted)}
+.stub-no{margin:18px 0 0;font-size:10px;letter-spacing:.14em;color:var(--muted)}
+.stub-name{margin:6px 0 0;font-family:var(--mp-font-serif);font-size:26px;letter-spacing:.12em}
+.stub-line{margin:6px 0 0;font-size:10px;letter-spacing:.08em;color:var(--muted)}
+.stub-barcode{
+  margin-top:16px;height:20px;
+  background:repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px 5px,var(--ink) 5px 6px,transparent 6px 10px);
+  opacity:.72;
+}
+.stub-foot{
+  display:flex;justify-content:space-between;gap:12px;margin-top:12px;
+  padding-top:8px;border-top:1px solid var(--line);
+  font-size:9px;letter-spacing:.1em;color:var(--muted);
+}
+.stub-seal{
+  position:absolute;right:16px;top:58px;
+  width:58px;height:58px;border:1.5px solid var(--accent);
+  color:var(--accent);transform:rotate(-12deg);
+  display:grid;place-content:center;text-align:center;
+  font-family:var(--mp-font-serif);font-size:12px;line-height:1.2;letter-spacing:.06em;
+  opacity:.88;
+}
+.cover-steps{
+  grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);
+  gap:0;border-top:1px solid var(--line);margin-top:8px;
+}
+.step{padding:18px 22px 0 0;border-right:1px solid var(--line)}
+.step:last-child{border-right:0;padding-right:0}
+.step .no{font-family:var(--mp-font-mono);font-size:10px;letter-spacing:.14em;color:var(--accent)}
+.step p{margin:6px 0 0;font-size:13px;line-height:1.7;color:var(--ink-soft)}
+
+/* ---------- 幕 ---------- */
+.act{
+  max-width:1180px;margin:0 auto;padding:70px 24px 20px;
+}
+.act + .act{border-top:1px solid var(--line);margin-top:56px}
+.act-head{display:grid;gap:10px;margin-bottom:28px}
+.act-index{
+  margin:0;font-family:var(--mp-font-mono);font-size:10.5px;
+  letter-spacing:.18em;color:var(--accent);text-transform:uppercase;
+}
+.act-head h2{
+  margin:0;font-family:var(--mp-font-serif);
+  font-size:clamp(30px,3.6vw,44px);line-height:1.16;letter-spacing:.03em;
+}
+.act-lede{margin:0;max-width:62ch;color:var(--ink-soft);font-size:14.5px}
+.act-status{
+  display:flex;gap:22px;flex-wrap:wrap;align-items:baseline;
+  border-top:1px solid var(--line);padding-top:10px;margin-top:4px;
+  font-family:var(--mp-font-mono);font-size:10.5px;letter-spacing:.04em;color:var(--muted);
+}
+.act-status b{color:var(--ink);font-weight:600}
+.act-status .accent{color:var(--accent)}
+
+.lock-note{
+  display:none;border:1px dashed var(--line-strong);
+  padding:10px 14px;margin-bottom:18px;
+  font-family:var(--mp-font-mono);font-size:10.5px;letter-spacing:.06em;color:var(--muted);
+}
+.act[data-locked="true"] .lock-note{display:block}
+.act[data-locked="true"] .act-body{opacity:.42;filter:grayscale(.35);pointer-events:none}
+.act[data-locked="true"] .act-body *{cursor:not-allowed}
+
+/* ---------- 通用按钮 ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  border:1px solid var(--ink);background:transparent;
+  padding:9px 18px;cursor:pointer;text-decoration:none;
+  font-family:var(--mp-font-mono);font-size:10.5px;letter-spacing:.1em;
+  transition:background .18s ease,color .18s ease,border-color .18s ease;
+}
+.btn:hover{background:var(--ink);color:var(--paper)}
+.btn.ghost{border-color:var(--line-strong);color:var(--muted)}
+.btn.ghost:hover{border-color:var(--ink);color:var(--paper)}
+.btn[disabled]{opacity:.35;cursor:not-allowed;background:transparent;color:var(--muted)}
+
+/* ---------- 第一幕：拼图 ---------- */
+.puzzle-layout{
+  display:grid;grid-template-columns:minmax(0,1.42fr) minmax(260px,.58fr);
+  gap:28px;align-items:start;
+}
+.map-plate{
+  border:1px solid var(--line-strong);background:#faf7ee;
+  padding:13px 14px 0;position:relative;
+}
+.plate-head,.plate-foot{
+  display:flex;justify-content:space-between;gap:12px;align-items:baseline;
+  font-family:var(--mp-font-mono);font-size:9.5px;letter-spacing:.1em;
+  color:var(--muted);text-transform:uppercase;
+}
+.plate-head{border-bottom:1px solid var(--line);padding-bottom:9px}
+.plate-foot{
+  border-top:1px solid var(--line);margin-top:6px;
+  padding:9px 0;min-height:40px;display:block;
+  font-family:var(--mp-font-sans);font-size:12px;letter-spacing:0;
+  text-transform:none;color:var(--ink-soft);line-height:1.6;
+}
+#ring-svg{display:block;width:100%;height:auto;margin:6px 0 2px}
+
+#ring-line{
+  fill:none;stroke:var(--mp-line-2);stroke-width:6;
+  stroke-linejoin:round;stroke-linecap:round;
+  opacity:.16;transition:opacity .7s ease,stroke-width .7s ease;
+}
+#ring-line.is-complete{opacity:1;stroke-width:9}
+
+.ring-slot{cursor:pointer;outline:none;transform-box:fill-box;transform-origin:center}
+.ring-slot .slot-ring{
+  fill:#faf7ee;stroke:var(--line-strong);stroke-width:1.5;
+  stroke-dasharray:3 3;
+  transition:fill .18s ease,stroke .18s ease,stroke-width .18s ease;
+}
+.ring-slot:hover .slot-ring,
+.ring-slot:focus-visible .slot-ring{stroke:var(--accent);stroke-width:2}
+.ring-slot .slot-num{
+  font-family:var(--mp-font-mono);font-size:9px;fill:var(--muted);
+  text-anchor:middle;dominant-baseline:central;pointer-events:none;
+}
+.ring-slot .slot-name{
+  font-family:var(--mp-font-serif);font-size:14px;font-weight:600;
+  fill:var(--ink);opacity:0;pointer-events:none;
+}
+.ring-slot.is-placed{cursor:default}
+.ring-slot.is-placed .slot-ring{
+  fill:#fffdf8;stroke:var(--mp-line-2);stroke-width:3;stroke-dasharray:none;
+}
+.ring-slot.is-placed .slot-num{display:none}
+.ring-slot.is-placed .slot-name{opacity:1}
+.ring-slot.is-hinted .slot-ring{stroke:var(--accent);stroke-width:2.5;animation:hintPulse 1s ease-in-out infinite}
+.ring-slot.is-wrong .slot-ring{stroke:var(--accent);stroke-width:3;stroke-dasharray:none}
+.ring-slot.is-wrong{animation:shake .36s ease}
+
+.puzzle-side{display:grid;gap:22px}
+.side-block{display:block}
+.block-label{
+  margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);
+  font-family:var(--mp-font-mono);font-size:9.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--muted);
+}
+.tile-tray{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.tile{
+  appearance:none;border:1px solid var(--line-strong);background:var(--paper-card);
+  padding:8px 3px;cursor:grab;
+  font-family:var(--mp-font-serif);font-size:13.5px;line-height:1.4;
+  transition:border-color .15s ease,background .15s ease,color .15s ease,opacity .15s ease;
+}
+.tile:hover{border-color:var(--ink);background:#fffdf8}
+.tile.is-selected{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.tile.is-hinted{outline:2px solid var(--accent);outline-offset:2px}
+.tile.is-used{opacity:.28;text-decoration:line-through;cursor:default;background:transparent;border-style:dotted}
+.tile.is-used:hover{border-color:var(--line-strong);background:transparent}
+
+.repair-log{
+  list-style:none;margin:0;padding:0;max-height:196px;overflow:auto;
+  border-top:1px solid var(--line);
+}
+.repair-log li{
+  display:grid;grid-template-columns:42px 1fr;gap:8px;
+  padding:6px 0;border-bottom:1px dotted var(--line);
+  font-family:var(--mp-font-mono);font-size:10.5px;line-height:1.55;
+  color:var(--ink-soft);
+}
+.repair-log li .t{color:var(--muted)}
+.repair-log li.bad .m{color:var(--accent)}
+.repair-log li.empty{display:block;padding:8px 0;color:var(--muted);font-size:10.5px;border-bottom:0}
+
+.side-actions{display:grid;gap:8px;grid-template-columns:1fr 1fr}
+.side-actions .btn{padding:9px 10px;white-space:nowrap}
+
+.act-done{
+  border-left:3px solid var(--accent);
+  background:#f6f1e5;
+  padding:18px 22px;margin-top:26px;
+}
+.act-done h3{
+  margin:0 0 6px;font-family:var(--mp-font-serif);
+  font-size:20px;line-height:1.3;
+}
+.act-done p{margin:0 0 12px;max-width:64ch;color:var(--ink-soft);font-size:13.5px}
+.act-done .btn{margin-top:2px}
+
+/* ---------- 第二幕：车票与全图 ---------- */
+.tickets{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.ticket{
+  appearance:none;position:relative;text-align:left;
+  display:flex;flex-direction:column;gap:8px;
+  background:var(--paper-card);border:1px solid var(--line-strong);
+  padding:14px 14px 12px;min-height:198px;cursor:pointer;
+  transition:border-color .16s ease,background .16s ease,box-shadow .16s ease;
+}
+.ticket:hover{border-color:var(--ink)}
+.ticket.is-active{border-color:var(--ink);background:#fffdf8;box-shadow:inset 0 0 0 1px var(--ink)}
+.ticket.is-active::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);
+}
+.ticket.is-solved{background:#f2eddf}
+.ticket[disabled]{cursor:not-allowed}
+.ticket-head{
+  display:flex;justify-content:space-between;gap:10px;
+  font-family:var(--mp-font-mono);font-size:9.5px;letter-spacing:.09em;color:var(--muted);
+}
+.ticket-corner{color:var(--accent)}
+.ticket-route{
+  margin:0;padding:5px 0;border-top:1px dotted var(--line);border-bottom:1px dotted var(--line);
+  font-family:var(--mp-font-mono);font-size:9.5px;letter-spacing:.04em;color:var(--muted);
+}
+.ticket-start{
+  margin:0;font-family:var(--mp-font-serif);font-size:17px;line-height:1.3;letter-spacing:.02em;
+}
+.ticket-inst{margin:0;font-size:12px;line-height:1.62;color:var(--ink-soft)}
+.ticket-foot{
+  margin-top:auto;padding-top:8px;border-top:1px dotted var(--line);
+  display:flex;justify-content:space-between;align-items:center;
+  font-family:var(--mp-font-mono);font-size:9.5px;color:var(--muted);
+}
+.ticket-foot .state{letter-spacing:.08em}
+.ticket.is-solved .ticket-foot .state{color:var(--accent)}
+.ticket .stamp{
+  display:none;position:absolute;right:10px;top:36px;
+  transform:rotate(-9deg);border:1.5px solid var(--accent);
+  color:var(--accent);background:rgba(251,248,241,.65);
+  padding:2px 5px;font-family:var(--mp-font-mono);font-size:8.5px;
+  letter-spacing:.14em;pointer-events:none;
+}
+.ticket.is-solved .stamp{display:block}
+
+.decode-bar{
+  display:flex;justify-content:space-between;gap:18px;align-items:baseline;
+  margin:22px 0 14px;padding:10px 0;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  font-size:12.5px;color:var(--ink-soft);
+}
+.decode-bar .bar-status{
+  font-family:var(--mp-font-mono);font-size:10px;letter-spacing:.06em;
+  color:var(--muted);white-space:nowrap;
+}
+.decode-bar .bar-status b{color:var(--ink);font-weight:600}
+.decode-bar .bar-status .accent{color:var(--accent)}
+
+.fullmap-wrap{overflow:auto;display:flex;justify-content:center}
+.map-scroll-note{display:none;margin:8px 0 0;font-family:var(--mp-font-mono);font-size:10px;letter-spacing:.1em;color:var(--muted)}
+#fullmap-svg{display:block;width:100%;max-width:1000px;min-width:760px;height:auto}
+#fullmap-svg .fm-line{
+  fill:none;stroke-linejoin:round;stroke-linecap:round;
+  stroke-width:9;transition:opacity .25s ease;
+}
+#fullmap-svg .fm-station{cursor:pointer;outline:none;transition:opacity .25s ease}
+#fullmap-svg .fm-label{font-family:var(--mp-font-sans);font-size:13px;fill:var(--ink);transition:fill .15s ease}
+#fullmap-svg .fm-station:hover .fm-label,
+#fullmap-svg .fm-station:focus-visible .fm-label{fill:var(--accent);font-weight:600}
+#fullmap-svg .fm-station.is-wrong .fm-label{fill:var(--accent);font-weight:600}
+#fullmap-svg[data-focus="1"] .fm-station:not([data-lines~="1"]),
+#fullmap-svg[data-focus="1"] .fm-line:not([data-line="1"]){opacity:.14}
+#fullmap-svg[data-focus="2"] .fm-station:not([data-lines~="2"]),
+#fullmap-svg[data-focus="2"] .fm-line:not([data-line="2"]){opacity:.14}
+#fullmap-svg[data-focus="4"] .fm-station:not([data-lines~="4"]),
+#fullmap-svg[data-focus="4"] .fm-line:not([data-line="4"]){opacity:.14}
+#fullmap-svg[data-focus="5"] .fm-station:not([data-lines~="5"]),
+#fullmap-svg[data-focus="5"] .fm-line:not([data-line="5"]){opacity:.14}
+
+.route-halo{fill:none;stroke:#faf7ee;stroke-width:13;stroke-linecap:round;stroke-linejoin:round;opacity:.95}
+.route-line{
+  fill:none;stroke-width:7;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:1600;stroke-dashoffset:1600;
+  animation:routeDraw .85s ease forwards;
+}
+.start-pulse{fill:none;stroke:var(--accent);stroke-width:2;animation:pulse 1.9s ease-out infinite;transform-box:fill-box;transform-origin:center}
+.start-dot{fill:var(--accent)}
+.start-label{font-family:var(--mp-font-mono);font-size:10px;letter-spacing:.12em;fill:var(--accent);text-anchor:middle}
+.terminal-label{font-family:var(--mp-font-mono);font-size:10px;letter-spacing:.1em;fill:var(--accent);text-anchor:middle}
+.miss-ring{fill:none;stroke:var(--accent);stroke-width:2}
+.miss-x{font-family:var(--mp-font-sans);font-size:26px;fill:var(--accent);text-anchor:middle;dominant-baseline:central}
+.miss-mark{animation:missFade .7s ease forwards;transform-box:fill-box;transform-origin:center}
+.diag{stroke:var(--accent);stroke-width:2.5;stroke-dasharray:6 5;opacity:0;animation:diagIn .7s ease forwards}
+.center-ring{fill:#faf7ee;stroke:var(--accent);stroke-width:2.5}
+.center-q{font-family:var(--mp-font-serif);font-size:22px;font-weight:600;fill:var(--accent);text-anchor:middle;dominant-baseline:central}
+.center-label{font-family:var(--mp-font-mono);font-size:10px;letter-spacing:.12em;fill:var(--accent);text-anchor:middle}
+
+.map-tools{
+  display:flex;gap:16px;flex-wrap:wrap;align-items:center;
+  border-top:1px solid var(--line);margin-top:8px;padding:10px 0 12px;
+  font-family:var(--mp-font-mono);font-size:9.5px;letter-spacing:.05em;color:var(--muted);
+}
+.map-tools .tools-label{color:var(--muted)}
+.legend-btn{
+  appearance:none;border:1px solid transparent;background:none;
+  display:inline-flex;align-items:center;gap:6px;padding:4px 7px;cursor:pointer;
+  font-family:var(--mp-font-mono);font-size:9.5px;letter-spacing:.05em;color:var(--muted);
+}
+.legend-btn .sw{display:inline-block;width:16px;height:4px}
+.legend-btn:hover{color:var(--ink)}
+.legend-btn[aria-pressed="true"]{border-color:var(--line-strong);color:var(--ink)}
+
+/* ---------- 第三幕：城心 ---------- */
+.center-layout{
+  display:grid;grid-template-columns:minmax(280px,.82fr) minmax(0,1.18fr);
+  gap:34px;align-items:start;
+}
+.center-figure{border:1px solid var(--line-strong);background:#faf7ee;padding:12px}
+.center-figure .fig-head{
+  display:flex;justify-content:space-between;gap:10px;
+  border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:6px;
+  font-family:var(--mp-font-mono);font-size:9.5px;letter-spacing:.1em;color:var(--muted);
+}
+#center-svg{display:block;width:100%;height:auto}
+#center-svg .mini-frame{fill:none;stroke:var(--line-strong);stroke-width:1.5;stroke-dasharray:4 4}
+#center-svg .mini-diag{stroke:var(--accent);stroke-width:2;stroke-dasharray:5 4;opacity:.85}
+#center-svg .mini-node circle{fill:var(--paper);stroke:var(--ink);stroke-width:2}
+#center-svg .mini-node text{font-family:var(--mp-font-serif);font-size:12.5px;fill:var(--ink)}
+#center-svg .mini-center{fill:#faf7ee;stroke:var(--accent);stroke-width:2}
+#center-svg .mini-q{font-family:var(--mp-font-serif);font-size:18px;font-weight:600;fill:var(--accent);text-anchor:middle;dominant-baseline:central}
+.center-copy p{margin:0 0 14px;color:var(--ink-soft);max-width:56ch;font-size:14px}
+.center-copy .q{
+  margin:0 0 6px;font-family:var(--mp-font-serif);font-size:22px;
+  line-height:1.5;letter-spacing:.02em;color:var(--ink);
+}
+.answers{display:grid;gap:9px;margin-top:16px;max-width:540px}
+.answer{
+  appearance:none;display:flex;align-items:center;gap:14px;
+  border:1px solid var(--line-strong);background:var(--paper-card);
+  padding:12px 16px;text-align:left;cursor:pointer;
+  font-family:var(--mp-font-serif);font-size:16.5px;
+  transition:border-color .15s ease,background .15s ease,color .15s ease;
+}
+.answer .key{
+  font-family:var(--mp-font-mono);font-size:9.5px;letter-spacing:.12em;
+  color:var(--muted);width:16px;flex:none;
+}
+.answer:hover{border-color:var(--ink)}
+.answer.is-wrong{border-color:var(--accent);color:var(--accent);animation:shake .36s ease}
+.answer.is-correct{border-color:var(--accent);background:#f6ece4}
+.answer[disabled]{cursor:default}
+
+.report{
+  position:relative;margin-top:26px;border:1px solid var(--ink);
+  background:var(--paper-card);padding:22px 24px 24px;
+}
+.report-head{
+  display:flex;justify-content:space-between;align-items:baseline;gap:16px;
+  border-bottom:2px solid var(--ink);padding-bottom:8px;
+}
+.report-head h3{margin:0;font-family:var(--mp-font-serif);font-size:22px;letter-spacing:.06em}
+.report-head span{font-family:var(--mp-font-mono);font-size:9.5px;letter-spacing:.12em;color:var(--muted)}
+.report-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+  background:var(--line);border:1px solid var(--line);
+  margin:16px 0 16px;
+}
+.report-cell{background:var(--paper-card);padding:10px 12px}
+.report-cell .k{font-family:var(--mp-font-mono);font-size:9px;letter-spacing:.1em;color:var(--muted)}
+.report-cell .v{font-family:var(--mp-font-serif);font-size:23px;line-height:1.25;margin-top:2px}
+.report-cell .v small{font-size:12px;color:var(--muted);margin-left:2px}
+.report p{margin:0;font-size:13px;line-height:1.75;color:var(--ink-soft);max-width:58ch}
+.report-seal{
+  position:absolute;right:24px;bottom:20px;
+  width:78px;height:78px;border:2px solid var(--accent);
+  display:grid;grid-template-columns:1fr 1fr;place-content:center;
+  gap:0;text-align:center;transform:rotate(-8deg);opacity:.9;
+  color:var(--accent);font-family:var(--mp-font-serif);font-size:15px;line-height:1.45;
+  padding:5px;
+}
+.report-seal span{display:block}
+
+/* ---------- 档案 ---------- */
+.archive-group{margin-top:34px}
+.archive-head{
+  display:flex;align-items:baseline;gap:14px;
+  border-bottom:1px solid var(--ink);padding-bottom:6px;margin-bottom:4px;
+}
+.archive-head h3{margin:0;font-family:var(--mp-font-serif);font-size:21px;letter-spacing:.08em}
+.archive-head .count{
+  font-family:var(--mp-font-mono);font-size:9.5px;letter-spacing:.08em;color:var(--muted);
+  margin-left:auto;
+}
+.archive-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(248px,1fr));gap:0 30px}
+.archive-card{border-top:1px solid var(--line);padding:14px 0 18px;break-inside:avoid}
+.archive-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.archive-top h4{margin:0;font-family:var(--mp-font-serif);font-size:18px;letter-spacing:.03em}
+.archive-top .no{font-family:var(--mp-font-mono);font-size:9.5px;color:var(--muted)}
+.archive-ep{
+  margin:4px 0 8px;font-family:var(--mp-font-mono);font-size:9.5px;
+  letter-spacing:.04em;color:var(--accent);
+}
+.archive-story{margin:0 0 8px;font-size:12.5px;line-height:1.75;color:var(--ink-soft)}
+.archive-transfer{
+  margin:0;padding-top:6px;border-top:1px dotted var(--line);
+  font-family:var(--mp-font-mono);font-size:9.5px;letter-spacing:.04em;color:var(--muted);
+}
+
+.gate-block{margin-top:44px;border-top:2px solid var(--ink);padding-top:14px}
+.gate-block h3{
+  margin:0 0 4px;font-family:var(--mp-font-serif);font-size:21px;letter-spacing:.08em;
+}
+.gate-block .gate-sub{margin:0 0 12px;font-size:12.5px;color:var(--muted)}
+.gate-wrap{overflow-x:auto}
+.gate-table{width:100%;border-collapse:collapse;font-size:13px}
+.gate-table th{
+  font-family:var(--mp-font-mono);font-size:9.5px;letter-spacing:.1em;
+  color:var(--muted);text-align:left;font-weight:400;
+  border-bottom:1px solid var(--ink);padding:7px 12px 7px 0;white-space:nowrap;
+}
+.gate-table td{border-bottom:1px solid var(--line);padding:9px 12px 9px 0;vertical-align:top;color:var(--ink-soft)}
+.gate-table td:first-child{font-family:var(--mp-font-serif);font-size:15px;color:var(--ink);white-space:nowrap}
+.gate-table td:nth-child(2){
+  font-family:var(--mp-font-mono);font-size:10.5px;color:var(--accent);white-space:nowrap;
+}
+.gate-note{margin:12px 0 0;font-size:12px;line-height:1.7;color:var(--muted);max-width:70ch}
+
+/* ---------- 页脚 ---------- */
+.footer{
+  max-width:1180px;margin:72px auto 0;padding:32px 24px 80px;
+  border-top:2px solid var(--ink);
+  display:grid;gap:10px;
+}
+.footer p{margin:0;font-size:12px;line-height:1.8;color:var(--muted);max-width:78ch}
+.footer .sig{
+  font-family:var(--mp-font-mono);font-size:9.5px;letter-spacing:.12em;
+  color:var(--ink-soft);margin-top:6px;
+}
+
+/* ---------- 动效 ---------- */
+@keyframes routeDraw{to{stroke-dashoffset:0}}
+@keyframes pulse{0%{opacity:.7;transform:scale(.9)}70%{opacity:0;transform:scale(1.45)}100%{opacity:0;transform:scale(1.45)}}
+@keyframes hintPulse{0%,100%{stroke-opacity:1}50%{stroke-opacity:.22}}
+@keyframes shake{0%,100%{transform:translateX(0)}22%{transform:translateX(-4px)}55%{transform:translateX(4px)}78%{transform:translateX(-2px)}}
+@keyframes missFade{0%{opacity:1}100%{opacity:0}}
+@keyframes diagIn{to{opacity:.85}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  html{scroll-behavior:auto}
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:980px){
+  .cover{grid-template-columns:1fr;padding-top:54px;gap:36px}
+  .cover-ticket{justify-self:start;width:300px}
+  .cover-steps{grid-template-columns:1fr;border-top:1px solid var(--line)}
+  .step{border-right:0;border-bottom:1px solid var(--line);padding:14px 0}
+  .step:last-child{border-bottom:0}
+  .puzzle-layout{grid-template-columns:1fr}
+  .puzzle-side{grid-template-columns:1fr 1fr;gap:22px}
+  .side-actions{grid-column:1/-1}
+  .tickets{grid-template-columns:repeat(2,1fr)}
+  .center-layout{grid-template-columns:1fr}
+  .report-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:840px){
+  .fullmap-wrap{justify-content:flex-start}
+  .map-scroll-note{display:block}
+}
+@media (max-width:680px){
+  .topbar-inner{height:52px;padding:0 16px;gap:10px}
+  .topnav{display:none}
+  .hud{padding-left:12px;gap:6px}
+  .cover{padding:44px 18px 36px}
+  .cover-title{font-size:clamp(40px,13vw,62px)}
+  .cover-ticket{width:100%;max-width:300px}
+  .act{padding:48px 18px 14px}
+  .puzzle-side{grid-template-columns:1fr}
+  .tickets{grid-template-columns:1fr}
+  .ticket{min-height:0}
+  .report{padding:18px 16px 20px}
+  .report-seal{position:static;margin-top:16px;transform:rotate(-5deg)}
+  .archive-grid{grid-template-columns:1fr}
+  .footer{padding:26px 18px 64px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#top">地铁<i>拼图师</i></a>
+    <nav class="topnav" aria-label="页面分区">
+      <a href="#act-1">第一幕 · 拼环线</a>
+      <a href="#act-2">第二幕 · 验旧票</a>
+      <a href="#act-3">第三幕 · 寻城心</a>
+      <a href="#archive">站名档案</a>
+    </nav>
+    <div class="hud" aria-live="off">
+      <span>用时</span><b id="clock">00:00</b>
+      <span class="sep">/</span>
+      <span>误置</span><b id="error-count">0</b>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ============ 封面 ============ -->
+  <section class="cover">
+    <div class="cover-copy">
+      <p class="eyebrow"><span class="tick"></span>北京地铁 · 内城四线 · 三幕解谜</p>
+      <h1 class="cover-title">地铁拼图师</h1>
+      <p class="cover-sub">北京环城记</p>
+      <p class="cover-lede">把十八个站名放回二号线环线，再用四张旧车票走出四个城角。两条对角线相交的地方，藏着这座城市的心。</p>
+      <div class="cover-actions">
+        <a class="btn" href="#act-1">开始拼图</a>
+        <a class="btn ghost" href="#archive">先读档案</a>
+      </div>
+      <p class="cover-meta">80 站 · 3 幕 · 4 张旧票 · 1 个城心</p>
+    </div>
+    <div class="cover-ticket" aria-hidden="true">
+      <div class="ticket-stub">
+        <div class="stub-head"><span class="mono">北京市地下铁道</span><span class="mono">单程票</span></div>
+        <p class="stub-no mono">NO. 000018</p>
+        <p class="stub-name">北京环城记</p>
+        <p class="stub-line mono">2 号线 · 环线 18 站</p>
+        <div class="stub-barcode"></div>
+        <div class="stub-foot"><span class="mono">票价 / 叁角</span><span class="mono">当日有效</span></div>
+        <div class="stub-seal">环<br>城</div>
+      </div>
+    </div>
+    <div class="cover-steps">
+      <div class="step"><span class="no">01 / 拼环线</span><p>十八个站名字模，十八个空位。点字模、点空位，把环线补完整。</p></div>
+      <div class="step"><span class="no">02 / 验旧票</span><p>四张旧车票，四条乘车指令。在全图上点出终点，线路会自己画出来。</p></div>
+      <div class="step"><span class="no">03 / 寻城心</span><p>四角连成两条对角线。交点落在哪一处，就是这道题的答案。</p></div>
+    </div>
+  </section>
+
+  <!-- ============ 第一幕 ============ -->
+  <section class="act" id="act-1" data-locked="false">
+    <div class="act-head">
+      <p class="act-index">第一幕 / ACT I</p>
+      <h2>环线拼图</h2>
+      <p class="act-lede">二号线是北京第一条环形地铁，十八座车站大多沿明清内城城墙排布。右侧字模已经打乱：先选字模，再点环线上的空位；位置对了才落位。</p>
+      <div class="act-status">
+        <span>已归位 <b id="ring-progress">0 / 18</b></span>
+        <span>线索 <b id="hint-count">3</b></span>
+        <span>本幕误置 <b id="ring-errors">0</b></span>
+        <span class="accent">拖动字模亦可</span>
+      </div>
+    </div>
+    <div class="act-body">
+      <div class="puzzle-layout">
+        <div class="map-plate">
+          <div class="plate-head"><span>图 01 / 北京地铁 2 号线</span><span>环线 · 18 站</span></div>
+          <svg id="ring-svg" viewBox="660 370 650 540" role="group" aria-label="二号线环线线路图，十八个待拼车站位">
+            <polyline id="ring-line" points="770,420 875,420 945,420 1015,420 1120,420 1190,420 1190,560 1190,630 1190,700 1190,770 1120,840 980,840 910,840 840,840 770,770 770,700 770,560 770,490 770,420"></polyline>
+            <g id="ring-slots"></g>
+          </svg>
+          <div class="plate-foot"><p id="ring-message" aria-live="polite">先点右侧字模，再点环线上的一个空位。</p></div>
+        </div>
+        <aside class="puzzle-side">
+          <div class="side-block">
+            <p class="block-label">站名字模 / Tiles</p>
+            <div id="tile-tray" class="tile-tray" role="group" aria-label="可拼合的车站字模"></div>
+          </div>
+          <div class="side-block">
+            <p class="block-label">修复记录 / Log</p>
+            <ol id="repair-log" class="repair-log"><li class="empty">尚无记录。</li></ol>
+          </div>
+          <div class="side-actions">
+            <button id="hint-btn" class="btn" type="button">用一条线索</button>
+            <button id="reset-btn" class="btn ghost" type="button">重排字模</button>
+          </div>
+        </aside>
+      </div>
+      <div id="act1-done" class="act-done" hidden>
+        <h3>十八站归位，环线闭合。</h3>
+        <p>二号线自 1984 年起闭合成圈，是中国第一条环形地铁。它围住的不是随便画的一个圆，而是明清北京内城的城墙线——十八站里，多数站名就是当年的城门与墙角。</p>
+        <a class="btn" href="#act-2">前往第二幕 · 验旧票</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 第二幕 ============ -->
+  <section class="act" id="act-2" data-locked="true">
+    <div class="act-head">
+      <p class="act-index">第二幕 / ACT II</p>
+      <h2>四张旧车票</h2>
+      <p class="act-lede">四张票分别指向环线的西北、东北、西南、东南四角。选一张票，按票面指令在全图上点出终点；点对了，线路会自动画出来。</p>
+      <div class="act-status">
+        <span>已核验 <b id="ticket-progress">0 / 4</b></span>
+        <span>本幕误点 <b id="decode-errors">0</b></span>
+        <span class="accent">四票全对，对角线出现</span>
+      </div>
+    </div>
+    <div class="act-body">
+      <p class="lock-note">此幕暂未解锁 · 请先在第一幕拼合全部十八站。</p>
+      <div id="ticket-row" class="tickets"></div>
+      <div class="decode-bar">
+        <p id="decode-message" aria-live="polite" style="margin:0">先点选一张车票，再在全图上点出终点站。</p>
+        <p class="bar-status" style="margin:0">已核验 <b id="ticket-progress-2">0</b> / 4</p>
+      </div>
+      <div class="map-plate">
+        <div class="plate-head"><span>图 02 / 内城四线全图</span><span>1 · 2 · 4 · 5 号线 · 80 站</span></div>
+        <div class="fullmap-wrap">
+          <svg id="fullmap-svg" viewBox="-80 -300 1060 1080" role="group" aria-label="北京内城地铁 1、2、4、5 号线全图，共八十座车站"></svg>
+        </div>
+        <p class="map-scroll-note">左右滑动查看全图 →</p>
+        <div class="map-tools">
+          <span class="tools-label">线路高亮</span>
+          <button class="legend-btn" type="button" data-line="1" aria-pressed="false"><span class="sw" style="background:var(--mp-line-1)"></span>1 号线</button>
+          <button class="legend-btn" type="button" data-line="2" aria-pressed="false"><span class="sw" style="background:var(--mp-line-2)"></span>2 号线</button>
+          <button class="legend-btn" type="button" data-line="4" aria-pressed="false"><span class="sw" style="background:var(--mp-line-4)"></span>4 号线</button>
+          <button class="legend-btn" type="button" data-line="5" aria-pressed="false"><span class="sw" style="background:var(--mp-line-5)"></span>5 号线</button>
+          <span style="margin-left:auto">点击车站核验终点</span>
+        </div>
+      </div>
+      <div id="act2-done" class="act-done" hidden>
+        <h3>四角归位，两条对角线出现。</h3>
+        <p>西直门与建国门连成一条，东直门与复兴门连成另一条。它们在图上相交于一点——那个点，就是第三幕要问的地方。</p>
+        <a class="btn" href="#act-3">前往第三幕 · 寻城心</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 第三幕 ============ -->
+  <section class="act" id="act-3" data-locked="true">
+    <div class="act-head">
+      <p class="act-index">第三幕 / ACT III</p>
+      <h2>城心</h2>
+      <p class="act-lede">两条对角线已经画好。把相交的位置放回真实的北京：它不在城墙上，而在内城的正中。</p>
+      <div class="act-status">
+        <span>当前用时 <b id="final-clock">00:00</b></span>
+        <span>总误置 <b id="final-errors">0</b></span>
+        <span class="accent">一题定胜负</span>
+      </div>
+    </div>
+    <div class="act-body">
+      <p class="lock-note">此幕暂未解锁 · 请先核验四张车票。</p>
+      <div class="center-layout">
+        <figure class="center-figure" style="margin:0">
+          <div class="fig-head"><span>图 03 / 四角与对角线</span><span>交点待定</span></div>
+          <svg id="center-svg" viewBox="368 160 384 300" role="img" aria-label="二号线四个角与两条对角线，交点位于中心">
+            <rect class="mini-frame" x="440" y="200" width="240" height="200"></rect>
+            <line class="mini-diag" x1="440" y1="200" x2="680" y2="400"></line>
+            <line class="mini-diag" x1="680" y1="200" x2="440" y2="400"></line>
+            <g class="mini-node"><circle cx="440" cy="200" r="5"></circle><text x="424" y="196" text-anchor="end">西直门</text></g>
+            <g class="mini-node"><circle cx="680" cy="200" r="5"></circle><text x="696" y="196" text-anchor="start">东直门</text></g>
+            <g class="mini-node"><circle cx="440" cy="400" r="5"></circle><text x="424" y="405" text-anchor="end">复兴门</text></g>
+            <g class="mini-node"><circle cx="680" cy="400" r="5"></circle><text x="696" y="405" text-anchor="start">建国门</text></g>
+            <circle class="mini-center" cx="560" cy="300" r="18"></circle>
+            <text class="mini-q" x="560" y="300">?</text>
+          </svg>
+        </figure>
+        <div class="center-copy">
+          <p class="q">两条对角线的交点，落在今天的哪一处？</p>
+          <p>提示：它不是一座车站，但每一座城门、每一条环路，都以它为中心展开。二号线围住的旧城，正中央是明清两代的宫城。</p>
+          <div class="answers" role="group" aria-label="城心四选一">
+            <button class="answer" type="button" data-value="前门" disabled><span class="key">A</span><span>前门</span></button>
+            <button class="answer" type="button" data-value="故宫" disabled><span class="key">B</span><span>故宫</span></button>
+            <button class="answer" type="button" data-value="钟鼓楼" disabled><span class="key">C</span><span>钟鼓楼</span></button>
+            <button class="answer" type="button" data-value="天坛" disabled><span class="key">D</span><span>天坛</span></button>
+          </div>
+          <p id="final-message" aria-live="polite" style="margin-top:14px;font-size:12.5px;color:var(--muted);min-height:20px"></p>
+        </div>
+      </div>
+      <section id="final-report" class="report" hidden aria-live="polite">
+        <div class="report-head">
+          <h3>修复报告</h3>
+          <span>BEIJING LOOP · COMPLETE</span>
+        </div>
+        <div class="report-grid">
+          <div class="report-cell"><p class="k">用时</p><p class="v" id="report-time">00:00</p></div>
+          <div class="report-cell"><p class="k">误置</p><p class="v"><span id="report-errors">0</span><small>次</small></p></div>
+          <div class="report-cell"><p class="k">线索</p><p class="v"><span id="report-hints">0</span><small>条</small></p></div>
+          <div class="report-cell"><p class="k">车票</p><p class="v">4<small>/4</small></p></div>
+        </div>
+        <p>两条对角线交于内城正中。那里是明清紫禁城，也是北京中轴线的核心。环线围住的是旧城，交点点出的是城心——城墙可以被拆掉，这条中轴却一直在。</p>
+        <div class="report-seal" aria-hidden="true"><span>城</span><span>心</span><span>已</span><span>定</span></div>
+      </section>
+    </div>
+  </section>
+
+  <!-- ============ 档案 ============ -->
+  <section class="act" id="archive">
+    <div class="act-head">
+      <p class="act-index">附录 / ARCHIVE</p>
+      <h2>十八站档案</h2>
+      <p class="act-lede">按环线的北、东、南、西四道“墙”分组。每一站记下方位、旧名与一句来历；卡片的编号与第一幕的空位编号一致。</p>
+    </div>
+    <div id="archive-list"></div>
+    <div class="gate-block">
+      <h3>九门走九车</h3>
+      <p class="gate-sub">老北京把这句口诀当城市地图用：看见什么车，就知道该走哪座门。</p>
+      <div class="gate-wrap">
+        <table class="gate-table">
+          <thead><tr><th>门</th><th>走什么</th><th>缘由</th></tr></thead>
+          <tbody>
+            <tr><td>正阳门</td><td>龙车</td><td>内城正南门，皇帝御辇出入，中轴线上规格最高的一座。</td></tr>
+            <tr><td>崇文门</td><td>酒车</td><td>南来酒车多由此入城，门内设崇文门税关，商货在此纳税。</td></tr>
+            <tr><td>宣武门</td><td>囚车</td><td>刑部押解囚犯赴菜市口，走宣武门，故又称囚车门。</td></tr>
+            <tr><td>朝阳门</td><td>粮车</td><td>漕粮自通州经运河运抵，门内旧有禄米仓、海运仓。</td></tr>
+            <tr><td>东直门</td><td>木材车</td><td>南方木材经大运河北上至通州，再由此门运入城内。</td></tr>
+            <tr><td>阜成门</td><td>煤车</td><td>门头沟一带的煤自西运来，多经阜成门入城。</td></tr>
+            <tr><td>西直门</td><td>水车</td><td>玉泉山的甜水由此门入城，供宫禁与内城使用。</td></tr>
+            <tr><td>德胜门</td><td>兵车</td><td>出师北征多走德胜门，取“得胜”之意。</td></tr>
+            <tr><td>安定门</td><td>粪车</td><td>城北粪场多在此门外；民间又有“收兵安定门”之说。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="gate-note">九门之外，建国门与复兴门是 1939 年在城墙上开豁口、1946 年才正式命名；和平门则是 1926 年新辟。它们都没有列入“九门走九车”，但今天都成了环线上的站名。</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <p>线路走向为示意地铁图网格坐标，非地理坐标。站名、线路顺序与线路识别色取自北京地铁 1 / 2 / 4 / 5 号线的公开资料；站点来历为公开城市史料综述。</p>
+  <p class="sig">地铁拼图师 · 北京环城记 — 三幕解谜版 · 单页作品</p>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  var SVGNS = 'http://www.w3.org/2000/svg';
+
+  /* ================= 数据 ================= */
+  var RING = [
+    {name:'西直门',x:770,y:420,lx:770,ly:404,anchor:'middle',wall:'北墙',ep:'内城西垣北门 · 运水门',transfer:'2 / 4 / 13 号线',
+     story:'其址可溯至元大都的和义门，明清两代是内城西垣北侧的门。旧时自玉泉山运水入城的水车都走此门，故有「运水门」之称。1906 年京张铁路在西直门外设站，铁路与城门并立了半个多世纪。1969 年修建地铁时城楼与瓮城被拆除。今为 2、4、13 号线交汇处，也是环线客流最大的节点之一。'},
+    {name:'积水潭',x:875,y:420,lx:875,ly:404,anchor:'middle',wall:'北墙',ep:'北垣水关 · 元代码头',transfer:'2 / 19 号线',
+     story:'元代这里是京杭大运河的北端终点，南来的粮船在此卸货。郭守敬引白浮泉水入大都，积水潭一度是城北最大的水陆码头。明初改筑城墙、运河淤塞后水面渐小，清代成为内城北垣的排水水关。今站旁有郭守敬纪念馆与什刹西海。'},
+    {name:'鼓楼大街',x:945,y:420,lx:945,ly:404,anchor:'middle',wall:'北墙',ep:'中轴近地 · 报时之楼',transfer:'2 / 8 号线',
+     story:'紧邻元大都中轴线上的鼓楼，是这条中轴在城北的标志。元代钟鼓楼一线是全城最热闹的商业区，报时、开市皆以此为号。明代北京城南移之后，鼓楼仍在原处，周边斜街与市集延续数百年。今为 2、8 号线换乘站，出站北望即是灰砖的鼓楼与钟楼。'},
+    {name:'安定门',x:1015,y:420,lx:1015,ly:404,anchor:'middle',wall:'北墙',ep:'内城北垣东门 · 收兵门 · 粪车',transfer:'仅 2 号线',
+     story:'内城北垣东侧的门，与西侧的德胜门东西相对。旧有「出兵德胜门，收兵安定门」之说，取安定天下之意；而「九门走九车」中，安定门对应的是粪车——城北粪场多在此门外。1969 年因修地铁，城楼与箭楼相继拆除，仅存地名。今仅有 2 号线经停。'},
+    {name:'雍和宫',x:1120,y:420,lx:1120,ly:404,anchor:'middle',wall:'北墙',ep:'北垣东段 · 王府改寺',transfer:'2 / 5 号线',
+     story:'原为清康熙帝第四子胤禛的府邸，即雍亲王府。胤禛即位为雍正帝后，此处改为行宫；乾隆年间进一步改为藏传佛教寺院，成为北京规格最高的喇嘛庙。万福阁内有一尊由整根白檀雕成的弥勒大佛，高逾十八米。今为 2、5 号线换乘站，出站即是雍和宫与国子监街。'},
+    {name:'东直门',x:1190,y:420,lx:1190,ly:404,anchor:'middle',wall:'东墙',ep:'内城东北门 · 木材门',transfer:'2 / 13 号线 / 首都机场线',
+     story:'内城东北角的门，也是明清两代木材进京的主要通道。南方木材经大运河北运至通州，再自此门运入城内堆放，故有「东直门走木材车」之说。1950 年代城楼、箭楼相继拆除，只余地名与街巷格局。今为 2、13 号线与首都机场线的交汇处。'},
+    {name:'东四十条',x:1190,y:560,lx:1220,ly:565,anchor:'start',wall:'东墙',ep:'东四牌楼一带 · 仓场',transfer:'仅 2 号线',
+     story:'站名取自东四牌楼以北的第十条胡同。明代在东四路口立有「大市街」牌楼四座，故有东四之名。牌楼以北的胡同按序命名，十条即其中一条，街区肌理至今完整。明代这一带仓场聚集，是漕粮转运与储存之地。今车站仅有 2 号线经停。'},
+    {name:'朝阳门',x:1190,y:630,lx:1220,ly:635,anchor:'start',wall:'东墙',ep:'内城东门 · 粮门',transfer:'2 / 6 号线',
+     story:'内城东垣的门，元代旧称齐化门。明清漕粮自通州经运河运抵后，多由此门入城，故有「朝阳门走粮车」之说。门内旧有禄米仓、海运仓等一批粮仓，是京师的粮储中心。1970 年代修地铁时城楼被拆除。今为 2、6 号线换乘站。'},
+    {name:'建国门',x:1190,y:700,lx:1220,ly:705,anchor:'start',wall:'东墙',ep:'1939 年开豁口 · 东门',transfer:'1 / 2 号线',
+     story:'这里并非古门，原为明清城墙的东南转角。1939 年在城墙上开豁口以通行，1946 年取「建国」之名正式辟为城门。门外的古观象台至今仍立于城东南，是明清两代观测天象的所在。今为 1、2 号线的换乘节点，扼长安街东端。'},
+    {name:'北京站',x:1190,y:770,lx:1220,ly:775,anchor:'start',wall:'东墙',ep:'城墙东南角楼之侧',transfer:'仅 2 号线',
+     story:'紧邻明清内城城墙的东南角楼，出站即可望见角楼与一段残存的城墙。1959 年作为国庆十大建筑之一建成北京站，是当时全国最大的铁路客运站。更早以前，庚子年后的京奉铁路曾在此设正阳门东站。地铁 2 号线与车站大厅直接连通，旅客可自环线一步进站。'},
+    {name:'崇文门',x:1120,y:840,lx:1120,ly:874,anchor:'middle',wall:'南墙',ep:'内城南垣东门 · 税关',transfer:'2 / 5 号线',
+     story:'内城南垣东侧的门，元代称文明门，民间俗称哈德门。明清两代在此设崇文门税关，商货入城须在此纳税，是当时京师最重要的税关。门外的崇文门外大街一度是繁华的商业街。1950 年代城楼与箭楼被拆除，护城河一线今成明城墙遗址公园。今为 2、5 号线换乘站。'},
+    {name:'前门',x:980,y:840,lx:980,ly:874,anchor:'middle',wall:'南墙',ep:'正阳门 · 中轴南端',transfer:'2 / 8 号线',
+     story:'明代北京内城的正南门，即正阳门，是北京中轴线上的内城正门。正阳门城楼与箭楼是内城九门中规格最高的一组，也是唯一保留至今的城门楼。门外的正阳门东站曾是京奉铁路的终点。前门大街与廊房头条的商业街市就在门外。今为 2、8 号线换乘站。'},
+    {name:'和平门',x:910,y:840,lx:910,ly:874,anchor:'middle',wall:'南墙',ep:'1926 年新辟之门',transfer:'仅 2 号线',
+     story:'并非古门。1926 年在此新开一座城门，位置在正阳门与宣武门之间，取名「和平」。此门开通后，南新华街得以贯通南北，师范大学一带的通行大为便利。今仅有 2 号线经停，站旁即是琉璃厂文化街。'},
+    {name:'宣武门',x:840,y:840,lx:840,ly:874,anchor:'middle',wall:'南墙',ep:'内城南垣西门 · 囚车门',transfer:'2 / 4 号线',
+     story:'内城南垣西侧的门，元代称顺承门。明清两代这里是京师押解行刑的必经之门，故有「宣武门走囚车」之说，门外即是菜市口刑场。门内东侧建有明万历年间始建的天主教堂，即今宣武门天主堂（南堂），是北京最古老的天主教堂。今为 2、4 号线换乘站。'},
+    {name:'长椿街',x:770,y:770,lx:740,ly:775,anchor:'end',wall:'西墙',ep:'西南隅 · 因寺得名',transfer:'仅 2 号线',
+     story:'因明代的长椿寺而得名，寺中旧有长椿树，寺遂以此命名。长椿寺建于万历二十年，相传为万历帝之母李太后所建，是宣南一带的名刹。清末民初，这里属于宣南士人聚居之地，会馆与报馆在周边聚集。长椿寺今已修复开放，就在车站南侧。'},
+    {name:'复兴门',x:770,y:700,lx:740,ly:705,anchor:'end',wall:'西墙',ep:'1939 年开豁口 · 西门',transfer:'1 / 2 号线',
+     story:'与建国门同为 1939 年在城墙上开豁口而成，位置在明清城墙的西垣南段。1946 年取「复兴」之名正式辟为城门，与东侧的建国门东西对望。门外的复兴门外大街向西直达京西宾馆、军事博物馆一线。今为 1、2 号线换乘站，扼长安街西端。'},
+    {name:'阜成门',x:770,y:560,lx:740,ly:565,anchor:'end',wall:'西墙',ep:'内城西门 · 煤门',transfer:'仅 2 号线',
+     story:'内城西垣中段的门，元代旧称平则门。门头沟一带所产的煤自西运来，多经阜成门入城，故有「阜成门走煤车」之说。门内的阜成门内大街是西城通往中轴的老街，白塔寺（妙应寺）的元代白塔即在街北。1970 年代城楼与箭楼被拆除，白塔与地名保留至今。'},
+    {name:'车公庄',x:770,y:490,lx:740,ly:495,anchor:'end',wall:'西墙',ep:'西垣北段 · 因庙得名',transfer:'2 / 6 号线',
+     story:'因明代此处有一座车公庙而得名，是西直门以南、阜成门以北的一个地名。清代这里仍在西垣附近的村落范围之内，民国以后才逐渐并入城区。今为 2、6 号线换乘站，站旁是车公庄大街与北京展览馆一带。'}
+  ];
+
+  var TICKETS = [
+    {id:'t1',no:'01',corner:'西北角',start:'北京南站',end:'西直门',routeLabel:'4 号线 · 向北 9 站',
+     instruction:'从北京南站上车，沿 4 号线一路向北，坐 9 站。终点是环线的西北角。',
+     segments:[{line:'4',stations:['北京南站','陶然亭','菜市口','宣武门','西单','灵境胡同','西四','平安里','新街口','西直门']}],
+     wrongHint:'继续向北。宣武门只是 2、4 号线的南侧换乘点，不是环线的西北角。'},
+    {id:'t2',no:'02',corner:'东北角',start:'东单',end:'东直门',routeLabel:'5 号线 → 2 号线',
+     instruction:'从东单上车，沿 5 号线向北到雍和宫，换 2 号线向东坐 1 站。',
+     segments:[{line:'5',stations:['东单','灯市口','东四','张自忠路','北新桥','雍和宫']},{line:'2',stations:['雍和宫','东直门']}],
+     wrongHint:'先沿 5 号线向北，到雍和宫换 2 号线，再向东一站。'},
+    {id:'t3',no:'03',corner:'西南角',start:'王府井',end:'复兴门',routeLabel:'1 号线 · 向西 4 站',
+     instruction:'从王府井上车，沿 1 号线向西，经过天安门东、天安门西、西单，到第 4 站。',
+     segments:[{line:'1',stations:['王府井','天安门东','天安门西','西单','复兴门']}],
+     wrongHint:'沿 1 号线向西数：天安门东、天安门西、西单，第 4 站是复兴门。'},
+    {id:'t4',no:'04',corner:'东南角',start:'东直门',end:'建国门',routeLabel:'2 号线 · 向南 3 站',
+     instruction:'从东直门上车，沿 2 号线向南坐 3 站。',
+     segments:[{line:'2',stations:['东直门','东四十条','朝阳门','建国门']}],
+     wrongHint:'沿环线东墙向南：东四十条、朝阳门、建国门。'}
+  ];
+
+  /* 全图：线路折线与站序（示意网格坐标，非地理坐标） */
+  var MAP_LINES = {
+    '1': {color:'var(--mp-line-1)', points:'0,400 880,400', stations:[
+      ['苹果园',0,400,'a'],['古城',40,400,'b'],['八角游乐园',80,400,'a'],['八宝山',120,400,'b'],
+      ['玉泉路',160,400,'a'],['五棵松',200,400,'b'],['万寿路',240,400,'a'],['公主坟',280,400,'b'],
+      ['军事博物馆',320,400,'a'],['木樨地',360,400,'b'],['南礼士路',400,400,'a'],
+      ['复兴门',440,400,'l'],['西单',480,400,'r'],['天安门西',520,400,'b'],['天安门东',560,400,'a'],
+      ['王府井',600,400,'b'],['东单',640,400,'l'],['建国门',680,400,'r'],['永安里',720,400,'a'],
+      ['国贸',760,400,'b'],['大望路',800,400,'a'],['四惠',840,400,'b'],['四惠东',880,400,'a']
+    ]},
+    '2': {color:'var(--mp-line-2)', points:'440,200 680,200 680,440 640,480 480,480 440,440 440,200', stations:[
+      ['西直门',440,200,'l'],['积水潭',490,200,'a'],['鼓楼大街',540,200,'b'],['安定门',590,200,'a'],
+      ['雍和宫',640,200,'b'],['东直门',680,200,'a'],['东四十条',680,240,'r'],['朝阳门',680,280,'r'],
+      ['建国门',680,400,'r'],['北京站',680,440,'r'],['崇文门',640,480,'r'],['前门',560,480,'b'],
+      ['和平门',520,480,'b'],['宣武门',480,480,'b'],['长椿街',440,440,'l'],['复兴门',440,400,'l'],
+      ['阜成门',440,280,'l'],['车公庄',440,240,'l']
+    ]},
+    '4': {color:'var(--mp-line-4)', points:'440,-240 440,200 480,240 480,480 480,720', stations:[
+      ['安河桥北',440,-240,'l'],['北宫门',440,-200,'l'],['西苑',440,-160,'l'],['圆明园',440,-120,'l'],
+      ['北京大学东门',440,-80,'l'],['中关村',440,-40,'l'],['海淀黄庄',440,0,'l'],['人民大学',440,40,'l'],
+      ['魏公村',440,80,'l'],['国家图书馆',440,120,'l'],['动物园',440,160,'l'],['西直门',440,200,'l'],
+      ['新街口',480,240,'r'],['平安里',480,280,'r'],['西四',480,320,'r'],['灵境胡同',480,360,'r'],
+      ['西单',480,400,'r'],['宣武门',480,480,'b'],['菜市口',480,520,'l'],['陶然亭',480,560,'r'],
+      ['北京南站',480,600,'r'],['马家堡',480,640,'r'],['角门西',480,680,'r'],['公益西桥',480,720,'r']
+    ]},
+    '5': {color:'var(--mp-line-5)', points:'640,-240 640,680', stations:[
+      ['天通苑北',640,-240,'l'],['天通苑',640,-200,'l'],['天通苑南',640,-160,'l'],['立水桥',640,-120,'l'],
+      ['立水桥南',640,-80,'l'],['北苑路北',640,-40,'l'],['大屯路东',640,0,'l'],['惠新西街北口',640,40,'l'],
+      ['惠新西街南口',640,80,'l'],['和平西桥',640,120,'l'],['和平里北街',640,160,'l'],['雍和宫',640,200,'b'],
+      ['北新桥',640,240,'l'],['张自忠路',640,280,'l'],['东四',640,320,'l'],['灯市口',640,360,'l'],
+      ['东单',640,400,'l'],['崇文门',640,480,'r'],['磁器口',640,520,'l'],['天坛东门',640,560,'l'],
+      ['蒲黄榆',640,600,'l'],['刘家窑',640,640,'l'],['宋家庄',640,680,'l']
+    ]}
+  };
+
+  var LINE_COLORS = {'1':'var(--mp-line-1)','2':'var(--mp-line-2)','4':'var(--mp-line-4)','5':'var(--mp-line-5)'};
+
+  /* ================= 状态 ================= */
+  var state = {
+    placed: new Set(),
+    selected: null,
+    hints: 3,
+    errors: {ring:0, decode:0, final:0},
+    solved: new Set(),
+    activeTicket: null,
+    act2: false,
+    act3: false,
+    final: false,
+    started: false,
+    t0: 0,
+    timer: null,
+    seconds: 0
+  };
+
+  /* ================= 小工具 ================= */
+  function q(sel, root) { return (root || document).querySelector(sel); }
+  function qa(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function fmt(sec) { return pad2(Math.floor(sec / 60)) + ':' + pad2(sec % 60); }
+  function svgEl(tag, attrs) {
+    var el = document.createElementNS(SVGNS, tag);
+    if (attrs) { for (var k in attrs) { if (Object.prototype.hasOwnProperty.call(attrs, k)) { el.setAttribute(k, attrs[k]); } } }
+    return el;
+  }
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i -= 1) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+    return arr;
+  }
+  function findTicket(id) {
+    for (var i = 0; i < TICKETS.length; i += 1) { if (TICKETS[i].id === id) { return TICKETS[i]; } }
+    return null;
+  }
+  function totalErrors() {
+    return state.errors.ring + state.errors.decode + state.errors.final;
+  }
+
+  /* ================= 计时 ================= */
+  var clockEl = q('#clock');
+  var finalClockEl = q('#final-clock');
+
+  function tick() {
+    state.seconds = Math.floor((Date.now() - state.t0) / 1000);
+    clockEl.textContent = fmt(state.seconds);
+    if (finalClockEl) { finalClockEl.textContent = fmt(state.seconds); }
+  }
+  function startClock() {
+    if (state.started) { return; }
+    state.started = true;
+    state.t0 = Date.now();
+    state.timer = window.setInterval(tick, 1000);
+  }
+  function stopClock() {
+    if (state.timer) { window.clearInterval(state.timer); state.timer = null; }
+    if (state.started) { tick(); }
+  }
+
+  /* ================= 第一幕 ================= */
+  var tray = q('#tile-tray');
+  var ringSlots = q('#ring-slots');
+  var ringLine = q('#ring-line');
+  var ringMessage = q('#ring-message');
+  var repairLog = q('#repair-log');
+  var ringProgress = q('#ring-progress');
+  var hintCountEl = q('#hint-count');
+  var ringErrorsEl = q('#ring-errors');
+  var errorCountEl = q('#error-count');
+  var hintBtn = q('#hint-btn');
+  var resetBtn = q('#reset-btn');
+  var act1Done = q('#act1-done');
+
+  var slotNodes = [];
+
+  function ringSay(text) { ringMessage.textContent = text; }
+
+  function addLog(text, bad) {
+    var empty = q('.empty', repairLog);
+    if (empty) { empty.remove(); }
+    var li = document.createElement('li');
+    if (bad) { li.className = 'bad'; }
+    var t = document.createElement('span');
+    t.className = 't';
+    t.textContent = fmt(state.seconds);
+    var m = document.createElement('span');
+    m.className = 'm';
+    m.textContent = text;
+    li.appendChild(t);
+    li.appendChild(m);
+    repairLog.appendChild(li);
+    repairLog.scrollTop = repairLog.scrollHeight;
+  }
+
+  function updateStats() {
+    ringProgress.textContent = state.placed.size + ' / 18';
+    ringErrorsEl.textContent = state.errors.ring;
+    errorCountEl.textContent = totalErrors();
+    hintCountEl.textContent = state.hints;
+    var tp = q('#ticket-progress');
+    var tp2 = q('#ticket-progress-2');
+    var de = q('#decode-errors');
+    var fe = q('#final-errors');
+    if (tp) { tp.textContent = state.solved.size + ' / 4'; }
+    if (tp2) { tp2.textContent = state.solved.size; }
+    if (de) { de.textContent = state.errors.decode; }
+    if (fe) { fe.textContent = totalErrors(); }
+    hintBtn.disabled = state.hints <= 0;
+    hintBtn.textContent = '用一条线索（余 ' + state.hints + '）';
+  }
+
+  function renderSlots() {
+    ringSlots.innerHTML = '';
+    slotNodes = [];
+    RING.forEach(function (st, i) {
+      var g = svgEl('g', {
+        'class': 'ring-slot',
+        'data-name': st.name,
+        'data-i': i,
+        role: 'button',
+        tabindex: '0',
+        'aria-label': '第 ' + pad2(i + 1) + ' 号空位'
+      });
+      g.appendChild(svgEl('circle', { cx: st.x, cy: st.y, r: 26, fill: 'transparent', 'pointer-events': 'all' }));
+      g.appendChild(svgEl('circle', { 'class': 'slot-ring', cx: st.x, cy: st.y, r: 15 }));
+      var num = svgEl('text', { 'class': 'slot-num', x: st.x, y: st.y + 1 });
+      num.textContent = pad2(i + 1);
+      g.appendChild(num);
+      var name = svgEl('text', { 'class': 'slot-name', x: st.lx, y: st.ly, 'text-anchor': st.anchor });
+      name.textContent = st.name;
+      g.appendChild(name);
+
+      g.addEventListener('click', function () {
+        startClock();
+        onSlotClick(i);
+      });
+      g.addEventListener('keydown', function (e) {
+        var key = e.key || e.keyCode;
+        if (key === 'Enter' || key === 13 || key === ' ' || key === 'Spacebar' || key === 32) {
+          e.preventDefault();
+          startClock();
+          onSlotClick(i);
+        }
+      });
+      g.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        if (e.dataTransfer) { e.dataTransfer.dropEffect = 'move'; }
+      });
+      g.addEventListener('drop', function (e) {
+        e.preventDefault();
+        startClock();
+        var name = e.dataTransfer ? e.dataTransfer.getData('text/plain') : '';
+        if (name) { tryPlace(name, i); }
+      });
+
+      ringSlots.appendChild(g);
+      slotNodes.push(g);
+    });
+  }
+
+  function renderTiles() {
+    tray.innerHTML = '';
+    var names = shuffle(RING.map(function (s) { return s.name; }));
+    names.forEach(function (name) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tile';
+      b.draggable = true;
+      b.textContent = name;
+      b.setAttribute('data-name', name);
+      b.addEventListener('click', function () {
+        if (state.placed.size >= 18) { return; }
+        if (b.classList.contains('is-used')) { return; }
+        startClock();
+        if (state.selected === name) {
+          clearSelection();
+          ringSay('已取消选择。');
+          return;
+        }
+        selectTile(name);
+      });
+      b.addEventListener('dragstart', function (e) {
+        startClock();
+        selectTile(name);
+        if (e.dataTransfer) {
+          e.dataTransfer.setData('text/plain', name);
+          e.dataTransfer.effectAllowed = 'move';
+        }
+      });
+      tray.appendChild(b);
+    });
+  }
+
+  function tileNode(name) {
+    var list = qa('.tile', tray);
+    for (var i = 0; i < list.length; i += 1) {
+      if (list[i].getAttribute('data-name') === name) { return list[i]; }
+    }
+    return null;
+  }
+
+  function clearSelection() {
+    qa('.tile', tray).forEach(function (t) { t.classList.remove('is-selected'); });
+    state.selected = null;
+  }
+
+  function selectTile(name) {
+    clearSelection();
+    state.selected = name;
+    var t = tileNode(name);
+    if (t) { t.classList.add('is-selected'); }
+    ringSay('已选「' + name + '」。在环线上点一个空位。');
+  }
+
+  function onSlotClick(i) {
+    if (state.placed.has(i)) { return; }
+    if (!state.selected) {
+      ringSay('先在右侧选一个站名字模，再点这个空位。');
+      return;
+    }
+    var name = state.selected;
+    tryPlace(name, i);
+  }
+
+  function tryPlace(name, i) {
+    if (state.placed.has(i)) { return; }
+    var st = RING[i];
+    if (st.name !== name) {
+      state.errors.ring += 1;
+      updateStats();
+      var g = slotNodes[i];
+      g.classList.add('is-wrong');
+      window.setTimeout(function () { g.classList.remove('is-wrong'); }, 420);
+      addLog('误置 · ' + name + ' → 第 ' + pad2(i + 1) + ' 号', true);
+      ringSay('「' + name + '」不在这个位置。这个空位在环线的' + st.wall + '。');
+      clearSelection();
+      return;
+    }
+    placeStation(i);
+    clearSelection();
+  }
+
+  function placeStation(i) {
+    var st = RING[i];
+    var g = slotNodes[i];
+    state.placed.add(i);
+    g.classList.add('is-placed');
+    g.classList.remove('is-hinted');
+    var circle = q('.slot-ring', g);
+    if (circle) { circle.setAttribute('r', '12'); }
+    var tile = tileNode(st.name);
+    if (tile) {
+      tile.classList.add('is-used');
+      tile.classList.remove('is-hinted', 'is-selected');
+      tile.disabled = true;
+    }
+    addLog('归位 · ' + pad2(i + 1) + ' ' + st.name + ' / ' + st.ep, false);
+    updateStats();
+    if (st.transfer === '仅 2 号线') {
+      ringSay(st.name + ' 归位。' + st.ep + '。');
+    } else {
+      ringSay(st.name + ' 归位。' + st.ep + '；今为 ' + st.transfer + ' 的交汇。');
+    }
+    if (state.placed.size === RING.length) { completeRing(); }
+  }
+
+  function completeRing() {
+    ringLine.classList.add('is-complete');
+    act1Done.hidden = false;
+    addLog('环线闭合 · 18 / 18', false);
+    ringSay('十八站归位。2 号线自 1984 年闭合成圈，是中国第一条环形地铁。');
+    unlockAct2();
+  }
+
+  function useHint() {
+    if (state.hints <= 0) { return; }
+    var idx = -1;
+    for (var i = 0; i < RING.length; i += 1) {
+      if (!state.placed.has(i)) { idx = i; break; }
+    }
+    if (idx < 0) { ringSay('已经没有空位了。'); return; }
+    startClock();
+    state.hints -= 1;
+    var st = RING[idx];
+    var prev = RING[(idx + RING.length - 1) % RING.length].name;
+    var next = RING[(idx + 1) % RING.length].name;
+    ringSay('线索：第 ' + pad2(idx + 1) + ' 号空位在' + st.wall + '，夹在' + prev + '与' + next + '之间。');
+    addLog('线索 · 第 ' + pad2(idx + 1) + ' 号 ' + st.wall, false);
+    var g = slotNodes[idx];
+    var tile = tileNode(st.name);
+    g.classList.add('is-hinted');
+    if (tile) { tile.classList.add('is-hinted'); }
+    window.setTimeout(function () {
+      g.classList.remove('is-hinted');
+      if (tile) { tile.classList.remove('is-hinted'); }
+    }, 2600);
+    updateStats();
+  }
+
+  function resetRing() {
+    state.placed.clear();
+    state.selected = null;
+    slotNodes.forEach(function (g) {
+      g.classList.remove('is-placed', 'is-hinted', 'is-wrong');
+      var c = q('.slot-ring', g);
+      if (c) { c.setAttribute('r', '15'); }
+    });
+    qa('.tile', tray).forEach(function (t) {
+      t.classList.remove('is-used', 'is-selected', 'is-hinted');
+      t.disabled = false;
+    });
+    ringLine.classList.remove('is-complete');
+    act1Done.hidden = true;
+    addLog('重排字模', false);
+    ringSay('字模已重新打乱。环线回到未拼合的状态。');
+    renderTiles();
+    updateStats();
+  }
+
+  hintBtn.addEventListener('click', useHint);
+  resetBtn.addEventListener('click', resetRing);
+
+  /* ================= 第二幕 ================= */
+  var fullmap = q('#fullmap-svg');
+  var ticketRow = q('#ticket-row');
+  var decodeMessage = q('#decode-message');
+  var act2El = q('#act-2');
+  var act3El = q('#act-3');
+  var act2Done = q('#act2-done');
+  var routeLayer = null;
+  var startLayer = null;
+  var terminalLayer = null;
+  var diagLayer = null;
+  var coords = {};
+  var stationNodes = {};
+
+  function decodeSay(text) { decodeMessage.textContent = text; }
+
+  function labelPos(x, y, pos) {
+    if (pos === 'a') { return [x, y - 14, 'middle']; }
+    if (pos === 'b') { return [x, y + 24, 'middle']; }
+    if (pos === 'l') { return [x - 14, y + 5, 'end']; }
+    return [x + 14, y + 5, 'start'];
+  }
+
+  function initFullmap() {
+    fullmap.innerHTML = '';
+    var unique = {};
+    var order = [];
+
+    Object.keys(MAP_LINES).forEach(function (line) {
+      var L = MAP_LINES[line];
+      var poly = svgEl('polyline', {
+        'class': 'fm-line',
+        'data-line': line,
+        points: L.points,
+        stroke: L.color
+      });
+      fullmap.appendChild(poly);
+
+      L.stations.forEach(function (s) {
+        var name = s[0];
+        if (!unique[name]) {
+          unique[name] = {name:name, x:s[1], y:s[2], pos:s[3], lines:[]};
+          order.push(unique[name]);
+        }
+        if (unique[name].lines.indexOf(line) < 0) { unique[name].lines.push(line); }
+      });
+    });
+
+    order.forEach(function (e) {
+      var isTransfer = e.lines.length > 1;
+      var g = svgEl('g', {
+        'class': 'fm-station' + (isTransfer ? ' fm-transfer' : ''),
+        'data-name': e.name,
+        'data-lines': e.lines.join(' '),
+        role: 'button',
+        tabindex: '0',
+        'aria-label': e.name + '，点此核验终点'
+      });
+      g.appendChild(svgEl('circle', {
+        cx: e.x, cy: e.y, r: isTransfer ? 19 : 12,
+        fill: 'var(--mp-card)',
+        stroke: isTransfer ? 'var(--mp-foreground)' : LINE_COLORS[e.lines[0]],
+        'stroke-width': 3
+      }));
+      if (isTransfer) {
+        g.appendChild(svgEl('circle', { cx: e.x, cy: e.y, r: 4.5, fill: 'var(--mp-foreground)' }));
+      }
+      var lp = labelPos(e.x, e.y, e.pos);
+      var label = svgEl('text', {
+        'class': 'fm-label',
+        x: lp[0], y: lp[1], 'text-anchor': lp[2]
+      });
+      label.textContent = e.name;
+      g.appendChild(label);
+
+      g.addEventListener('click', function () { onMapStation(e.name); });
+      g.addEventListener('keydown', function (ev) {
+        var key = ev.key || ev.keyCode;
+        if (key === 'Enter' || key === 13 || key === ' ' || key === 'Spacebar' || key === 32) {
+          ev.preventDefault();
+          onMapStation(e.name);
+        }
+      });
+
+      fullmap.appendChild(g);
+      stationNodes[e.name] = g;
+      coords[e.name] = {x:e.x, y:e.y};
+    });
+
+    routeLayer = svgEl('g', { 'id': 'route-layer', 'pointer-events': 'none' });
+    startLayer = svgEl('g', { 'id': 'start-layer', 'pointer-events': 'none' });
+    terminalLayer = svgEl('g', { 'id': 'terminal-layer', 'pointer-events': 'none' });
+    diagLayer = svgEl('g', { 'id': 'diag-layer', 'pointer-events': 'none' });
+
+    fullmap.appendChild(routeLayer);
+    fullmap.appendChild(terminalLayer);
+    fullmap.appendChild(startLayer);
+    fullmap.appendChild(diagLayer);
+  }
+
+  function buildTickets() {
+    ticketRow.innerHTML = '';
+    TICKETS.forEach(function (t) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ticket';
+      b.setAttribute('data-id', t.id);
+      b.disabled = !state.act2;
+      b.innerHTML =
+        '<div class="ticket-head"><span>票 ' + t.no + '</span><span class="ticket-corner">' + t.corner + '</span></div>' +
+        '<p class="ticket-route">' + t.routeLabel + '</p>' +
+        '<p class="ticket-start">' + t.start + ' 上车</p>' +
+        '<p class="ticket-inst">' + t.instruction + '</p>' +
+        '<div class="ticket-foot"><span class="state" data-state>待核验</span><span>单程</span></div>' +
+        '<span class="stamp">已核验</span>';
+      b.addEventListener('click', function () {
+        if (!state.act2) { return; }
+        if (state.solved.has(t.id)) { decodeSay('这张票已经核验过了。'); return; }
+        startClock();
+        setActiveTicket(t.id);
+      });
+      ticketRow.appendChild(b);
+    });
+  }
+
+  function ticketNode(id) {
+    var list = qa('.ticket', ticketRow);
+    for (var i = 0; i < list.length; i += 1) {
+      if (list[i].getAttribute('data-id') === id) { return list[i]; }
+    }
+    return null;
+  }
+
+  function setActiveTicket(id) {
+    var t = findTicket(id);
+    if (!t) { return; }
+    state.activeTicket = id;
+    qa('.ticket', ticketRow).forEach(function (b) {
+      b.classList.toggle('is-active', b.getAttribute('data-id') === id && !state.solved.has(id));
+    });
+    clearStart();
+    drawStart(t);
+    decodeSay('票 ' + t.no + ' · ' + t.instruction + ' 请在全图上点出终点站。');
+  }
+
+  function clearStart() {
+    if (startLayer) { startLayer.innerHTML = ''; }
+  }
+
+  function drawStart(t) {
+    if (!startLayer) { return; }
+    var p = coords[t.start];
+    if (!p) { return; }
+    startLayer.appendChild(svgEl('circle', { 'class': 'start-pulse', cx: p.x, cy: p.y, r: 25 }));
+    startLayer.appendChild(svgEl('circle', { 'class': 'start-dot', cx: p.x, cy: p.y, r: 5 }));
+    var label = svgEl('text', { 'class': 'start-label', x: p.x, y: p.y - 32 });
+    label.textContent = '起 · ' + t.start;
+    startLayer.appendChild(label);
+  }
+
+  function drawRoute(t) {
+    if (!routeLayer) { return; }
+    var paths = [];
+    t.segments.forEach(function (seg) {
+      var pts = [];
+      seg.stations.forEach(function (name) {
+        var p = coords[name];
+        if (p) { pts.push(p.x + ',' + p.y); }
+      });
+      if (pts.length > 1) { paths.push({line:seg.line, points:pts.join(' ')}); }
+    });
+    paths.forEach(function (p) {
+      routeLayer.appendChild(svgEl('polyline', { 'class': 'route-halo', points: p.points }));
+    });
+    paths.forEach(function (p) {
+      routeLayer.appendChild(svgEl('polyline', {
+        'class': 'route-line',
+        points: p.points,
+        stroke: LINE_COLORS[p.line]
+      }));
+    });
+  }
+
+  function addTerminal(t) {
+    if (!terminalLayer) { return; }
+    var p = coords[t.end];
+    if (!p) { return; }
+    terminalLayer.appendChild(svgEl('circle', { cx: p.x, cy: p.y, r: 8, fill: 'var(--mp-primary)' }));
+    var label = svgEl('text', { 'class': 'terminal-label', x: p.x, y: p.y - 32 });
+    label.textContent = '终点';
+    terminalLayer.appendChild(label);
+  }
+
+  function missMark(p) {
+    if (!startLayer || !p) { return; }
+    var g = svgEl('g', { 'class': 'miss-mark' });
+    g.appendChild(svgEl('circle', { 'class': 'miss-ring', cx: p.x, cy: p.y, r: 24 }));
+    var x = svgEl('text', { 'class': 'miss-x', x: p.x, y: p.y });
+    x.textContent = '×';
+    g.appendChild(x);
+    startLayer.appendChild(g);
+    window.setTimeout(function () {
+      if (g.parentNode) { g.parentNode.removeChild(g); }
+    }, 700);
+  }
+
+  function flashStation(name) {
+    var g = stationNodes[name];
+    if (!g) { return; }
+    g.classList.add('is-wrong');
+    window.setTimeout(function () { g.classList.remove('is-wrong'); }, 500);
+  }
+
+  function onMapStation(name) {
+    if (!state.act2 || state.final) { return; }
+    if (!state.activeTicket) {
+      decodeSay('先点选上方的一张车票，再点终点站。');
+      return;
+    }
+    var t = findTicket(state.activeTicket);
+    if (!t) { return; }
+    if (name === t.start) {
+      decodeSay('这是起点。请沿票面指令继续，点出终点。');
+      return;
+    }
+    if (name === t.end) {
+      solveTicket(t);
+      return;
+    }
+    state.errors.decode += 1;
+    updateStats();
+    flashStation(name);
+    missMark(coords[name]);
+    addLog('误点 · ' + name + ' / 票 ' + t.no, true);
+    decodeSay(t.wrongHint);
+  }
+
+  function solveTicket(t) {
+    state.solved.add(t.id);
+    state.activeTicket = null;
+    var card = ticketNode(t.id);
+    if (card) {
+      card.classList.add('is-solved');
+      card.classList.remove('is-active');
+      var st = card.querySelector('[data-state]');
+      if (st) { st.textContent = '已核验'; }
+    }
+    clearStart();
+    drawRoute(t);
+    addTerminal(t);
+    addLog('核验 · 票 ' + t.no + ' ' + t.start + ' → ' + t.end, false);
+    updateStats();
+    decodeSay('核验通过：票 ' + t.no + ' 的终点是 ' + t.end + '（' + t.corner + '）。');
+
+    if (state.solved.size === TICKETS.length) {
+      window.setTimeout(finishTickets, 700);
+    } else {
+      window.setTimeout(function () {
+        var next = null;
+        for (var i = 0; i < TICKETS.length; i += 1) {
+          if (!state.solved.has(TICKETS[i].id)) { next = TICKETS[i]; break; }
+        }
+        if (next) {
+          setActiveTicket(next.id);
+        }
+      }, 950);
+    }
+  }
+
+  function finishTickets() {
+    drawDiagonals();
+    act2Done.hidden = false;
+    unlockAct3();
+    addLog('四票归位 · 两条对角线出现', false);
+    decodeSay('四角连成两条对角线。它们的交点，就是第三幕的问题。');
+  }
+
+  function drawDiagonals() {
+    if (!diagLayer) { return; }
+    diagLayer.innerHTML = '';
+    var A = coords['西直门'];
+    var B = coords['建国门'];
+    var C = coords['东直门'];
+    var D = coords['复兴门'];
+    if (!A || !B || !C || !D) { return; }
+
+    diagLayer.appendChild(svgEl('line', { 'class': 'diag', x1:A.x, y1:A.y, x2:B.x, y2:B.y }));
+    diagLayer.appendChild(svgEl('line', { 'class': 'diag', x1:C.x, y1:C.y, x2:D.x, y2:D.y }));
+
+    var cx = (A.x + B.x) / 2;
+    var cy = (A.y + B.y) / 2;
+    diagLayer.appendChild(svgEl('circle', { 'class': 'center-ring', cx:cx, cy:cy, r:23 }));
+    var qm = svgEl('text', { 'class': 'center-q', x:cx, y:cy });
+    qm.textContent = '?';
+    diagLayer.appendChild(qm);
+    var label = svgEl('text', { 'class': 'center-label', x:cx, y:cy + 42 });
+    label.textContent = '交点';
+    diagLayer.appendChild(label);
+  }
+
+  /* 线路高亮 */
+  qa('.legend-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var line = btn.getAttribute('data-line');
+      var pressed = btn.getAttribute('aria-pressed') === 'true';
+      qa('.legend-btn').forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
+      if (pressed) {
+        fullmap.removeAttribute('data-focus');
+      } else {
+        btn.setAttribute('aria-pressed', 'true');
+        fullmap.setAttribute('data-focus', line);
+      }
+    });
+  });
+
+  /* ================= 解锁 ================= */
+  function unlockAct2() {
+    if (state.act2) { return; }
+    state.act2 = true;
+    act2El.setAttribute('data-locked', 'false');
+    qa('.ticket', ticketRow).forEach(function (b) { b.disabled = false; });
+    decodeSay('第一幕完成。选一张车票，按票面指令在全图上点出终点。');
+  }
+
+  function unlockAct3() {
+    if (state.act3) { return; }
+    state.act3 = true;
+    act3El.setAttribute('data-locked', 'false');
+    qa('.answer').forEach(function (b) { b.disabled = false; });
+    q('#final-message').textContent = '四条对角线已经画好。选一个答案。';
+  }
+
+  /* ================= 第三幕 ================= */
+  function answer(value, btn) {
+    if (!state.act3 || state.final) { return; }
+    if (value === '故宫') {
+      state.final = true;
+      stopClock();
+      btn.classList.add('is-correct');
+      qa('.answer').forEach(function (b) {
+        b.disabled = true;
+        if (b !== btn) { b.style.opacity = '.5'; }
+      });
+      var msg = q('#final-message');
+      msg.textContent = '对了。两条对角线交于内城正中——故宫。';
+      addLog('城心 · 故宫', false);
+
+      var report = q('#final-report');
+      report.hidden = false;
+      q('#report-time').textContent = fmt(state.seconds);
+      q('#report-errors').textContent = totalErrors();
+      q('#report-hints').textContent = 3 - state.hints;
+      window.setTimeout(function () {
+        report.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }, 160);
+    } else {
+      state.errors.final += 1;
+      updateStats();
+      btn.classList.add('is-wrong');
+      window.setTimeout(function () { btn.classList.remove('is-wrong'); }, 420);
+      addLog('误答 · ' + value, true);
+      q('#final-message').textContent = '不是这里。交点在内城正中，不在城墙线上。';
+    }
+  }
+
+  qa('.answer').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      answer(btn.getAttribute('data-value'), btn);
+    });
+  });
+
+  /* ================= 档案 ================= */
+  var WALL_ORDER = ['北墙', '东墙', '南墙', '西墙'];
+  var WALL_NOTE = {
+    '北墙': '北垣五站：西直门起，沿城墙向东至雍和宫。',
+    '东墙': '东垣五站：东直门向南，经朝阳门、建国门到北京站。',
+    '南墙': '南垣四站：崇文门、前门、和平门、宣武门。',
+    '西墙': '西垣四站：长椿街向北，经复兴门、阜成门回车公庄。'
+  };
+
+  function buildArchive() {
+    var host = q('#archive-list');
+    host.innerHTML = '';
+    WALL_ORDER.forEach(function (wall) {
+      var items = RING.filter(function (s) { return s.wall === wall; });
+      var group = document.createElement('div');
+      group.className = 'archive-group';
+
+      var head = document.createElement('div');
+      head.className = 'archive-head';
+      var h3 = document.createElement('h3');
+      h3.textContent = wall;
+      var count = document.createElement('span');
+      count.className = 'count';
+      count.textContent = items.length + ' 站 · ' + WALL_NOTE[wall];
+      head.appendChild(h3);
+      head.appendChild(count);
+      group.appendChild(head);
+
+      var grid = document.createElement('div');
+      grid.className = 'archive-grid';
+      items.forEach(function (s) {
+        var idx = RING.indexOf(s) + 1;
+        var card = document.createElement('article');
+        card.className = 'archive-card';
+        card.innerHTML =
+          '<div class="archive-top"><h4>' + s.name + '</h4><span class="no">' + pad2(idx) + '</span></div>' +
+          '<p class="archive-ep">' + s.ep + '</p>' +
+          '<p class="archive-story">' + s.story + '</p>' +
+          '<p class="archive-transfer">换乘 · ' + s.transfer + '</p>';
+        grid.appendChild(card);
+      });
+      group.appendChild(grid);
+      host.appendChild(group);
+    });
+  }
+
+  /* ================= 初始化 ================= */
+  renderSlots();
+  renderTiles();
+  buildTickets();
+  initFullmap();
+  buildArchive();
+  updateStats();
+  decodeSay('先点选一张车票，再在全图上点出终点站。');
+
+  q('#report-hints').textContent = '0';
+}());
+</script>
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preflight</title>
+    <style id="theme-vars">
+/* ============================================================
+   《地铁拼图师 · 北京环城记》设计令牌
+   方向：印刷品 / 编辑排版风 —— 纸白底、墨黑字、单一赭橙强调色、
+        发丝分隔线、极小圆角、中文衬线标题 + 无衬线正文。
+   单一品牌色原则：全站仅 --mp-primary 一个强调色。
+   ============================================================ */
+
+:root {
+  /* —— 语义颜色（脚本解析必需）—— */
+  --mp-background: #f4f1e8;
+  --mp-foreground: #1b1915;
+  --mp-card: #fbf9f3;
+  --mp-card-foreground: #1b1915;
+  --mp-popover: #fffdf8;
+  --mp-popover-foreground: #1b1915;
+  --mp-primary: #a63a2a;
+  --mp-primary-foreground: #fdfaf5;
+  --mp-muted: #e9e4d7;
+  --mp-muted-foreground: #6b6455;
+  --mp-border: #d6cfbe;
+  --mp-input: #d6cfbe;
+  --mp-ring: #a63a2a;
+
+  /* —— 圆角阶梯（脚本解析必需）—— */
+  --mp-radius-sm: 2px;
+  --mp-radius-md: 4px;
+  --mp-radius-lg: 8px;
+
+  /* —— 字体 —— */
+  --mp-font-serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "SimSun", serif;
+  --mp-font-sans: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --mp-font-mono: "SFMono-Regular", "JetBrains Mono", "Menlo", "Consolas", monospace;
+
+  /* —— 版式阶梯 —— */
+  --mp-text-display: clamp(34px, 4.6vw, 58px);
+  --mp-text-h1: clamp(26px, 3.2vw, 40px);
+  --mp-text-h2: clamp(20px, 2.2vw, 27px);
+  --mp-text-h3: 18px;
+  --mp-text-body: 15px;
+  --mp-text-caption: 13px;
+
+  /* —— 8pt 间距 —— */
+  --mp-s1: 4px;
+  --mp-s2: 8px;
+  --mp-s3: 12px;
+  --mp-s4: 16px;
+  --mp-s5: 24px;
+  --mp-s6: 32px;
+  --mp-s7: 48px;
+  --mp-s8: 80px;
+
+  /* —— 分隔与阴影（静态面仅发丝线与极浅阴影）—— */
+  --mp-hairline: 1px solid var(--mp-border);
+  --mp-rule-strong: 2px solid var(--mp-foreground);
+  --mp-shadow-1: 0 1px 2px rgba(27, 25, 21, 0.05);
+  --mp-shadow-2: 0 10px 28px -12px rgba(27, 25, 21, 0.22);
+
+  /* —— 地铁线路识别色（数据身份色，低饱和以贴合纸面）—— */
+  --mp-line-1: #b6483a;
+  --mp-line-2: #2f6b8f;
+  --mp-line-4: #2f7d78;
+  --mp-line-5: #8d3f6b;
+}
+
+body {
+  font-family: var(--mp-font-sans);
+  font-size: var(--mp-text-body);
+  line-height: 1.65;
+  color: var(--mp-foreground);
+  background-color: var(--mp-background);
+  -webkit-font-smoothing: antialiased;
+}
+
+.mp-serif {
+  font-family: var(--mp-font-serif);
+}
+
+.mp-mono {
+  font-family: var(--mp-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.mp-num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 标题：中文衬线、短名词短语、断行保护 */
+.mp-title {
+  font-family: var(--mp-font-serif);
+  line-height: 1.22;
+  letter-spacing: 0.01em;
+  text-wrap: balance;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.mp-hair {
+  border-top: var(--mp-hairline);
+}
+
+.mp-rule-strong {
+  border-top: var(--mp-rule-strong);
+}
+
+.mp-eyebrow {
+  font-family: var(--mp-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mp-muted-foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--mp-background);
+    --color-foreground: var(--mp-foreground);
+    --color-card: var(--mp-card);
+    --color-card-foreground: var(--mp-card-foreground);
+    --color-popover: var(--mp-popover);
+    --color-popover-foreground: var(--mp-popover-foreground);
+    --color-primary: var(--mp-primary);
+    --color-primary-foreground: var(--mp-primary-foreground);
+    --color-muted: var(--mp-muted);
+    --color-muted-foreground: var(--mp-muted-foreground);
+    --color-border: var(--mp-border);
+    --color-input: var(--mp-input);
+    --color-ring: var(--mp-ring);
+    --radius-sm: var(--mp-radius-sm);
+    --radius-md: var(--mp-radius-md);
+    --radius-lg: var(--mp-radius-lg);
+  }
+  @layer base {
+    body { background: var(--mp-background); color: var(--mp-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--mp-background); }
+      .text-background { color: var(--mp-background); }
+      .border-background { border-color: var(--mp-background); }
+      .ring-background { --tw-ring-color: var(--mp-background); }
+      .bg-foreground { background-color: var(--mp-foreground); }
+      .text-foreground { color: var(--mp-foreground); }
+      .border-foreground { border-color: var(--mp-foreground); }
+      .ring-foreground { --tw-ring-color: var(--mp-foreground); }
+      .bg-card { background-color: var(--mp-card); }
+      .text-card { color: var(--mp-card); }
+      .border-card { border-color: var(--mp-card); }
+      .ring-card { --tw-ring-color: var(--mp-card); }
+      .bg-card-foreground { background-color: var(--mp-card-foreground); }
+      .text-card-foreground { color: var(--mp-card-foreground); }
+      .border-card-foreground { border-color: var(--mp-card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--mp-card-foreground); }
+      .bg-popover { background-color: var(--mp-popover); }
+      .text-popover { color: var(--mp-popover); }
+      .border-popover { border-color: var(--mp-popover); }
+      .ring-popover { --tw-ring-color: var(--mp-popover); }
+      .bg-popover-foreground { background-color: var(--mp-popover-foreground); }
+      .text-popover-foreground { color: var(--mp-popover-foreground); }
+      .border-popover-foreground { border-color: var(--mp-popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--mp-popover-foreground); }
+      .bg-primary { background-color: var(--mp-primary); }
+      .text-primary { color: var(--mp-primary); }
+      .border-primary { border-color: var(--mp-primary); }
+      .ring-primary { --tw-ring-color: var(--mp-primary); }
+      .bg-primary-foreground { background-color: var(--mp-primary-foreground); }
+      .text-primary-foreground { color: var(--mp-primary-foreground); }
+      .border-primary-foreground { border-color: var(--mp-primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--mp-primary-foreground); }
+      .bg-muted { background-color: var(--mp-muted); }
+      .text-muted { color: var(--mp-muted); }
+      .border-muted { border-color: var(--mp-muted); }
+      .ring-muted { --tw-ring-color: var(--mp-muted); }
+      .bg-muted-foreground { background-color: var(--mp-muted-foreground); }
+      .text-muted-foreground { color: var(--mp-muted-foreground); }
+      .border-muted-foreground { border-color: var(--mp-muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--mp-muted-foreground); }
+      .bg-border { background-color: var(--mp-border); }
+      .text-border { color: var(--mp-border); }
+      .border-border { border-color: var(--mp-border); }
+      .ring-border { --tw-ring-color: var(--mp-border); }
+      .bg-input { background-color: var(--mp-input); }
+      .text-input { color: var(--mp-input); }
+      .border-input { border-color: var(--mp-input); }
+      .ring-input { --tw-ring-color: var(--mp-input); }
+      .bg-ring { background-color: var(--mp-ring); }
+      .text-ring { color: var(--mp-ring); }
+      .border-ring { border-color: var(--mp-ring); }
+      .ring-ring { --tw-ring-color: var(--mp-ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <main>
+    </main>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

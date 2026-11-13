@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>方向 A · 公文卷宗 — 数字边境 / 我是风控系统</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4F0E6; --paper-2:#EAE3D3; --ink:#1B1A17; --ink-soft:#5B564C;
+  --rule:#CBC4B3; --rule-soft:#E4DECD; --seal:#B4471F; --deny:#9E2B22; --ok:#4A5C42;
+  --serif:"Noto Serif SC","Source Han Serif SC","Songti SC",serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:var(--paper); color:var(--ink); font-family:var(--serif);
+  -webkit-font-smoothing:antialiased; text-wrap:pretty;
+  padding:44px 44px 72px; min-height:100vh;
+}
+/* ---- 方向说明条 ---- */
+.dirbar{border-bottom:2px solid var(--ink); padding-bottom:18px; margin-bottom:32px; display:flex; flex-wrap:wrap; align-items:baseline; gap:16px}
+.dirbar__tag{font-family:var(--mono); font-size:12px; letter-spacing:.18em; border:1px solid var(--ink); padding:3px 9px}
+.dirbar h1{font-size:30px; font-weight:700; letter-spacing:.02em}
+.dirbar h1 .en{font-family:var(--mono); font-size:13px; font-weight:400; color:var(--ink-soft); letter-spacing:.12em; margin-left:8px}
+.dirbar p{flex-basis:100%; color:var(--ink-soft); font-size:14px; line-height:1.75; max-width:76ch}
+
+/* ---- 两栏 ---- */
+.grid{display:grid; grid-template-columns:1fr 1fr; gap:26px; align-items:start}
+@media(max-width:1120px){.grid{grid-template-columns:1fr}}
+.frame{border:1px solid var(--rule); background:var(--paper)}
+.frame__bar{display:flex; justify-content:space-between; align-items:center; padding:10px 16px; border-bottom:1px solid var(--rule); font-size:13px; letter-spacing:.02em}
+.frame__bar span:last-child{font-family:var(--mono); font-size:11px; color:var(--ink-soft); letter-spacing:.1em}
+
+/* ---- 左：数字边境 · 受理单 ---- */
+.doc{padding:30px 30px 34px; position:relative; background:
+  repeating-linear-gradient(0deg,transparent 0 31px,var(--rule-soft) 31px 32px);}
+.doc__head{display:flex; justify-content:space-between; font-family:var(--mono); font-size:11px; letter-spacing:.1em; color:var(--ink-soft); padding-bottom:10px; border-bottom:1px solid var(--rule)}
+.doc__title{font-size:22px; font-weight:700; letter-spacing:.06em; margin:22px 0 6px; text-align:center}
+.doc__sub{text-align:center; font-size:12px; color:var(--ink-soft); letter-spacing:.28em; margin-bottom:22px}
+.fields{display:grid; gap:0; margin:0 0 22px}
+.field{display:grid; grid-template-columns:118px 1fr; align-items:center; border-bottom:1px solid var(--rule-soft); padding:11px 2px; font-size:14px}
+.field dt{color:var(--ink-soft); letter-spacing:.14em; font-size:12px}
+.field dd{font-family:var(--mono); font-size:13px}
+.actions{display:flex; align-items:center; gap:14px; margin-bottom:26px}
+.btn{font-family:var(--serif); font-size:14px; letter-spacing:.14em; padding:10px 26px; border:1px solid var(--ink); background:var(--ink); color:var(--paper); cursor:pointer}
+.hint{font-family:var(--mono); font-size:11px; color:var(--ink-soft)}
+.slip{border:1px solid var(--rule); border-left:3px solid var(--deny); padding:16px 18px; position:relative; background:var(--paper-2)}
+.slip__reason{font-size:15px; line-height:1.7}
+.slip__by{font-family:var(--mono); font-size:11px; color:var(--ink-soft); margin-top:10px; letter-spacing:.08em}
+.seal{position:absolute; top:14px; right:16px; width:76px; height:76px; border:2px solid var(--seal); color:var(--seal);
+  display:flex; align-items:center; justify-content:center; font-size:19px; font-weight:700; letter-spacing:.1em;
+  transform:rotate(-11deg); opacity:.86; border-radius:2px}
+
+/* ---- 右：我是风控系统 · 夜班台 ---- */
+.console{padding:0; display:flex; flex-direction:column}
+.console__head{display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid var(--rule); font-size:13px}
+.console__metric{font-family:var(--mono); font-size:11px; letter-spacing:.06em; border:1px solid var(--seal); color:var(--seal); padding:3px 8px}
+.queue{list-style:none}
+.row{display:grid; grid-template-columns:74px 1fr auto; align-items:center; gap:14px; padding:14px 16px; border-bottom:1px solid var(--rule-soft)}
+.row__id{font-family:var(--mono); font-size:12px; color:var(--ink-soft)}
+.row__info b{display:block; font-size:14px; font-weight:600; letter-spacing:.02em}
+.row__info span{font-size:12px; color:var(--ink-soft)}
+.row__act{display:flex; gap:8px}
+.btn--ghost{background:transparent; color:var(--ink); padding:8px 16px; font-size:13px}
+.btn--deny{background:var(--deny); border-color:var(--deny); padding:8px 16px; font-size:13px}
+.console__foot{display:flex; justify-content:space-between; padding:12px 16px; font-family:var(--mono); font-size:11px; color:var(--ink-soft); letter-spacing:.06em}
+.console__note{margin:14px 16px 18px; padding:12px 14px; border:1px dashed var(--rule); font-size:12px; line-height:1.7; color:var(--ink-soft)}
+.console__note b{color:var(--ink); font-weight:600}
+</style>
+</head>
+<body>
+
+<header class="dirbar">
+  <span class="dirbar__tag">方向 A</span>
+  <h1>公文卷宗<span class="en">Dossier</span></h1>
+  <p>官僚文书的冷静与荒诞。用最正式的表格、最端正的衬线、最规矩的分割线，去承接一件最不讲理的事——一张永远驳回的受理单。荒诞感来自"格式越严谨，内容越无解"。</p>
+</header>
+
+<main class="grid">
+
+  <!-- 数字边境 -->
+  <section class="frame">
+    <div class="frame__bar"><span>《数字边境》</span><span>受理界面 · 第 1 次尝试</span></div>
+    <article class="doc">
+      <div class="doc__head"><span>案件编号 REC-000731</span><span>访问申请受理系统</span></div>
+      <h2 class="doc__title">境外服务访问申请受理表</h2>
+      <p class="doc__sub">表格一 · 申请与告知</p>
+      <dl class="fields">
+        <div class="field"><dt>申请人</dt><dd>一名普通用户</dd></div>
+        <div class="field"><dt>注册地区</dt><dd>中国大陆</dd></div>
+        <div class="field"><dt>联系方式</dt><dd>156 **** ****</dd></div>
+        <div class="field"><dt>设备标识</dt><dd>未登记</dd></div>
+      </dl>
+      <div class="actions">
+        <button class="btn">提交受理</button>
+        <span class="hint">本次为第 1 次提交</span>
+      </div>
+      <div class="slip">
+        <div class="seal">驳回</div>
+        <p class="slip__reason">理由：该地区不在服务范围。</p>
+        <p class="slip__by">— 受理系统 · 自动签发</p>
+      </div>
+    </article>
+  </section>
+
+  <!-- 我是风控系统 -->
+  <section class="frame">
+    <div class="frame__bar"><span>《我是风控系统》</span><span>夜班 · 第 01 班次</span></div>
+    <article class="console">
+      <div class="console__head">
+        <span>待处理案卷队列</span>
+        <span class="console__metric">本班次指标 拦截率 ≥ 30%</span>
+      </div>
+      <ul class="queue">
+        <li class="row">
+          <span class="row__id">#A-2201</span>
+          <div class="row__info"><b>来源 · 未支持地区</b><span>设备 新登记 · 历史 空 · 行为 平稳</span></div>
+          <div class="row__act"><button class="btn btn--ghost">放行</button><button class="btn btn--deny">拦截</button></div>
+        </li>
+        <li class="row">
+          <span class="row__id">#A-2202</span>
+          <div class="row__info"><b>来源 · 未支持地区</b><span>设备 已登记 · 历史 空 · 行为 平稳</span></div>
+          <div class="row__act"><button class="btn btn--ghost">放行</button><button class="btn btn--deny">拦截</button></div>
+        </li>
+        <li class="row">
+          <span class="row__id">#A-2203</span>
+          <div class="row__info"><b>来源 · 支持地区</b><span>设备 新登记 · 历史 无 · 行为 异常</span></div>
+          <div class="row__act"><button class="btn btn--ghost">放行</button><button class="btn btn--deny">拦截</button></div>
+        </li>
+      </ul>
+      <div class="console__note"><b>提示：</b>本班次政策尚未下发。你的每一次判断都会被记录，并用于训练下一代模型。</div>
+      <div class="console__foot"><span>已处理 0 / 12</span><span>一致率 —</span><span>配额达成 —</span></div>
+    </article>
+  </section>
+
+</main>
+
+</body>
+</html>

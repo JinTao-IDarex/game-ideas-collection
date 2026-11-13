@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>最后一公里 · 完整可玩版</title>
+<!--
+  「最后一公里」完整单关可玩版（手机竖屏 390×844，哈啰找车页界面模式）
+  完整循环：找车验车（停车点集群）→ 步行 → 开锁（扫码/烧毁/输编号）→ 骑行（红绿灯/隐伤兑现/QTE/湿坐垫）→ 打卡结算
+  三维状态：时间（300s 真实倒计时）/ 体力 / 心情；多维结局文案
+  每次打开车况随机生成，无背板答案
+-->
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;user-select:none}
+  html,body{height:100%;overflow:hidden}
+  body{background:#20242B;font-family:'Noto Sans SC',sans-serif;display:flex;align-items:center;justify-content:center;gap:56px}
+  .side{color:#E8EAEE;max-width:330px}
+  .side h1{font-size:36px;font-weight:900;line-height:1.3}
+  .side h1 em{color:#33B5FF;font-style:normal}
+  .side p{color:#9BA1AB;font-size:14px;line-height:1.9;margin-top:14px}
+  .side .keys{margin-top:20px;display:flex;flex-direction:column;gap:9px}
+  .side .key{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:#C6CAD2;line-height:1.6}
+  .side .key i{flex:none;width:8px;height:8px;border-radius:50%;background:#33B5FF;margin-top:6px}
+  .side .key b{color:#FF6B4A}
+
+  .phone{width:390px;height:844px;border-radius:52px;background:#000;padding:10px;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 2px #3A3F47;flex:none}
+  .screen{width:100%;height:100%;border-radius:44px;overflow:hidden;position:relative;background:#F2F0EA}
+
+  .statusbar{position:absolute;top:0;left:0;right:0;height:44px;z-index:90;display:flex;justify-content:space-between;align-items:center;padding:0 26px;font-size:13px;font-weight:700;color:#222;pointer-events:none}
+  .statusbar.dark{color:#fff}
+  .notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:104px;height:28px;background:#000;border-radius:99px;z-index:91}
+
+  /* 任务胶囊（跨阶段常驻） */
+  .mission{position:absolute;top:56px;left:14px;right:14px;z-index:80;background:rgba(34,36,40,.92);backdrop-filter:blur(8px);border-radius:16px;padding:10px 14px;display:flex;align-items:center;gap:12px;color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+  .mission .clock{font-size:22px;font-weight:900;color:#FF6B4A;font-variant-numeric:tabular-nums;letter-spacing:.5px}
+  .mission .clock.hit{animation:hit .4s}
+  @keyframes hit{0%{transform:scale(1.35);color:#FF3B2F}100%{transform:scale(1)}}
+  .mission .tt{font-size:11px;color:#B9BDC6;line-height:1.5}
+  .mission .tt b{color:#fff}
+  .mission .speedo{display:inline-block;font-size:9px;font-weight:900;color:#FFD54F;background:rgba(255,213,79,.14);border:1px solid rgba(255,213,79,.4);border-radius:99px;padding:0 6px;vertical-align:1px}
+  .mission .mini{margin-left:auto;display:flex;gap:8px}
+  .mission .mstat{text-align:center}
+  .mission .mstat .v{font-size:14px;font-weight:900}
+  .mission .mstat .k{font-size:9px;color:#B9BDC6}
+  .mission .mstat .bar{width:34px;height:3px;background:#3A3F47;border-radius:2px;margin-top:3px;overflow:hidden}
+  .mission .mstat .bar i{display:block;height:100%;background:#33B5FF;transition:width .3s}
+  .mission .mstat.mood .bar i{background:#FFC53D}
+
+  .toast{position:absolute;top:170px;left:24px;right:24px;z-index:95;background:rgba(34,36,40,.95);color:#fff;font-size:13px;font-weight:700;padding:13px 16px;border-radius:14px;text-align:center;line-height:1.6;box-shadow:0 8px 24px rgba(0,0,0,.3);animation:tin .25s}
+  @keyframes tin{from{transform:translateY(-12px);opacity:0}to{transform:none;opacity:1}}
+
+  .stage{position:absolute;inset:0;display:none}
+  .stage.on{display:block}
+  #stage-walk.on,#stage-end.on{display:flex}
+
+  /* ================= 找车阶段 ================= */
+  #stage-map{background:#F2F0EA}
+  .block{position:absolute;background:#E7E4DA;border-radius:6px}
+  .block.park{background:#DCE9D4}
+  .road{position:absolute;background:#FFFFFF}
+  .road.h{height:14px;box-shadow:0 1px 0 #DDD9CE}
+  .road.v{width:14px;box-shadow:1px 0 0 #DDD9CE}
+  .road-name{position:absolute;font-size:10px;color:#B0AC9F;letter-spacing:3px;font-weight:500;transform:rotate(90deg);transform-origin:left center}
+  .zone{position:absolute;border:2px dashed rgba(51,181,255,.7);border-radius:14px;background:rgba(51,181,255,.08)}
+  .zone .zlb{position:absolute;top:-11px;left:12px;background:#33B5FF;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px}
+  .company{position:absolute;transform:translate(-50%,-100%);z-index:12;text-align:center}
+  .company .pin{width:34px;height:34px;border-radius:50% 50% 50% 4px;background:#FF5A3C;color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;transform:rotate(-45deg);box-shadow:0 3px 8px rgba(255,90,60,.4);margin:0 auto}
+  .company .pin span{transform:rotate(45deg)}
+  .company .lb{font-size:11px;font-weight:900;color:#FF5A3C;margin-top:3px;background:#fff;padding:1px 7px;border-radius:99px;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+  .me{position:absolute;transform:translate(-50%,-50%);z-index:11}
+  .me .dot{width:16px;height:16px;border-radius:50%;background:#1A9CFF;border:3px solid #fff;box-shadow:0 1px 6px rgba(26,156,255,.5)}
+  .me .ring{position:absolute;inset:-14px;border-radius:50%;border:2px solid rgba(26,156,255,.4);animation:pulse 2s infinite}
+  @keyframes pulse{0%{transform:scale(.5);opacity:1}100%{transform:scale(1.4);opacity:0}}
+  .pk{position:absolute;transform:translate(-50%,-50%);z-index:13;cursor:pointer;text-align:center}
+  .pk .ico{width:36px;height:36px;border-radius:50%;background:#fff;position:relative;box-shadow:0 2px 8px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;transition:transform .12s}
+  .pk.active .ico{background:#1A9CFF;transform:scale(1.15);box-shadow:0 4px 14px rgba(26,156,255,.5)}
+  .pk.active .ico svg path{stroke:#fff}
+  .pk .cnt{position:absolute;top:-7px;right:-9px;min-width:17px;height:17px;border-radius:99px;background:#FF8A00;color:#fff;font-size:10px;font-weight:900;line-height:17px;padding:0 4px;border:2px solid #fff}
+  .pk .d{position:absolute;top:40px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:10px;font-weight:700;color:#666;background:rgba(255,255,255,.92);padding:1px 6px;border-radius:99px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+
+  .sheet-default{position:absolute;left:0;right:0;bottom:0;z-index:26;padding:14px 18px 26px;background:linear-gradient(180deg,rgba(242,240,234,0),rgba(242,240,234,.96) 26%)}
+  .near{font-size:12px;color:#888;font-weight:500;margin-bottom:10px;text-align:center}
+  .near b{color:#E6432D}
+  .scan{width:100%;border:none;cursor:pointer;border-radius:16px;padding:17px;background:linear-gradient(135deg,#33B5FF,#1A7CFF);color:#fff;font-size:18px;font-weight:900;font-family:inherit;letter-spacing:2px;box-shadow:0 8px 20px rgba(26,124,255,.35);display:flex;align-items:center;justify-content:center;gap:10px}
+  .scan-sub{text-align:center;font-size:11px;color:#999;margin-top:9px}
+  .scan-sub u{color:#1A7CFF;font-weight:700}
+
+  .sheet-cluster{position:absolute;left:0;right:0;bottom:0;z-index:27;background:#fff;border-radius:22px 22px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.15);padding:12px 0 20px;transform:translateY(110%);transition:transform .25s cubic-bezier(.2,.9,.3,1);max-height:62%;display:flex;flex-direction:column}
+  .sheet-cluster.show{transform:translateY(0)}
+  .sheet-cluster .grab{width:38px;height:4px;border-radius:99px;background:#E4E4E4;margin:0 auto 8px;flex:none}
+  .sc-head{padding:0 18px;display:flex;align-items:baseline;gap:10px}
+  .sc-head h2{font-size:17px;font-weight:900}
+  .sc-head .meta{font-size:11px;color:#999}
+  .sc-head .odds{margin-left:auto;font-size:11px;font-weight:900;color:#E6432D;background:#FDECEA;padding:3px 9px;border-radius:99px}
+  .sc-row{display:flex;gap:10px;overflow-x:auto;padding:12px 18px;scrollbar-width:none}
+  .sc-row::-webkit-scrollbar{display:none}
+  .card{flex:none;width:118px;border:2px solid #EDEFF2;border-radius:14px;padding:8px 8px 10px;cursor:pointer;background:#FAFBFC;transition:border-color .15s,transform .15s;position:relative;text-align:center}
+  .card:hover{transform:translateY(-2px)}
+  .card.sel{border-color:#1A7CFF;background:#F0F7FF}
+  .card.dead{opacity:.45;pointer-events:none}
+  .card.dead::after{content:'✕ 骑不了';position:absolute;inset:auto 0 34px 0;font-size:11px;font-weight:900;color:#E6432D}
+  .card .no{font-size:10px;color:#999;font-weight:700;margin-top:2px}
+  .card img{width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:8px;display:block;background:#fff}
+  .card .tagline{font-size:10px;font-weight:700;margin-top:4px;padding:2px 0;border-radius:99px}
+  .card .tagline.unk{background:#FFF3E0;color:#B8791A}
+  .card .tagline.bad{background:#FDECEA;color:#E6432D}
+  .inspect{flex:none;border-top:1px solid #F0F1F3;padding:12px 18px 0;display:none}
+  .inspect.show{display:block}
+  .inspect .row{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:center}
+  .inspect .img{background:#F6F8FA;border-radius:12px;padding:4px}
+  .inspect .img img{width:100%;border-radius:8px;display:block}
+  .inspect .tags{display:flex;flex-wrap:wrap;gap:6px}
+  .tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;background:#F0F2F5;color:#555}
+  .tag.ok{background:#E8F7EE;color:#1FA84A}
+  .tag.bad{background:#FDECEA;color:#E6432D}
+  .tag.hint{background:#FFF7E6;color:#B8791A;border:1px dashed #E8C069}
+  .verdict{margin-top:10px;font-size:13px;font-weight:700;line-height:1.6;min-height:22px}
+  .verdict.good{color:#1FA84A}
+  .verdict.bad{color:#E6432D}
+  .verdict.uneasy{color:#B8791A}
+  .actions{display:flex;gap:10px;margin-top:10px}
+  .btn{border:none;cursor:pointer;border-radius:14px;font-family:inherit;font-weight:900;font-size:15px;padding:13px 0}
+  .btn.ghost{flex:1;background:#F0F2F5;color:#444}
+  .btn.main{flex:1.6;background:linear-gradient(135deg,#33B5FF,#1A7CFF);color:#fff;box-shadow:0 6px 14px rgba(26,124,255,.3)}
+  .btn:disabled{opacity:.5;box-shadow:none;cursor:default}
+
+  /* ================= 开场标题页 ================= */
+  #stage-start.on{display:flex}
+  #stage-start{background:linear-gradient(rgba(15,20,28,.55),rgba(15,20,28,.88)),url(assets/pov-street.png) center/cover;align-items:center;justify-content:center;text-align:center}
+  .start-box{width:82%;color:#fff}
+  .start-box .logo{font-size:56px}
+  .start-box h1{font-size:38px;font-weight:900;letter-spacing:8px;margin:10px 0 6px;text-shadow:0 4px 18px rgba(0,0,0,.5)}
+  .start-box .tagline{font-size:13px;color:#B9C4D0;margin-bottom:22px;letter-spacing:1px}
+  .start-box .rules{text-align:left;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:13px 16px;font-size:12.5px;line-height:2.1;color:#DCE4EC;margin-bottom:22px}
+  .start-btn{width:100%;border:none;border-radius:16px;padding:17px;font-size:19px;font-weight:900;font-family:inherit;letter-spacing:6px;color:#fff;background:linear-gradient(135deg,#33B5FF,#1A7CFF);box-shadow:0 10px 26px rgba(26,124,255,.45);cursor:pointer}
+  .start-btn:active{transform:scale(.97)}
+  .start-box .daily{margin-top:14px;font-size:11px;color:#8A96A4}
+  .start-box .career{margin-top:8px;font-size:11px;color:#8A96A4}
+  .diff-row{display:flex;gap:8px;margin-bottom:16px}
+  .diff-chip{flex:1;border:1.5px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:#C9D4E0;border-radius:12px;padding:9px 4px;font-family:inherit;cursor:pointer;text-align:center}
+  .diff-chip .n{font-size:14px;font-weight:900}
+  .diff-chip .d{font-size:10px;margin-top:3px;color:#93A1B0}
+  .diff-chip.on{border-color:#33B5FF;background:rgba(51,181,255,.18);color:#fff}
+  .end-box .rank{font-size:46px;font-weight:900;margin:2px 0;background:linear-gradient(135deg,#FFD76A,#FF8A00);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .end-box .ach-new{margin-top:10px;text-align:left;background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.4);border-radius:12px;padding:8px 12px;font-size:12px;color:#F5C06A;line-height:1.9}
+  .end-box .record{color:#F5A623;font-weight:900;font-size:14px;margin-top:10px}
+  .end-box .bestline{font-size:11px;color:#8A96A4;margin-top:4px}
+
+  /* ================= 步行过场 ================= */
+  #stage-walk{background:linear-gradient(rgba(18,22,28,.35),rgba(18,22,28,.78)),url(assets/pov-walk.png) center/cover;align-items:center;justify-content:center}
+  .walk-box{text-align:center;color:#fff;width:78%}
+  .walk-box .emoji{font-size:52px;animation:bob .5s infinite alternate}
+  @keyframes bob{from{transform:translateY(0)}to{transform:translateY(-8px)}}
+  .walk-box h3{font-size:18px;font-weight:900;margin:14px 0 4px}
+  .walk-box .sub{font-size:12px;color:#9BA1AB;margin-bottom:18px}
+  .wpbar{height:8px;background:#3A3F47;border-radius:99px;overflow:hidden}
+  .wpbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#33B5FF,#1A7CFF);border-radius:99px}
+
+  /* ================= 开锁阶段 ================= */
+  #stage-unlock{background:#171B21}
+  .cam{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;padding-top:150px}
+  .cam .tip{color:#fff;font-size:15px;font-weight:700;margin-bottom:6px}
+  .cam .sub{color:#7A828E;font-size:12px;margin-bottom:26px}
+  .vf{width:240px;height:240px;position:relative;border-radius:18px;background:url(assets/pov-lock.png) center/cover;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 0 0 4px rgba(51,181,255,.25),0 18px 50px rgba(0,0,0,.5)}
+  .vf.burned{background-image:url(assets/pov-lock-burnt.png)}
+  .vf .corner{position:absolute;width:26px;height:26px;border:4px solid #33B5FF}
+  .vf .c1{top:0;left:0;border-right:none;border-bottom:none;border-radius:10px 0 0 0}
+  .vf .c2{top:0;right:0;border-left:none;border-bottom:none;border-radius:0 10px 0 0}
+  .vf .c3{bottom:0;left:0;border-right:none;border-top:none;border-radius:0 0 0 10px}
+  .vf .c4{bottom:0;right:0;border-left:none;border-top:none;border-radius:0 0 10px 0}
+  .scanline{position:absolute;left:8%;right:8%;height:3px;background:#33B5FF;box-shadow:0 0 12px #33B5FF;animation:scan 1.6s infinite}
+  @keyframes scan{0%{top:10%}50%{top:86%}100%{top:10%}}
+  .qr{display:none;grid-template-columns:repeat(12,1fr);gap:2px;width:130px;height:130px}
+  .qr i{background:#fff;border-radius:1px}
+  .qr i.off{background:transparent}
+  .qr.burned{filter:brightness(.25) sepia(.6) contrast(1.4)}
+  .burn-stamp{position:absolute;inset:auto 0 64px 0;text-align:center;color:#FF6B4A;font-weight:900;font-size:14px;transform:rotate(-8deg)}
+  .unlock-actions{position:absolute;left:0;right:0;bottom:0;padding:16px 18px 28px;display:flex;flex-direction:column;gap:10px}
+  .unlock-result{color:#fff;text-align:center;font-size:15px;font-weight:900;min-height:24px}
+  .unlock-result.ok{color:#4ADE80}
+  .unlock-result.err{color:#FF6B4A}
+
+  /* 编号键盘 */
+  .pad-wrap{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:22px 22px 0 0;padding:14px 18px 24px;display:none}
+  .pad-wrap.show{display:block}
+  .plate{text-align:center;margin-bottom:6px}
+  .plate .pno{display:inline-block;background:#1A7CFF;color:#fff;font-weight:900;font-size:19px;letter-spacing:3px;padding:8px 18px;border-radius:10px;position:relative}
+  .plate .pno .smudge{background:#8AA0B8;color:#8AA0B8;border-radius:4px;position:relative}
+  .plate .hint{font-size:11px;color:#999;margin-top:8px}
+  .entry{display:flex;justify-content:center;gap:10px;margin:14px 0}
+  .entry .slot{width:44px;height:54px;border:2px solid #E0E3E8;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:#222}
+  .entry .slot.filled{border-color:#1A7CFF;background:#F0F7FF}
+  .entry.shake{animation:shake .35s}
+  @keyframes shake{0%,100%{transform:none}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+  .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .pad button{border:none;background:#F0F2F5;border-radius:12px;font-size:22px;font-weight:900;padding:13px 0;cursor:pointer;font-family:inherit;color:#222}
+  .pad button:active{background:#DCE3EA}
+  .pad .fn{font-size:14px;color:#666}
+
+  /* ================= 骑行阶段（第一视角 POV） ================= */
+  #stage-ride{background:#0E141B;overflow:hidden}
+  .pov{position:absolute;inset:0;overflow:hidden}
+  .pov-bg{position:absolute;inset:0;background:url(assets/pov-street.png) repeat-x left bottom/cover;will-change:background-position}
+  .pov-bar{position:absolute;left:50%;bottom:-13%;width:128%;transform:translateX(-50%);z-index:10;pointer-events:none;animation:povbob 1s infinite alternate ease-in-out}
+  .pov-bar img{width:100%;display:block;filter:drop-shadow(0 -6px 18px rgba(0,0,0,.35))}
+  @keyframes povbob{from{transform:translateX(-50%) translateY(0) rotate(-.5deg)}to{transform:translateX(-50%) translateY(-8px) rotate(.5deg)}}
+  .pov.fast .pov-bar{animation-duration:.45s}
+  .pov.slow .pov-bar{animation-duration:1.9s}
+  .pov.fell{animation:povfall .8s ease-in forwards}
+  @keyframes povfall{40%{transform:rotate(-14deg) translateY(6%)}100%{transform:rotate(15deg) translateY(12%)}}
+
+  .ride-hud{position:absolute;top:160px;left:14px;right:14px;z-index:20}
+  .prog{position:relative;height:10px;background:rgba(255,255,255,.65);border-radius:99px;border:1px solid rgba(0,0,0,.08)}
+  .prog .fill{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#33B5FF,#1A7CFF);border-radius:99px}
+  .prog .home{position:absolute;left:-4px;top:-16px;font-size:13px}
+  .prog .dest{position:absolute;right:-4px;top:-20px;font-size:16px}
+  .prog .meico{position:absolute;top:-15px;font-size:15px;transform:translateX(-50%);transition:left .2s linear}
+  .ride-info{display:flex;justify-content:space-between;margin-top:20px;font-size:12px;font-weight:700;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.6)}
+  .ride-info .spd{font-size:20px;font-weight:900;color:#fff}
+  .ride-info .spd small{font-size:11px;color:rgba(255,255,255,.85);font-weight:700}
+
+  .light{position:absolute;bottom:44%;width:26px;z-index:5;text-align:center}
+  .light .pole{width:5px;height:74px;background:#4A5560;margin:0 auto}
+  .light .box{width:24px;height:56px;background:#2B3440;border-radius:8px;margin:0 auto;display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;padding:4px 0}
+  .light .l{width:13px;height:13px;border-radius:50%;background:#3A4552}
+  .light .l.red.on{background:#FF4D3D;box-shadow:0 0 10px #FF4D3D}
+  .light .l.green.on{background:#3DDC74;box-shadow:0 0 10px #3DDC74}
+
+  /* 事件弹窗 */
+  .ev{position:absolute;left:0;right:0;bottom:0;z-index:60;background:#fff;border-radius:22px 22px 0 0;padding:16px 20px 26px;box-shadow:0 -10px 40px rgba(0,0,0,.3);transform:translateY(110%);transition:transform .25s cubic-bezier(.2,.9,.3,1)}
+  .ev.show{transform:translateY(0)}
+  .ev .ek{font-size:11px;font-weight:900;letter-spacing:2px;color:#FF5A3C}
+  .ev h3{font-size:20px;font-weight:900;margin:6px 0 8px;line-height:1.4}
+  .ev p{font-size:14px;color:#5A6470;line-height:1.8;margin-bottom:14px}
+  .ev .opts{display:flex;flex-direction:column;gap:9px}
+  .ev .opt{border:2px solid #E4E7EB;background:#FAFBFC;border-radius:14px;padding:12px 14px;text-align:left;cursor:pointer;font-family:inherit}
+  .ev .opt .t{font-size:15px;font-weight:900;color:#222}
+  .ev .opt .s{font-size:12px;color:#8A929C;margin-top:3px;font-weight:500}
+  .ev .opt:hover{border-color:#1A7CFF;background:#F0F7FF}
+  .ev .opt.risky .t{color:#E6432D}
+  .ev .qte-big{width:100%;border:none;border-radius:16px;padding:20px;font-size:22px;font-weight:900;font-family:inherit;background:linear-gradient(135deg,#FF8A00,#FF5A3C);color:#fff;cursor:pointer;animation:qtep .5s infinite alternate}
+  @keyframes qtep{from{transform:scale(1)}to{transform:scale(1.04)}}
+  .ev .qte-bar{height:6px;background:#F0F2F5;border-radius:99px;overflow:hidden;margin-top:12px}
+  .ev .qte-bar i{display:block;height:100%;background:#FF5A3C;width:100%}
+
+  /* 验车检查 */
+  .checks{display:flex;gap:6px;margin-top:12px}
+  .checks button{flex:1;border:1.5px solid #E0E3E8;background:#fff;border-radius:10px;padding:8px 2px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;color:#3A4A5A}
+  .checks button.done{background:#F0F7FF;border-color:#1A7CFF;color:#1A7CFF}
+  .checks button.bad{background:#FDECEA;border-color:#E6432D;color:#E6432D}
+  .checks button:disabled{cursor:default}
+  .check-tip{font-size:10px;color:#9AA2AC;margin-top:6px}
+
+  /* 猛蹬冲刺按钮 */
+  .dash{position:absolute;right:16px;bottom:96px;z-index:30;width:76px;height:76px;border-radius:50%;border:none;background:linear-gradient(135deg,#33B5FF,#1A7CFF);color:#fff;font-size:13px;font-weight:900;font-family:inherit;line-height:1.3;box-shadow:0 8px 22px rgba(0,0,0,.4);cursor:pointer}
+  .dash:active{transform:scale(.93)}
+  .dash.cd{opacity:.45}
+  .pov.dash .pov-bar{animation-duration:.3s}
+  .pov .pov-bg{transition:transform .3s}
+  .pov.dash .pov-bg{transform:scale(1.04)}
+
+  /* ================= 结算 ================= */
+  #stage-end{background:#171B21;color:#fff;align-items:center;justify-content:center}
+  .end-box{width:84%;text-align:center}
+  .end-box .stamp{display:inline-block;font-size:15px;font-weight:900;padding:6px 18px;border-radius:99px;margin-bottom:16px}
+  .end-box .stamp.ok{background:#143B2A;color:#4ADE80;border:1px solid #2A5C40}
+  .end-box .stamp.late{background:#3B1A17;color:#FF6B4A;border:1px solid #5C2E26}
+  .end-box h2{font-size:34px;font-weight:900;line-height:1.3}
+  .end-box .clockline{margin:12px 0 4px;font-size:15px;color:#B9BDC6}
+  .end-box .clockline b{color:#fff;font-size:20px;font-variant-numeric:tabular-nums}
+  .end-box .flavor{font-size:14px;color:#9BA1AB;line-height:1.9;margin:14px 0 20px}
+  .end-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:24px}
+  .end-stats .s{background:#232A33;border-radius:12px;padding:10px 4px}
+  .end-stats .v{font-size:19px;font-weight:900}
+  .end-stats .k{font-size:10px;color:#7A828E;margin-top:2px}
+  .again{width:100%;border:none;border-radius:16px;padding:16px;background:linear-gradient(135deg,#33B5FF,#1A7CFF);color:#fff;font-size:17px;font-weight:900;font-family:inherit;cursor:pointer;letter-spacing:2px}
+</style>
+</head>
+<body>
+
+<div class="side">
+  <h1>最后一公里<br><em>完整可玩版</em></h1>
+  <p>08:55 出门，09:00 打卡。找车、开锁、骑行——300 秒游戏时间，3 倍速进行，一局约 100 秒，拒绝干等。</p>
+  <div class="keys">
+    <div class="key"><i></i><b>验车</b>：明伤画在车上，隐伤只有一句暧昧线索；选错明伤 -5s</div>
+    <div class="key"><i></i><b>开锁</b>：二维码可能被烧毁——擦干净编号（-5s）还是盲猜一位？</div>
+    <div class="key"><i></i><b>骑行</b>：红灯闯不闯？外卖小哥闪不闪得开？隐伤会在半路爆发</div>
+    <div class="key"><i></i><b>结算</b>：准时/迟到 × 身体干爽度 × 心情 = 多维结局文案</div>
+  </div>
+</div>
+
+<div class="phone">
+  <div class="screen">
+    <div class="statusbar" id="statusbar"><span>08:55</span><span>📶 🔋</span></div>
+    <div class="notch"></div>
+
+    <div class="mission">
+      <div class="clock" id="timer">05:00</div>
+      <div class="tt"><b>09:00 前打卡</b> <span class="speedo">⏩×3</span><br><span id="missionSub">当前：找个停车点，验出一辆能骑的</span></div>
+      <div class="mini">
+        <div class="mstat"><div class="v" id="hpV">100</div><div class="k">体力</div><div class="bar"><i id="hpBar" style="width:100%"></i></div></div>
+        <div class="mstat mood"><div class="v" id="moodV">86</div><div class="k">心情</div><div class="bar"><i id="moodBar" style="width:86%"></i></div></div>
+      </div>
+    </div>
+
+    <!-- 开场标题页 -->
+    <div class="stage on" id="stage-start">
+      <div class="start-box">
+        <div class="logo">🚲</div>
+        <h1>最后一公里</h1>
+        <div class="tagline">5 分钟 · 800 米 · 一辆能骑的车</div>
+        <div class="rules">
+          <div>🔍 找车验车：明伤一眼看穿，隐伤得花 2 秒动手查</div>
+          <div>⚡ 骑行冲刺：猛蹬加速，随机路况连环决策</div>
+          <div>🏁 09:00 前打卡——迟到，全勤奖就泡汤了</div>
+        </div>
+        <div class="diff-row" id="diffRow">
+          <button class="diff-chip" data-d="easy" onclick="selDiff('easy')"><div class="n">摸鱼</div><div class="d">6 分钟 · 检查 -1s</div></button>
+          <button class="diff-chip on" data-d="std" onclick="selDiff('std')"><div class="n">标准</div><div class="d">5 分钟 · 检查 -2s</div></button>
+          <button class="diff-chip" data-d="hard" onclick="selDiff('hard')"><div class="n">夺命</div><div class="d">4 分钟 · 检查 -3s · 事件 +1</div></button>
+        </div>
+        <button class="start-btn" onclick="startGame()">开始冲刺</button>
+        <div class="daily" id="dailyInfo"></div>
+        <div class="career" id="careerInfo"></div>
+      </div>
+    </div>
+
+    <!-- 找车 -->
+    <div class="stage" id="stage-map">
+      <div id="mapLayer" style="position:absolute;inset:0">
+        <div class="block" style="left:4%;top:6%;width:30%;height:20%"></div>
+        <div class="block park" style="left:40%;top:5%;width:22%;height:16%"></div>
+        <div class="block" style="left:68%;top:8%;width:28%;height:24%"></div>
+        <div class="block" style="left:6%;top:36%;width:24%;height:18%"></div>
+        <div class="block" style="left:70%;top:42%;width:26%;height:16%"></div>
+        <div class="block park" style="left:8%;top:64%;width:26%;height:18%"></div>
+        <div class="block" style="left:44%;top:66%;width:20%;height:16%"></div>
+        <div class="block" style="left:72%;top:66%;width:24%;height:20%"></div>
+        <div class="road h" style="left:0;top:30%;width:100%"></div>
+        <div class="road h" style="left:0;top:58%;width:100%"></div>
+        <div class="road v" style="left:36%;top:0;height:100%"></div>
+        <div class="road v" style="left:64%;top:0;height:100%"></div>
+        <div class="road-name" style="left:37.5%;top:14%">望 京 街</div>
+        <div class="zone" style="left:58%;top:19%;width:40%;height:15%"><span class="zlb">打卡范围</span></div>
+        <div class="company" style="left:82%;top:29%"><div class="pin"><span>司</span></div><div class="lb">公司</div></div>
+        <div class="me" style="left:22%;top:52%"><div class="ring"></div><div class="dot"></div></div>
+      </div>
+      <div class="sheet-default" id="sheetDefault">
+        <div class="near">附近有 <b>3</b> 个停车点 · 每个停车点只有 <b>1 辆</b>能骑，点开验车</div>
+        <button class="scan" onclick="scanNoBike()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M3 7V4h3M17 4h3v3M21 17v3h-3M7 20H4v-3M3 12h18"/></svg>
+          扫码开锁
+        </button>
+        <div class="scan-sub">二维码损坏？试试 <u>输入编号开锁</u></div>
+      </div>
+      <div class="sheet-cluster" id="sheetCluster"></div>
+    </div>
+
+    <!-- 步行过场 -->
+    <div class="stage" id="stage-walk">
+      <div class="walk-box">
+        <div class="emoji">🚶</div>
+        <h3 id="walkTitle">步行前往停车点</h3>
+        <div class="sub" id="walkSub">预计 20 秒</div>
+        <div class="wpbar"><i id="wpFill"></i></div>
+      </div>
+    </div>
+
+    <!-- 开锁 -->
+    <div class="stage" id="stage-unlock">
+      <div class="cam">
+        <div class="tip" id="unlockTip">对准车尾智能锁二维码</div>
+        <div class="sub" id="unlockSub">开锁计费 1.5 元 / 30 分钟</div>
+        <div class="vf" id="vf">
+          <div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div>
+          <div class="qr" id="qr"></div>
+          <div class="scanline" id="scanline"></div>
+        </div>
+        <div class="unlock-result" id="unlockResult" style="margin-top:22px"></div>
+      </div>
+      <div class="unlock-actions" id="unlockActions"></div>
+      <div class="pad-wrap" id="padWrap">
+        <div class="plate">
+          <div class="pno" id="plateNo"></div>
+          <div class="hint">车牌号有 1 位被刮花了，看不清</div>
+        </div>
+        <div class="entry" id="entry">
+          <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+        </div>
+        <div class="pad" id="pad"></div>
+      </div>
+    </div>
+
+    <!-- 骑行 -->
+    <div class="stage" id="stage-ride">
+      <div class="pov" id="pov">
+        <div class="pov-bg" id="povBg"></div>
+        <div class="pov-bar"><img id="povBar" src="assets/pov-handlebar.png" alt=""></div>
+      </div>
+      <div class="ride-hud">
+        <div class="prog">
+          <div class="fill" id="progFill"></div>
+          <span class="home">家</span><span class="dest">司</span>
+          <span class="meico" id="meIco">🚴</span>
+        </div>
+        <div class="ride-info">
+          <span class="spd" id="spd">22 <small>km/h</small></span>
+          <span id="distTxt" style="align-self:center">距公司 800 m</span>
+        </div>
+      </div>
+      <button class="dash" id="dashBtn" onclick="dash()">🚴<br>猛蹬</button>
+      <div class="ev" id="evBox"></div>
+    </div>
+
+    <!-- 结算 -->
+    <div class="stage" id="stage-end">
+      <div class="end-box" id="endBox"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==================== 全局状态 ==================== */
+let t=300, hp=100, mood=86;
+let stage='start';
+let chosen=null;               // {cluster, bike}
+let stats={wrong:0, redRun:0, falls:0, wetButt:false};
+const clamp=v=>Math.max(0,Math.min(100,v));
+
+/* ==================== 车况生成（同 v2） ==================== */
+const VISIBLE=[
+  {def:'无坐垫', dmg:{saddle:0}},
+  {def:'无把手', dmg:{handle:0}},
+  {def:'脚踏掉了一只', dmg:{pedal:0}},
+];
+const HIDDEN=[
+  {def:'刹车失灵', clue:'刹车线有点垂', dmg:{cable:1}, key:'brake'},
+  {def:'链条断了', clue:'链条松松垮垮', dmg:{chain:0}, key:'chain'},
+  {def:'轮胎慢撒气', clue:'轮胎看着有点瘪', dmg:{flat:1}, key:'flat'},
+  {def:'坐垫裂缝存水', clue:'坐垫有道细裂痕', dmg:{crack:1}, key:'wet'},
+];
+const CLUSTER_DEFS=[
+  {id:'P1', name:'家楼下停车点', x:30, y:26, walk:20, n:4},
+  {id:'P2', name:'地铁口停车点', x:58, y:20, walk:45, n:5},
+  {id:'P3', name:'公司楼后停车点', x:74, y:44, walk:70, n:3},
+];
+/* ---- 每日挑战：按日期播种的随机数（同一天同一布局，可反复刷成绩） ---- */
+const DAYKEY=(()=>{const d=new Date();return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;})();
+let _seed=(parseInt(DAYKEY,10)%2147483646)+1;
+function rnd(){ _seed=(_seed*1103515245+12345)%2147483648; return _seed/2147483648; }
+/* ---- 难度 / 生涯 / 成就 ---- */
+const DIFFS={
+  easy:{name:'摸鱼模式', time:360, checkCost:1, pool:2},
+  std:{name:'标准模式', time:300, checkCost:2, pool:2},
+  hard:{name:'夺命模式', time:240, checkCost:3, pool:3},
+};
+let diff='std';
+function getBest(){ try{ return JSON.parse(localStorage.getItem('lastmile-best-'+DAYKEY+'-'+diff))||null; }catch(e){ return null; } }
+function setBest(s){ try{ localStorage.setItem('lastmile-best-'+DAYKEY+'-'+diff, JSON.stringify(s)); }catch(e){} }
+function career(){ try{ return JSON.parse(localStorage.getItem('lastmile-career'))||{runs:0,wins:0,falls:0}; }catch(e){ return {runs:0,wins:0,falls:0}; } }
+function saveCareer(c){ try{ localStorage.setItem('lastmile-career', JSON.stringify(c)); }catch(e){} }
+function achs(){ try{ return JSON.parse(localStorage.getItem('lastmile-ach'))||{}; }catch(e){ return {}; } }
+function saveAch(a){ try{ localStorage.setItem('lastmile-ach', JSON.stringify(a)); }catch(e){} }
+const ACH_DEF=[
+  ['first','首战告捷','第一次成功打卡'],
+  ['perfect','完美通勤','以「完美通勤」结局收工'],
+  ['blind','盲选之神','不做任何检查直接通关'],
+  ['clutz','摔出来的全勤','摔倒 2 次以上仍成功打卡'],
+  ['redlight','法外狂徒','单局闯红灯 2 次且成功打卡'],
+  ['inspector','质检员','单局验车检查 6 次以上'],
+  ['wet','湿身达人','裤子湿透仍成功打卡'],
+  ['dash','冲刺狂魔','单局猛蹬 8 次以上'],
+  ['lastsec','压哨传奇','剩余不足 10 秒打卡成功'],
+  ['hardmode','地狱归来','夺命模式成功打卡'],
+];
+const shuffle=a=>a.map(v=>[rnd(),v]).sort((x,y)=>x[0]-y[0]).map(p=>p[1]);
+function genClusters(){
+  return CLUSTER_DEFS.map(d=>{
+    const goodIdx=Math.floor(rnd()*d.n);
+    const vis=shuffle([...VISIBLE]), hid=shuffle([...HIDDEN]);
+    const bikes=[];
+    for(let i=0;i<d.n;i++){
+      const tail=String(1000+Math.floor(rnd()*9000));
+      const no='860'+Math.floor(rnd()*10)+' '+tail;
+      if(i===goodIdx){
+        bikes.push({no,tail,state:'good',clue:'这辆……好像真没问题？',dmg:{},key:null});
+      }else if(hid.length && (i%2===0 || !vis.length)){
+        const h=hid.pop();
+        bikes.push({no,tail,state:'hidden',def:h.def,clue:'细看：'+h.clue,dmg:h.dmg,key:h.key});
+      }else{
+        const v=vis.pop()||VISIBLE[i%4];
+        bikes.push({no,tail,state:'visible',def:v.def,clue:null,dmg:v.dmg,key:null});
+      }
+    }
+    return {...d, bikes:shuffle(bikes), dead:{}};
+  });
+}
+let CLUSTERS=genClusters();
+let curCluster=null, selIdx=null;
+
+/* ==================== 单车 SVG ==================== */
+function bikeSVG(dmg,rider){
+  const ink='#2B3A4A',blue='#1A7CFF',bad='#E6432D';
+  const saddle=dmg.saddle!==0
+    ?`<line x1="95" y1="52" x2="95" y2="70" stroke="${ink}" stroke-width="3"/>
+      <rect x="82" y="44" width="26" height="9" rx="4.5" fill="${ink}"/>
+      ${dmg.crack?`<path d="M86 47 L 104 49" stroke="#6FC6F5" stroke-width="2.5" stroke-linecap="round"/>`:''}`
+    :`<line x1="95" y1="52" x2="95" y2="70" stroke="${bad}" stroke-width="3" stroke-dasharray="3 3"/>`;
+  const handle=dmg.handle!==0
+    ?`<line x1="205" y1="46" x2="205" y2="72" stroke="${ink}" stroke-width="3"/>
+      <line x1="193" y1="46" x2="217" y2="46" stroke="${ink}" stroke-width="4.5" stroke-linecap="round"/>
+      ${dmg.cable?`<path d="M210 48 Q 224 74 215 92" stroke="${bad}" stroke-width="2" fill="none" stroke-dasharray="4 3"/>`:''}`
+    :`<line x1="205" y1="46" x2="205" y2="72" stroke="${ink}" stroke-width="3"/><circle cx="205" cy="44" r="3" fill="${bad}"/>`;
+  const chain=dmg.chain!==0
+    ?`<line x1="95" y1="100" x2="150" y2="100" stroke="#9AA7B4" stroke-width="2.5"/>`
+    :`<path d="M95 100 Q 122 116 150 100" stroke="${bad}" stroke-width="2.5" fill="none" stroke-dasharray="4 3"/>`;
+  const pedal=dmg.pedal!==0
+    ?`<circle cx="110" cy="105" r="7" fill="${blue}"/><line x1="110" y1="105" x2="120" y2="112" stroke="${ink}" stroke-width="3"/>`
+    :`<circle cx="110" cy="105" r="7" fill="${blue}"/><line x1="110" y1="105" x2="118" y2="111" stroke="${bad}" stroke-width="3" stroke-dasharray="2 2"/>`;
+  const wheel=(cx)=>dmg.flat
+    ?`<ellipse cx="${cx}" cy="109" rx="34" ry="29" fill="none" stroke="${ink}" stroke-width="5"/>`
+    :`<circle cx="${cx}" cy="105" r="34" fill="none" stroke="${ink}" stroke-width="5"/>`;
+  const spokes=(cx,cy,r)=>`<g class="spin"><line x1="${cx-r+6}" y1="${cy}" x2="${cx+r-6}" y2="${cy}" stroke="#C5CDD6" stroke-width="3"/><line x1="${cx}" y1="${cy-r+6}" x2="${cx}" y2="${cy+r-6}" stroke="#C5CDD6" stroke-width="3"/></g>`;
+  const riderSvg=rider?`
+    <circle cx="128" cy="26" r="10" fill="${ink}"/>
+    <path d="M124 38 Q 112 52 100 60" stroke="${ink}" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <path d="M122 40 Q 160 46 200 48" stroke="${ink}" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M100 60 Q 104 82 110 100" stroke="${ink}" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path d="M100 60 Q 90 80 96 100" stroke="${ink}" stroke-width="6" fill="none" stroke-linecap="round" opacity=".7"/>`
+    :'';
+  return `<svg viewBox="0 0 260 150" width="100%" class="frame">
+    ${dmg.flat?spokes(70,109,29)+spokes(190,109,29):spokes(70,105,34)+spokes(190,105,34)}
+    ${wheel(70)}${wheel(190)}
+    <path d="M70 105 L110 105 L150 68 L95 68 Z" fill="none" stroke="${blue}" stroke-width="5" stroke-linejoin="round"/>
+    <line x1="150" y1="68" x2="190" y2="105" stroke="${blue}" stroke-width="5"/>
+    <line x1="110" y1="105" x2="95" y2="68" stroke="${blue}" stroke-width="5"/>
+    ${pedal}${chain}${saddle}${handle}${riderSvg}</svg>`;
+}
+const ICON=`<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5.5 17.5a3 3 0 1 0 0-.1M18.5 17.5a3 3 0 1 0 0-.1M5.5 17h4l3-7h4M12.5 10 10 5.5h2.5M15 5l3.5 5.5" stroke="#1A7CFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+/* ==================== 车况实拍图映射 ==================== */
+const BIKE_IMG={
+  base:'assets/bike-base.png',
+  '无坐垫':'assets/bike-no-saddle.png',
+  '无把手':'assets/bike-no-handlebar.png',
+  '脚踏掉了一只':'assets/bike-base.png',
+  brake:'assets/bike-cable.png',
+  chain:'assets/bike-chain.png',
+  flat:'assets/bike-flat.png',
+  wet:'assets/bike-wet.png',
+};
+function bikeImg(b){
+  const src=b.state==='good'?BIKE_IMG.base:(b.key?BIKE_IMG[b.key]:BIKE_IMG[b.def]||BIKE_IMG.base);
+  return `<img src="${src}" alt="单车 ${b.tail}">`;
+}
+
+/* ==================== HUD & 计时 ==================== */
+function updTimer(){
+  const tt=Math.ceil(t);
+  const m=String(Math.floor(tt/60)).padStart(2,'0'),s=String(tt%60).padStart(2,'0');
+  document.getElementById('timer').textContent=m+':'+s;
+}
+function updHud(){
+  document.getElementById('hpV').textContent=Math.round(hp);
+  document.getElementById('hpBar').style.width=hp+'%';
+  document.getElementById('moodV').textContent=Math.round(mood);
+  document.getElementById('moodBar').style.width=mood+'%';
+}
+function cost(s){ t=Math.max(0,t-s); const el=document.getElementById('timer'); el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); updTimer(); }
+function setSub(txt){ document.getElementById('missionSub').textContent=txt; }
+function toast(msg,ms=2600){
+  document.querySelectorAll('.toast').forEach(x=>x.remove());
+  const el=document.createElement('div');
+  el.className='toast'; el.textContent=msg;
+  document.querySelector('.screen').appendChild(el);
+  setTimeout(()=>el.remove(),ms);
+}
+/* ==================== 全局时间流速（3 倍速：300 游戏秒 ≈ 100 真实秒） ==================== */
+const TIME_SCALE=3;
+setInterval(()=>{
+  if(stage==='end'||stage==='start') return;
+  if(t>0){ t=Math.max(0,t-0.1*TIME_SCALE); updTimer(); }
+  if(t<=0) gameOver(false);
+},100);
+
+function setStage(s){
+  stage=s;
+  document.querySelectorAll('.stage').forEach(e=>e.classList.remove('on'));
+  document.getElementById('stage-'+s).classList.add('on');
+  document.getElementById('statusbar').classList.toggle('dark', s==='start'||s==='unlock'||s==='walk'||s==='end');
+}
+function startGame(){
+  t=DIFFS[diff].time; updTimer();
+  setStage('map'); setSub('当前：找个停车点，验出一辆能骑的');
+}
+function selDiff(d){
+  diff=d; t=DIFFS[d].time; updTimer();
+  document.querySelectorAll('.diff-chip').forEach(c=>c.classList.toggle('on',c.dataset.d===d));
+  renderDailyInfo();
+}
+function renderDailyInfo(){
+  const b=getBest();
+  document.getElementById('dailyInfo').textContent=`今日挑战 #${DAYKEY} · ${DIFFS[diff].name}`+(b?` · 最佳：剩 ${b.left} 秒`:' · 尚未成功打卡');
+  const ca=career(), an=Object.keys(achs()).length;
+  document.getElementById('careerInfo').textContent=`生涯 ${ca.runs} 战 ${ca.wins} 胜 · 累计摔跤 ${ca.falls} 次 · 成就 ${an}/${ACH_DEF.length}`;
+}
+
+/* ==================== 找车阶段 ==================== */
+function renderMarkers(){
+  document.querySelectorAll('.pk').forEach(n=>n.remove());
+  const map=document.getElementById('mapLayer');
+  CLUSTERS.forEach(c=>{
+    const d=document.createElement('div');
+    d.className='pk'+(curCluster===c.id?' active':'');
+    d.style.left=c.x+'%';d.style.top=c.y+'%';
+    d.innerHTML=`<div class="ico">${ICON}<div class="cnt">${c.n}</div></div><div class="d">步行 ${c.walk}s</div>`;
+    d.onclick=e=>{e.stopPropagation();openCluster(c.id);};
+    map.appendChild(d);
+  });
+}
+function scanNoBike(){ toast('先点开一个停车点，选一辆你的车'); }
+function openCluster(id){
+  curCluster=id; selIdx=null; renderMarkers();
+  document.getElementById('sheetDefault').style.display='none';
+  renderClusterSheet();
+  document.getElementById('sheetCluster').classList.add('show');
+}
+function renderClusterSheet(){
+  const c=CLUSTERS.find(x=>x.id===curCluster);
+  const el=document.getElementById('sheetCluster');
+  el.innerHTML=`
+    <div class="grab"></div>
+    <div class="sc-head">
+      <h2>${c.name}</h2><span class="meta">步行 ${c.walk}s</span>
+      <span class="odds">${c.n} 辆里只有 1 辆能骑</span>
+    </div>
+    <div class="sc-row">
+      ${c.bikes.map((b,i)=>`
+        <div class="card ${selIdx===i?'sel':''} ${c.dead[i]?'dead':''}" onclick="selectBike(${i})">
+          ${bikeImg(b)}
+          <div class="no">No.${b.tail}</div>
+          <div class="tagline ${b.state==='visible'?'bad':'unk'}">${b.state==='visible'?b.def:'外观完好?'}</div>
+        </div>`).join('')}
+    </div>
+    <div class="inspect" id="inspect"></div>`;
+  if(selIdx!==null) renderInspect();
+}
+function selectBike(i){ selIdx=i; renderClusterSheet(); }
+function renderInspect(){
+  const c=CLUSTERS.find(x=>x.id===curCluster);
+  const b=c.bikes[selIdx];
+  const box=document.getElementById('inspect');
+  box.classList.add('show');
+  const checkTags=b.checked?CHECK_PARTS.map(([k,label])=>
+    b.checked[k]==='bad'?`<span class="tag bad">${label} ❌</span>`:
+    b.checked[k]?`<span class="tag ok">${label} ✅</span>`:'').join(''):'';
+  box.innerHTML=`
+    <div class="row">
+      <div class="img">${bikeImg(b)}</div>
+      <div>
+        <div class="tags">
+          ${b.state==='visible'?`<span class="tag bad">${b.def}</span>`:`<span class="tag ok">外观完好</span>`}
+          ${b.clue?`<span class="tag hint">${b.clue}</span>`:''}
+          ${checkTags}
+        </div>
+        <div class="verdict" id="verdict"></div>
+      </div>
+    </div>
+    ${b.state!=='visible'?`
+    <div class="checks">
+      ${CHECK_PARTS.map(([k,label])=>{
+        const st=b.checked?b.checked[k]:null;
+        return `<button class="${st==='bad'?'bad':st?'done':''}" ${st?'disabled':''} onclick="doCheck('${k}')">${label}${st==='bad'?' ❌':st?' ✅':''}</button>`;
+      }).join('')}
+    </div>
+    <div class="check-tip">动手检查 -${DIFFS[diff].checkCost}s/项 · 查到隐患直接排除，全检通过放心骑</div>`:''}
+    <div class="actions">
+      <button class="btn ghost" onclick="closeCluster()">换停车点</button>
+      <button class="btn main" onclick="commit()">就选这辆</button>
+    </div>`;
+}
+const CHECK_PARTS=[['brake','捏刹车'],['chain','晃链条'],['flat','按轮胎'],['wet','摸坐垫']];
+function doCheck(part){
+  const c=CLUSTERS.find(x=>x.id===curCluster);
+  const b=c.bikes[selIdx];
+  if(!b.checked) b.checked={};
+  if(b.checked[part]) return;
+  const cc=DIFFS[diff].checkCost;
+  cost(cc);
+  stats.checks=(stats.checks||0)+1;
+  const bad=b.key===part;
+  b.checked[part]=bad?'bad':'ok';
+  renderClusterSheet();
+  const v=document.getElementById('verdict');
+  if(bad){
+    b.revealed=true; c.dead[selIdx]=true;
+    renderClusterSheet();
+    const v2=document.getElementById('verdict');
+    v2.className='verdict bad';
+    v2.textContent=`❌ 一查一个准——${b.def}！这辆排除，换一辆吧`;
+    const btn=document.querySelector('#inspect .btn.main');
+    btn.disabled=true; btn.textContent='这辆已排除';
+    toast(`发现隐患：${b.def}（-${cc}s，避免了一场半路灾难）`);
+  }else{
+    const allOk=CHECK_PARTS.every(([k])=>b.checked[k]==='ok');
+    if(allOk&&b.state==='good'){ v.className='verdict good'; v.textContent='✅ 四项全检通过，这辆车放心骑！'; }
+    else{ v.className='verdict uneasy'; v.textContent=`这项没查出问题（-${cc}s）`; }
+  }
+}
+function commit(){
+  const c=CLUSTERS.find(x=>x.id===curCluster);
+  const b=c.bikes[selIdx];
+  if(b.revealed) return;
+  const v=document.getElementById('verdict');
+  const btn=document.querySelector('.btn.main');
+  if(b.state==='visible'){
+    c.dead[selIdx]=true; stats.wrong++;
+    v.className='verdict bad';
+    v.textContent=`❌ 上手一推——${b.def}，根本没法骑！换一辆（-5s）`;
+    cost(5);
+    btn.disabled=true; btn.textContent='这辆不行';
+    setTimeout(()=>{ if(stage==='map') renderClusterSheet(); },1400);
+  }else{
+    v.className='verdict '+(b.state==='good'?'good':'uneasy');
+    v.textContent=b.state==='good'
+      ?'✅ 验车通过！刹车灵、链条紧、坐垫干爽——就是它了！'
+      :'😬 外观查不出毛病，但总觉得哪里不对劲……';
+    btn.textContent=`去开锁（步行 -${c.walk}s）→`;
+    btn.onclick=()=>{ chosen={cluster:c,bike:b}; startWalk(); };
+  }
+}
+function closeCluster(){
+  curCluster=null; selIdx=null; renderMarkers();
+  document.getElementById('sheetCluster').classList.remove('show');
+  document.getElementById('sheetDefault').style.display='block';
+}
+document.getElementById('mapLayer').addEventListener('click',()=>{ if(curCluster&&stage==='map') closeCluster(); });
+
+/* ==================== 步行过场 ==================== */
+function startWalk(){
+  const w=chosen.cluster.walk;
+  setStage('walk'); setSub('当前：步行前往停车点');
+  document.getElementById('walkTitle').textContent='步行前往「'+chosen.cluster.name+'」';
+  document.getElementById('walkSub').textContent='预计 '+w+' 秒 · 边走边祈祷是辆好车';
+  const fill=document.getElementById('wpFill');
+  fill.style.transition='none'; fill.style.width='0';
+  requestAnimationFrame(()=>{
+    fill.style.transition=`width ${w*0.07}s linear`;
+    fill.style.width='100%';
+  });
+  setTimeout(()=>{ cost(w); startUnlock(); }, w*70+200);
+}
+
+/* ==================== 开锁阶段 ==================== */
+let unlockMode='ok', codeProgress=0, smudgeIdx=0, wiped=false;
+function buildQR(){
+  const q=document.getElementById('qr');
+  let html='';
+  for(let i=0;i<144;i++) html+=`<i class="${rnd()>.45?'':'off'}"></i>`;
+  q.innerHTML=html;
+}
+function startUnlock(){
+  setStage('unlock'); setSub('当前：开锁 · 扫码或输编号');
+  buildQR(); wiped=false; codeProgress=0;
+  document.getElementById('padWrap').classList.remove('show');
+  document.getElementById('unlockResult').textContent='';
+  document.getElementById('unlockTip').textContent='对准车尾智能锁二维码';
+  document.getElementById('unlockSub').textContent='开锁计费 1.5 元 / 30 分钟';
+  document.getElementById('unlockActions').innerHTML='';
+  document.getElementById('scanline').style.display='block';
+  document.getElementById('vf').classList.remove('burned');
+
+  const r=rnd();
+  unlockMode = r<0.55 ? 'ok' : (r<0.8 ? 'burned' : 'spin');
+
+  if(unlockMode==='ok'){
+    setTimeout(()=>{
+      if(stage!=='unlock')return;
+      document.getElementById('unlockResult').className='unlock-result ok';
+      document.getElementById('unlockResult').textContent='滴——开锁成功！';
+      setTimeout(startRide,700);
+    },1500);
+  }else if(unlockMode==='spin'){
+    setTimeout(()=>{
+      if(stage!=='unlock')return;
+      document.getElementById('scanline').style.display='none';
+      document.getElementById('unlockResult').className='unlock-result err';
+      document.getElementById('unlockResult').textContent='网络信号差，请求超时…（-6s）';
+      cost(6);
+      setTimeout(()=>{
+        if(stage!=='unlock')return;
+        document.getElementById('scanline').style.display='block';
+        document.getElementById('unlockResult').className='unlock-result ok';
+        document.getElementById('unlockResult').textContent='重试成功，滴——开锁！';
+        setTimeout(startRide,800);
+      },1100);
+    },1600);
+  }else{
+    setTimeout(()=>{
+      if(stage!=='unlock')return;
+      document.getElementById('scanline').style.display='none';
+      document.getElementById('vf').classList.add('burned');
+      document.getElementById('unlockResult').className='unlock-result err';
+      document.getElementById('unlockResult').textContent='二维码被烧毁了，无法识别';
+      document.getElementById('unlockActions').innerHTML=`
+        <button class="btn main" onclick="openPad()">输入编号开锁</button>
+        <button class="btn ghost" style="background:#2A323C;color:#B9BDC6" onclick="abandonBike()">放弃，换一辆车</button>`;
+    },1300);
+  }
+}
+function abandonBike(){
+  const c=chosen.cluster;
+  const idx=c.bikes.indexOf(chosen.bike);
+  c.dead[idx]=true; stats.wrong++;
+  cost(10);
+  toast('白跑一趟……回到地图重新找车（-10s）');
+  chosen=null; closeCluster(); setStage('map'); setSub('当前：重新找一辆能骑的');
+}
+function openPad(){
+  const b=chosen.bike;
+  smudgeIdx=Math.floor(rnd()*4);
+  wiped=false; codeProgress=0;
+  const digits=b.tail.split('');
+  document.getElementById('plateNo').innerHTML='No.'+digits.map((d,i)=>
+    i===smudgeIdx?'<span class="smudge" id="smudgeD">?</span>':d).join('');
+  renderEntry();
+  const pad=document.getElementById('pad');
+  pad.innerHTML='';
+  [1,2,3,4,5,6,7,8,9].forEach(n=>{
+    pad.innerHTML+=`<button onclick="keyIn('${n}')">${n}</button>`;
+  });
+  pad.innerHTML+=`<button class="fn" onclick="wipeSmudge()">擦干净<br>(-5s)</button>
+    <button onclick="keyIn('0')">0</button>
+    <button class="fn" onclick="keyDel()">删除</button>`;
+  document.getElementById('padWrap').classList.add('show');
+}
+function renderEntry(){
+  const slots=document.querySelectorAll('#entry .slot');
+  const b=chosen.bike;
+  slots.forEach((s,i)=>{
+    s.classList.remove('filled');
+    s.textContent='';
+  });
+}
+function keyIn(n){
+  const slots=document.querySelectorAll('#entry .slot');
+  if(codeProgress>=4)return;
+  slots[codeProgress].textContent=n;
+  slots[codeProgress].classList.add('filled');
+  codeProgress++;
+  if(codeProgress===4) checkCode();
+}
+function keyDel(){
+  if(codeProgress<=0)return;
+  codeProgress--;
+  const slots=document.querySelectorAll('#entry .slot');
+  slots[codeProgress].textContent='';
+  slots[codeProgress].classList.remove('filled');
+}
+function wipeSmudge(){
+  if(wiped)return;
+  wiped=true; cost(5);
+  document.getElementById('smudgeD').textContent=chosen.bike.tail[smudgeIdx];
+  document.getElementById('smudgeD').style.background='transparent';
+  document.getElementById('smudgeD').style.color='#fff';
+  toast('用力擦了擦，数字看清了（-5s）');
+}
+function checkCode(){
+  const slots=document.querySelectorAll('#entry .slot');
+  let entered='';
+  slots.forEach(s=>entered+=s.textContent);
+  const real=chosen.bike.tail.split('').map((d,i)=> i===smudgeIdx&&!wiped ? '*' : d);
+  let ok=true;
+  for(let i=0;i<4;i++){
+    if(real[i]==='*') continue;           // 刮花位任意数字都算对？不——必须猜中
+    if(entered[i]!==real[i]) ok=false;
+  }
+  // 刮花位也要猜对
+  if(!wiped && entered[smudgeIdx]!==chosen.bike.tail[smudgeIdx]) ok=false;
+  if(ok){
+    document.getElementById('padWrap').classList.remove('show');
+    document.getElementById('unlockResult').className='unlock-result ok';
+    document.getElementById('unlockResult').textContent='编号正确，滴——开锁成功！';
+    setTimeout(startRide,900);
+  }else{
+    cost(3);
+    const e=document.getElementById('entry');
+    e.classList.remove('shake'); void e.offsetWidth; e.classList.add('shake');
+    toast('编号不对……再仔细看看车牌（-3s）');
+    codeProgress=0;
+    slots.forEach(s=>{s.textContent='';s.classList.remove('filled');});
+  }
+}
+
+/* ==================== 骑行阶段 ==================== */
+const TOTAL=800;
+const SPD=7.5;                    // 基准车速 m/s（≈27 km/h，骑行全程约 107 游戏秒）
+let dist=0, speedMul=1, evModal=false, events=[], evIdx=0, rideTimer=null, sprite='', rideT0=0;
+let boostUntil=0, dashCd=0;
+function startRide(){
+  setStage('ride'); setSub('当前：骑行冲刺 · 注意路况');
+  dist=0; speedMul=1; evModal=false; evIdx=0;
+  boostUntil=0; dashCd=0;
+  sprite=chosen.bike.key;
+  // 第一视角：重置画面与车把
+  const pov=document.getElementById('pov');
+  pov.className='pov';
+  document.getElementById('povBar').src='assets/pov-handlebar.png';
+  document.getElementById('povBg').style.backgroundPosition='0px bottom';
+  // 事件序列
+  events=[
+    {at:160, type:'light'},
+    {at:340, type:'qte'},
+    {at:560, type:'obs'},
+  ];
+  if(sprite==='wet')   events.push({at:250, type:'wet'});
+  if(sprite==='flat')  events.push({at:430, type:'flat'});
+  if(sprite==='chain') events.push({at:480, type:'chain'});
+  if(sprite==='brake') events.push({at:690, type:'brake'});
+  else                 events.push({at:690, type:'light2'});
+  // 每日路况随机事件池：每局抽 2 个，注入不撞车的随机位置
+  const POOL=['rain','coworker','alley','phone','sprinkler','downhill'];
+  const slots=[210,290,400,460,520,620].filter(p=>!events.some(e=>Math.abs(e.at-p)<40));
+  shuffle(POOL).slice(0,DIFFS[diff].pool).forEach(tp=>{
+    if(!slots.length) return;
+    const s=slots.splice(Math.floor(rnd()*slots.length),1)[0];
+    events.push({at:s,type:tp});
+  });
+  events.sort((a,b)=>a.at-b.at);
+  updRideHud();
+  rideTimer=setInterval(rideTick,100);
+}
+function rideTick(){
+  if(stage!=='ride'){ clearInterval(rideTimer); return; }
+  if(evModal) return;
+  const now=performance.now();
+  const boosting=now<boostUntil;
+  const spd=SPD*speedMul*(boosting?1.35:1);   // m/s
+  dist+=spd*0.1*TIME_SCALE;
+  document.getElementById('pov').classList.toggle('dash', boosting);
+  document.getElementById('dashBtn').classList.toggle('cd', now<dashCd);
+  if(sprite==='wet'&&standing) hp=clamp(hp-0.06*TIME_SCALE);  // 站着骑耗体力
+  updHud();
+  // 视差滚动（街景背景随距离平移）
+  document.getElementById('povBg').style.backgroundPosition=`${-dist*3.2}px bottom`;
+  updRideHud();
+  // 触发事件
+  if(evIdx<events.length && dist>=events[evIdx].at){
+    const ev=events[evIdx]; evIdx++;
+    fireEvent(ev);
+    return;
+  }
+  if(dist>=TOTAL){ clearInterval(rideTimer); arrive(); }
+}
+function updRideHud(){
+  const p=Math.min(1,dist/TOTAL);
+  document.getElementById('progFill').style.width=(p*100)+'%';
+  document.getElementById('meIco').style.left=`calc(${p*100}% )`;
+  document.getElementById('distTxt').textContent='距公司 '+Math.max(0,Math.round(TOTAL-dist))+' m';
+  const kmh=Math.round(SPD*speedMul*3.6);
+  document.getElementById('spd').innerHTML=kmh+' <small>km/h</small>';
+  const pov=document.getElementById('pov');
+  pov.classList.toggle('fast', speedMul>=1);
+  pov.classList.toggle('slow', speedMul<0.8);
+}
+
+/* ---- 事件系统 ---- */
+function showEv(html){ evModal=true; const b=document.getElementById('evBox'); b.innerHTML=html; b.classList.add('show'); }
+function hideEv(){ const b=document.getElementById('evBox'); b.classList.remove('show'); setTimeout(()=>{evModal=false;},250); }
+function optBtn(t,s,fn,risky){
+  return `<button class="opt ${risky?'risky':''}" onclick="${fn}"><div class="t">${t}</div><div class="s">${s}</div></button>`;
+}
+function fireEvent(ev){
+  switch(ev.type){
+    case 'light': case 'light2': evLight(); break;
+    case 'qte': evQte(); break;
+    case 'obs': evObstacle(); break;
+    case 'rain': evRain(); break;
+    case 'coworker': evCoworker(); break;
+    case 'alley': evAlley(); break;
+    case 'phone': evPhone(); break;
+    case 'sprinkler': evSprinkler(); break;
+    case 'downhill': evDownhill(); break;
+    case 'wet': evWet(); break;
+    case 'chain': evChain(); break;
+    case 'flat': evFlat(); break;
+    case 'brake': evBrake(); break;
+  }
+}
+function evLight(){
+  showEv(`
+    <div class="ek">路况 · 红灯</div>
+    <h3>🚦 前方路口红灯，还剩 15 秒</h3>
+    <p>机动车流不算大。等，还是不等？打卡倒计时可不会等你。</p>
+    <div class="opts">
+      ${optBtn('老老实实等','-15s · 心情平稳','doWait()')}
+      ${optBtn('闯！','大概率省下 15s · 小概率被交警拦下教育','doRun()',true)}
+    </div>`);
+}
+function doWait(){ cost(15); mood=clamp(mood+2); updHud(); hideEv(); toast('等了 15 秒，安全第一（-15s）'); }
+function doRun(){
+  hideEv(); stats.redRun++;
+  setTimeout(()=>{
+    if(rnd()<0.72){
+      mood=clamp(mood+3); updHud();
+      toast('冲过去了！省下宝贵的 15 秒');
+    }else{
+      cost(40); mood=clamp(mood-20); updHud();
+      toast('🚔 被交警拦下教育了一番……（-40s，心情-20）',3200);
+    }
+  },600);
+}
+function evQte(){
+  showEv(`
+    <div class="ek">突发 · 逆行外卖</div>
+    <h3>🛵 外卖小哥逆行高速杀来！</h3>
+    <p>快躲开！！</p>
+    <button class="qte-big" onclick="qteOk()">⚡ 闪避！</button>
+    <div class="qte-bar"><i id="qteBar"></i></div>`);
+  const bar=document.getElementById('qteBar');
+  bar.style.transition='width 2.2s linear';
+  requestAnimationFrame(()=>{bar.style.width='0';});
+  window._qteTimer=setTimeout(qteFail,2200);
+}
+function qteOk(){
+  clearTimeout(window._qteTimer);
+  hideEv(); toast('好险！贴着车把擦过去了');
+}
+function qteFail(){
+  hideEv(); stats.falls++;
+  hp=clamp(hp-15); mood=clamp(mood-10); cost(8); updHud();
+  const pov=document.getElementById('pov');
+  pov.classList.add('fell');
+  toast('💥 急刹摔倒！膝盖擦破了皮（-8s，体力-15）',3000);
+  setTimeout(()=>{ pov.classList.remove('fell'); },1200);
+}
+/* ---- 猛蹬冲刺 ---- */
+function dash(){
+  if(stage!=='ride'||evModal) return;
+  const now=performance.now();
+  if(now<dashCd) return;
+  if(hp<8){ toast('体力见底，蹬不动了……'); return; }
+  hp=clamp(hp-3); updHud();
+  stats.dash=(stats.dash||0)+1;
+  boostUntil=now+2600; dashCd=now+6000;
+  toast('猛蹬！速度 +35%');
+}
+/* ---- 积水+井盖 限时抉择 ---- */
+function evObstacle(){
+  showEv(`
+    <div class="ek">路况 · 积水+井盖</div>
+    <h3>🕳️ 前方一大片积水，右侧还有翘起的井盖！</h3>
+    <p>2.5 秒内做决定，犹豫就会败北。</p>
+    <div class="opts">
+      ${optBtn('从积水里冲过去','不耗时 · 裤脚湿透 心情 -8',"obsPick('water')")}
+      ${optBtn('贴右绕过井盖','-3s · 稳妥通过',"obsPick('curb')")}
+      ${optBtn('急刹，下车推过去','-5s · 最安全',"obsPick('brake')")}
+    </div>
+    <div class="qte-bar"><i id="obsBar"></i></div>`);
+  const bar=document.getElementById('obsBar');
+  bar.style.transition='width 2.5s linear';
+  requestAnimationFrame(()=>{bar.style.width='0';});
+  window._obsTimer=setTimeout(obsFail,2500);
+}
+function obsPick(kind){
+  clearTimeout(window._obsTimer);
+  if(kind==='water'){ mood=clamp(mood-8); updHud(); hideEv(); toast('冲过水坑！裤脚全湿，路人被溅了一身'); }
+  else if(kind==='curb'){ cost(3); hideEv(); toast('贴着井盖边缘绕过去了（-3s）'); }
+  else{ cost(5); mood=clamp(mood+1); updHud(); hideEv(); toast('急刹停稳，推车从容绕过（-5s）'); }
+}
+function obsFail(){
+  clearTimeout(window._obsTimer);
+  hideEv(); stats.falls++;
+  hp=clamp(hp-10); mood=clamp(mood-8); cost(6); updHud();
+  const pov=document.getElementById('pov');
+  pov.classList.add('fell');
+  toast('💥 犹豫了一下，前轮正磕在井盖上！（-6s，体力-10）',3000);
+  setTimeout(()=>{ pov.classList.remove('fell'); },1200);
+}
+/* ---- 每日路况随机事件池 ---- */
+function evRain(){
+  showEv(`
+    <div class="ek">天气 · 突然下雨</div>
+    <h3>🌧️ 毫无预兆，雨点劈头盖脸砸下来！</h3>
+    <p>早高峰的雨，专挑没带伞的人下。</p>
+    <div class="opts">
+      ${optBtn('翻包穿雨衣','-8s · 干爽体面','rainCoat()')}
+      ${optBtn('冒雨硬骑','不耗时 · 心情 -8 · 体力 -2','rainHard()',true)}
+    </div>`);
+}
+function rainCoat(){ cost(8); hideEv(); toast('套上雨衣，雨中从容（-8s）'); }
+function rainHard(){ mood=clamp(mood-8); hp=clamp(hp-2); updHud(); hideEv(); toast('淋成落汤鸡，眼镜上全是水雾'); }
+function evCoworker(){
+  showEv(`
+    <div class="ek">偶遇 · 同事</div>
+    <h3>🏃 同事小王在路边狂奔：「带我一程——」</h3>
+    <p>他也快迟到了。共享单车带人，违规但暖和。</p>
+    <div class="opts">
+      ${optBtn('带他！让他站后座','速度 -15% · 心情 +10 · 收获人情','coTake()')}
+      ${optBtn('喊声加油，先走为敬','不耗时 · 心情 -5 · 人情 -1','coRefuse()',true)}
+    </div>`);
+}
+function coTake(){ speedMul*=0.85; mood=clamp(mood+10); updHud(); hideEv(); toast('小王站上后座：「你是我的神！」（速度 -15%）'); }
+function coRefuse(){ mood=clamp(mood-5); updHud(); hideEv(); toast('后视镜里，小王的眼神幽怨了起来'); }
+function evAlley(){
+  showEv(`
+    <div class="ek">抉择 · 近路</div>
+    <h3>🛤️ 旁边有条小巷，理论上能直插公司后街</h3>
+    <p>理论上。巷子里的路况，只有进去才知道。</p>
+    <div class="opts">
+      ${optBtn('抄近路！','六成概率白赚 120m · 四成死胡同 -15s','alleyGo()',true)}
+      ${optBtn('老老实实走大路','不耗时 · 稳','alleySafe()')}
+    </div>`);
+}
+function alleyGo(){
+  hideEv();
+  if(rnd()<0.6){ dist=Math.min(TOTAL,dist+120); toast('神之一手！小巷直出公司后街（白赚 120m）'); }
+  else{ cost(15); toast('死胡同……骂骂咧咧原路返回（-15s）',3000); }
+}
+function alleySafe(){ hideEv(); toast('大路朝天，稳中向前'); }
+function evPhone(){
+  showEv(`
+    <div class="ek">突发 · 手机</div>
+    <h3>📱 口袋一轻——手机颠掉了！</h3>
+    <p>它在地上翻了个面，屏幕朝下，生死未卜。</p>
+    <div class="opts">
+      ${optBtn('急刹回去捡','-6s · 手机得救','phonePick()')}
+      ${optBtn('先打卡！回来再找','不耗时 · 心情 -12 · 祈祷它安好','phoneSkip()',true)}
+    </div>`);
+}
+function phonePick(){ cost(6); hideEv(); toast('屏没碎！今天运气不错（-6s）'); }
+function phoneSkip(){ mood=clamp(mood-12); updHud(); hideEv(); toast('一路都在惦记手机，完全没法专心'); }
+function evSprinkler(){
+  showEv(`
+    <div class="ek">路况 · 洒水车</div>
+    <h3>🚿 前方洒水车作业，水幕糊满整条车道！</h3>
+    <p>早高峰的经典 BOSS 登场了。</p>
+    <div class="opts">
+      ${optBtn('减速贴边绕行','-4s · 躲开水幕','sprSlow()')}
+      ${optBtn('闭眼冲过水幕','不耗时 · 心情 -6 · 半身湿透','sprRush()',true)}
+    </div>`);
+}
+function sprSlow(){ cost(4); hideEv(); toast('擦着水幕边缘溜了过去（-4s）'); }
+function sprRush(){ mood=clamp(mood-6); updHud(); hideEv(); toast('透心凉。保洁阿姨在笑你'); }
+function evDownhill(){
+  showEv(`
+    <div class="ek">幸运 · 下坡</div>
+    <h3>🛝 前方一段下坡，风都在推着你走！</h3>
+    <p>老天爷今天终于做了回人。</p>
+    <div class="opts">
+      ${optBtn('放松滑行','体力 +5 · 心情 +6','downCoast()')}
+      ${optBtn('借坡猛蹬','3 秒免费冲刺，不耗体力','downDash()')}
+    </div>`);
+}
+function downCoast(){ hp=clamp(hp+5); mood=clamp(mood+6); updHud(); hideEv(); toast('风呼呼地吹，整个人满血复活'); }
+function downDash(){ boostUntil=performance.now()+3000; hideEv(); toast('借坡猛蹬，快到模糊！'); }
+let standing=false;
+function evWet(){
+  showEv(`
+    <div class="ek">隐伤爆发 · 坐垫</div>
+    <h3>💦 一坐上去……整条裤子都湿了</h3>
+    <p>坐垫那道裂痕里存了一夜的雨水，此刻全部转移到了你的屁股上。</p>
+    <div class="opts">
+      ${optBtn('垫张纸巾','-5s · 体面保住','wetPaper()')}
+      ${optBtn('站起来骑','不耗时间 · 体力消耗翻倍','wetStand()')}
+      ${optBtn('忍了，坐着骑','不耗时间 · 心情 -25','wetEndure()',true)}
+    </div>`);
+}
+function wetPaper(){ cost(5); hideEv(); toast('垫了三层纸巾，勉强体面（-5s）'); }
+function wetStand(){ standing=true; speedMul*=0.9; hideEv(); toast('站立骑行！路人投来敬佩的目光'); }
+function wetEndure(){ stats.wetButt=true; mood=clamp(mood-25); updHud(); hideEv(); toast('湿透的裤子贴着腿……这一天毁了'); }
+function evChain(){
+  showEv(`
+    <div class="ek">隐伤爆发 · 链条</div>
+    <h3>⛓️ 猛蹬一脚——空的！链条掉了</h3>
+    <p>验车时那句「链条松松垮垮」应验了。车子还能滑行，但蹬不动了。</p>
+    <div class="opts">
+      ${optBtn('单脚滑行+忍痛蹬','速度 -45%','chainEndure()')}
+      ${optBtn('下车推着跑','速度 -55% · 心情 -10','chainPush()')}
+      ${optBtn('弃车！回停车点换车','回到找车阶段 · 时间大损','chainAbandon()',true)}
+    </div>`);
+}
+function chainEndure(){ speedMul*=0.55; mood=clamp(mood-5); updHud(); hideEv(); toast('右脚蹬空气，左脚划出残影……'); }
+function chainPush(){ speedMul*=0.45; mood=clamp(mood-10); updHud(); hideEv(); toast('推车狂奔，回头率 200%'); }
+function chainAbandon(){
+  clearInterval(rideTimer);
+  const c=chosen.cluster;
+  c.dead[c.bikes.indexOf(chosen.bike)]=true;
+  cost(20);
+  toast('弃车！跑回停车点重新找车（-20s）',3000);
+  chosen=null; standing=false; speedMul=1;
+  closeCluster(); setStage('map'); setSub('当前：重新找一辆能骑的');
+}
+function evFlat(){
+  speedMul*=0.65;
+  showEv(`
+    <div class="ek">隐伤爆发 · 轮胎</div>
+    <h3>🛞 越骑越沉……轮胎在慢撒气</h3>
+    <p>「轮胎看着有点瘪」——是真的。现在每蹬一圈都像在划船。速度 -35%。</p>
+    <div class="opts">
+      ${optBtn('没办法，咬牙骑','接受现实','flatOk()')}
+    </div>`);
+}
+function flatOk(){ hideEv(); mood=clamp(mood-5); updHud(); }
+function evBrake(){
+  document.getElementById('povBar').src='assets/pov-handlebar-broken.png';
+  showEv(`
+    <div class="ek">隐伤爆发 · 刹车</div>
+    <h3>🚨 下坡+红灯，刹车捏到底——没用！</h3>
+    <p>那根垂着的刹车线早就断了。车速完全没减，路口就在眼前！</p>
+    <div class="opts">
+      ${optBtn('脚刹！鞋底拖地','-12s · 体力 -5 · 鞋底报废','brakeFoot()')}
+      ${optBtn('跳车侧滚','-15s · 体力 -25 · 心情 -20','brakeJump()',true)}
+      ${optBtn('冲向路边草丛','-8s · 体力 -12 · 心情 -10','brakeBush()',true)}
+    </div>`);
+}
+function brakeFoot(){ cost(12); hp=clamp(hp-5); updHud(); hideEv(); toast('鞋底冒烟，堪堪停在斑马线前（-12s）'); }
+function brakeJump(){ cost(15); hp=clamp(hp-25); mood=clamp(mood-20); stats.falls++; updHud(); hideEv(); toast('滚了两圈半，路人纷纷侧目（-15s）'); }
+function brakeBush(){ cost(8); hp=clamp(hp-12); mood=clamp(mood-10); stats.falls++; updHud(); hideEv(); toast('扎进冬青丛，挂着两片叶子爬出来（-8s）'); }
+
+/* ==================== 结算 ==================== */
+function arrive(){ gameOver(true); }
+function clockStr(){
+  const elapsed=300-t;                 // 秒
+  const base=8*3600+55*60;
+  const now=Math.floor(base+elapsed);
+  const h=String(Math.floor(now/3600)).padStart(2,'0');
+  const m=String(Math.floor(now%3600/60)).padStart(2,'0');
+  const s=String(now%60).padStart(2,'0');
+  return `${h}:${m}:${s}`;
+}
+function gameOver(arrived){
+  if(stage==='end')return;
+  clearInterval(rideTimer);
+  setStage('end');
+  const box=document.getElementById('endBox');
+  const clock=clockStr();
+  const lateSec = 300-t>300 ? 0 : 0;
+  let stamp,title,flavor;
+  if(arrived && t>=0){
+    if(!stats.wetButt && hp>=80 && mood>=70 && stats.falls===0){
+      stamp=['ok','✅ 打卡成功']; title='完美通勤';
+      flavor=`衣角都没乱，同事完全看不出你刚刚经历了一场生死时速。全勤奖，稳。`;
+    }else if(stats.wetButt || mood<45 || hp<60){
+      stamp=['ok','✅ 卡点打卡']; title='人到了，魂没了';
+      flavor=`${stats.wetButt?'湿透的裤子还贴在腿上，':''}但你赢了时间，输给了体面。`;
+    }else{
+      stamp=['ok','✅ 打卡成功']; title='有惊无险';
+      flavor=`摔过的膝盖隐隐作痛，但全勤奖保住了。这一公里，值。`;
+    }
+  }else{
+    const missMin=Math.max(0,Math.round((TOTAL-dist)/SPD));
+    stamp=['late','❌ 打卡失败']; title='迟到';
+    flavor=`09:00 的闹钟响时，你离公司还有 ${Math.max(0,Math.round(TOTAL-dist))} 米。全勤奖飞了，群里还弹出了领导的「？」。`;
+  }
+  const left=Math.max(0,Math.round(t));
+  let newRecord=false, rank=null;
+  if(arrived){
+    const ratio=left/DIFFS[diff].time;
+    rank=ratio>=0.4?'S':ratio>=0.25?'A':ratio>=0.1?'B':'C';
+    const b=getBest();
+    if(!b||left>b.left){ setBest({left,title,rank}); newRecord=true; }
+  }
+  // 生涯战绩
+  const ca=career(); ca.runs++; if(arrived) ca.wins++; ca.falls+=stats.falls; saveCareer(ca);
+  // 成就解锁
+  const ACH_FN={
+    first:()=>arrived,
+    perfect:()=>arrived&&title==='完美通勤',
+    blind:()=>arrived&&(stats.checks||0)===0,
+    clutz:()=>arrived&&stats.falls>=2,
+    redlight:()=>arrived&&stats.redRun>=2,
+    inspector:()=>arrived&&(stats.checks||0)>=6,
+    wet:()=>arrived&&stats.wetButt,
+    dash:()=>arrived&&(stats.dash||0)>=8,
+    lastsec:()=>arrived&&left<10,
+    hardmode:()=>arrived&&diff==='hard',
+  };
+  const owned=achs(); const newly=[];
+  ACH_DEF.forEach(([k,name])=>{ if(!owned[k]&&ACH_FN[k]()){ owned[k]={name}; newly.push(name); } });
+  if(newly.length) saveAch(owned);
+  const nb=getBest();
+  const bestLine=nb?`今日最佳（${DIFFS[diff].name}）：剩 ${nb.left} 秒 · 布局 #${DAYKEY}`:`今日尚未成功打卡 · 布局 #${DAYKEY}`;
+  box.innerHTML=`
+    <div class="stamp ${stamp[0]}">${stamp[1]}</div>
+    <h2>${title}</h2>
+    ${rank?`<div class="rank">评级 ${rank}</div>`:''}
+    <div class="clockline">打卡时间 <b>${arrived?clock:'——'}</b>${arrived?(t>0?`（还剩 ${Math.round(t)} 秒）`:'（压哨！）'):""}</div>
+    <div class="flavor">${flavor}</div>
+    ${newly.length?`<div class="ach-new">🎖️ 解锁成就：${newly.map(n=>'「'+n+'」').join(' ')}</div>`:''}
+    ${arrived&&newRecord?'<div class="record">🏆 今日新纪录！</div>':''}
+    <div class="bestline">${bestLine}</div>
+    <div class="end-stats">
+      <div class="s"><div class="v">${stats.wrong}</div><div class="k">选错车</div></div>
+      <div class="s"><div class="v">${stats.redRun}</div><div class="k">闯红灯</div></div>
+      <div class="s"><div class="v">${stats.falls}</div><div class="k">摔跤次数</div></div>
+    </div>
+    <div class="end-stats" style="grid-template-columns:repeat(3,1fr)">
+      <div class="s"><div class="v">${Math.round(hp)}</div><div class="k">剩余体力</div></div>
+      <div class="s"><div class="v">${Math.round(mood)}</div><div class="k">剩余心情</div></div>
+      <div class="s"><div class="v">${stats.wetButt?'💦':'✨'}</div><div class="k">裤子状态</div></div>
+    </div>
+    <button class="again" onclick="location.reload()">再战今日 · 同一布局</button>`;
+}
+
+/* ==================== 启动 ==================== */
+renderMarkers(); updTimer(); updHud();
+renderDailyInfo();
+</script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+/* ============================================================
+   《地铁拼图师 · 北京环城记》设计令牌
+   方向：印刷品 / 编辑排版风 —— 纸白底、墨黑字、单一赭橙强调色、
+        发丝分隔线、极小圆角、中文衬线标题 + 无衬线正文。
+   单一品牌色原则：全站仅 --mp-primary 一个强调色。
+   ============================================================ */
+
+:root {
+  /* —— 语义颜色（脚本解析必需）—— */
+  --mp-background: #f4f1e8;
+  --mp-foreground: #1b1915;
+  --mp-card: #fbf9f3;
+  --mp-card-foreground: #1b1915;
+  --mp-popover: #fffdf8;
+  --mp-popover-foreground: #1b1915;
+  --mp-primary: #a63a2a;
+  --mp-primary-foreground: #fdfaf5;
+  --mp-muted: #e9e4d7;
+  --mp-muted-foreground: #6b6455;
+  --mp-border: #d6cfbe;
+  --mp-input: #d6cfbe;
+  --mp-ring: #a63a2a;
+
+  /* —— 圆角阶梯（脚本解析必需）—— */
+  --mp-radius-sm: 2px;
+  --mp-radius-md: 4px;
+  --mp-radius-lg: 8px;
+
+  /* —— 字体 —— */
+  --mp-font-serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "SimSun", serif;
+  --mp-font-sans: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --mp-font-mono: "SFMono-Regular", "JetBrains Mono", "Menlo", "Consolas", monospace;
+
+  /* —— 版式阶梯 —— */
+  --mp-text-display: clamp(34px, 4.6vw, 58px);
+  --mp-text-h1: clamp(26px, 3.2vw, 40px);
+  --mp-text-h2: clamp(20px, 2.2vw, 27px);
+  --mp-text-h3: 18px;
+  --mp-text-body: 15px;
+  --mp-text-caption: 13px;
+
+  /* —— 8pt 间距 —— */
+  --mp-s1: 4px;
+  --mp-s2: 8px;
+  --mp-s3: 12px;
+  --mp-s4: 16px;
+  --mp-s5: 24px;
+  --mp-s6: 32px;
+  --mp-s7: 48px;
+  --mp-s8: 80px;
+
+  /* —— 分隔与阴影（静态面仅发丝线与极浅阴影）—— */
+  --mp-hairline: 1px solid var(--mp-border);
+  --mp-rule-strong: 2px solid var(--mp-foreground);
+  --mp-shadow-1: 0 1px 2px rgba(27, 25, 21, 0.05);
+  --mp-shadow-2: 0 10px 28px -12px rgba(27, 25, 21, 0.22);
+
+  /* —— 地铁线路识别色（数据语义色，非品牌色；取自北京地铁官方线路色）—— */
+  --mp-line-1: #c23a30;
+  --mp-line-2: #00619b;
+  --mp-line-4: #008c95;
+  --mp-line-5: #aa0061;
+
+  /* —— 地铁图绘制原语（SVG user-unit 数值，可按容器覆盖）—— */
+  --mp-map-line-width: 9;
+  --mp-station-r: 12;
+  --mp-transfer-r: 19;
+  --mp-corridor-r: 24;
+  --mp-label-size: 13px;
+}
+
+body {
+  font-family: var(--mp-font-sans);
+  font-size: var(--mp-text-body);
+  line-height: 1.65;
+  color: var(--mp-foreground);
+  background-color: var(--mp-background);
+  -webkit-font-smoothing: antialiased;
+}
+
+.mp-serif {
+  font-family: var(--mp-font-serif);
+}
+
+.mp-mono {
+  font-family: var(--mp-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.mp-num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 标题：中文衬线、短名词短语、断行保护 */
+.mp-title {
+  font-family: var(--mp-font-serif);
+  line-height: 1.22;
+  letter-spacing: 0.01em;
+  text-wrap: balance;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.mp-hair {
+  border-top: var(--mp-hairline);
+}
+
+.mp-rule-strong {
+  border-top: var(--mp-rule-strong);
+}
+
+.mp-eyebrow {
+  font-family: var(--mp-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mp-muted-foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

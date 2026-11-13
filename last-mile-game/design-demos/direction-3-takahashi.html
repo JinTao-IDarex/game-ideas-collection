@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>最后一公里 · 方向三 高橋慶太玩具风</title>
+<!--
+  ASSUMPTIONS：与前两版相同的游戏数据与交互范围（找车阶段，点击切换详情）
+  REASONING
+  - 设计师：高橋慶太（块魂 Katamari Damacy / Wattam）——玩具般的粗笨造型、
+    高饱和原色、粗黑描边、万物有脸的荒诞幽默。选他是因为这个游戏的灵魂是「扎心幽默」：
+    被一辆坏单车毁掉早晨这件事，只有玩具化表达才能让人笑出来而不是真的焦虑。
+  - 色彩论证：明黄/天蓝/草绿/粉红的玩具原色 = 共享单车的真实车色（黄ofo/蓝哈啰/绿青桔）
+    的童话化，色彩直接采样自题材本身。
+  - 骨架：顶部泡泡 HUD + 玩具积木街区地图 + 底部大贴纸详情卡（与前两版结构互异）
+  - form 来自内容的哪里：每辆单车做成一张「未拆盲盒贴纸」，地图是儿童积木摆出的街区，
+    车况标签做成「诊断贴纸」——整个游戏是一盒倒在地毯上的玩具。
+-->
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Baloo+2:wght@600;800&family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sun:#FFD93D; --sky:#6BCBEF; --grass:#8BC34A; --pink:#FF8FA3;
+    --ink:#2B2B2B; --paper:#FFF6E5; --bad:#FF5D5D;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden}
+  body{background:var(--sky);font-family:'Noto Sans SC',sans-serif;color:var(--ink);position:relative}
+  .kuai{font-family:'ZCOOL KuaiLe','Baloo 2',cursive}
+
+  /* 漂浮的云 -->
+  <!-- */
+  .cloud{position:absolute;background:#fff;border:3px solid var(--ink);border-radius:99px;opacity:.95;z-index:1}
+  .cloud::after{content:'';position:absolute;background:#fff;border:3px solid var(--ink);border-radius:50%}
+
+  /* 顶部泡泡 HUD */
+  .hud{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:20;display:flex;gap:14px;align-items:stretch}
+  .bubble{
+    background:#fff;border:3.5px solid var(--ink);border-radius:22px;padding:8px 20px;
+    box-shadow:0 5px 0 var(--ink);display:flex;flex-direction:column;align-items:center;min-width:110px;
+  }
+  .bubble .k{font-size:12px;font-weight:900;color:#999}
+  .bubble .v{font-size:24px;font-weight:900;font-family:'Baloo 2','ZCOOL KuaiLe'}
+  .bubble.time{background:var(--sun)}
+  .bubble.time .v{color:var(--bad)}
+  .bubble.title{background:var(--pink);color:#fff;justify-content:center}
+  .bubble.title .t{font-size:24px}
+
+  /* 玩具街区地图 */
+  .ground{
+    position:absolute;left:3%;right:3%;top:110px;bottom:250px;
+    background:var(--grass);border:4px solid var(--ink);border-radius:34px;
+    box-shadow:0 8px 0 var(--ink);overflow:hidden;z-index:5;
+  }
+  .path{position:absolute;background:#FFF1C9;border:3px solid var(--ink)}
+  .bldg{
+    position:absolute;border:3.5px solid var(--ink);border-radius:14px;
+    box-shadow:4px 5px 0 rgba(43,43,43,.35);
+    display:flex;align-items:center;justify-content:center;
+    font-size:26px;font-weight:900;color:#fff;font-family:'ZCOOL KuaiLe';
+  }
+  .bldg .face{position:absolute;bottom:6px;font-size:12px;letter-spacing:2px;color:rgba(43,43,43,.6)}
+
+  .pin{position:absolute;transform:translate(-50%,-90%);cursor:pointer;z-index:8;text-align:center;transition:transform .15s}
+  .pin:hover{transform:translate(-50%,-95%) scale(1.08)}
+  .pin .balloon{
+    width:58px;height:58px;border-radius:50% 50% 50% 6px;border:3.5px solid var(--ink);
+    display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;
+    font-family:'Baloo 2';color:#fff;box-shadow:3px 4px 0 rgba(43,43,43,.35);
+  }
+  .pin.active .balloon{outline:4px dashed #fff;outline-offset:3px}
+  .pin .wt{
+    display:inline-block;margin-top:8px;background:#fff;border:2.5px solid var(--ink);border-radius:99px;
+    font-size:11px;font-weight:900;padding:2px 9px;box-shadow:2px 3px 0 rgba(43,43,43,.3);
+  }
+  .poi{position:absolute;transform:translate(-50%,-50%);z-index:7;text-align:center}
+  .poi .box{
+    width:76px;height:76px;border:4px solid var(--ink);border-radius:18px;margin:0 auto;
+    display:flex;align-items:center;justify-content:center;font-size:30px;font-family:'ZCOOL KuaiLe';
+    box-shadow:4px 5px 0 rgba(43,43,43,.35);
+  }
+  .poi .lb{margin-top:6px;font-size:14px;font-weight:900;background:#fff;border:2.5px solid var(--ink);
+    border-radius:99px;padding:2px 12px;display:inline-block}
+  .poi.home .box{background:var(--pink);color:#fff}
+  .poi.work .box{background:var(--bad);color:#fff;animation:pulse 1.2s infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+
+  /* 底部大贴纸详情卡 */
+  .sticker{
+    position:absolute;left:50%;transform:translateX(-50%) rotate(-1deg);bottom:22px;z-index:30;
+    width:min(980px,94%);background:var(--paper);border:4px solid var(--ink);border-radius:26px;
+    box-shadow:0 8px 0 var(--ink);padding:18px 26px;
+    display:grid;grid-template-columns:300px 1fr auto;gap:24px;align-items:center;
+  }
+  .sticker .bikebox{background:#fff;border:3px dashed var(--ink);border-radius:16px;padding:6px}
+  .sticker h2{font-size:30px;font-family:'ZCOOL KuaiLe'}
+  .sticker .meta{font-size:14px;font-weight:700;color:#8a7a55;margin-top:2px}
+  .tags{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
+  .tag{
+    font-size:14px;font-weight:900;padding:5px 14px;border-radius:99px;border:3px solid var(--ink);
+    box-shadow:2px 3px 0 rgba(43,43,43,.3);background:#fff;transform:rotate(-1deg);
+  }
+  .tag.ok{background:var(--grass);color:#fff}
+  .tag.bad{background:var(--bad);color:#fff;transform:rotate(1.5deg)}
+  .tag.hint{background:#fff;border-style:dashed;color:#8a7a55;transform:rotate(-2deg)}
+  .go{
+    font-family:'ZCOOL KuaiLe';font-size:22px;color:#fff;background:var(--pink);
+    border:4px solid var(--ink);border-radius:20px;padding:16px 26px;cursor:pointer;
+    box-shadow:0 6px 0 var(--ink);transition:all .1s;white-space:nowrap;line-height:1.4;
+  }
+  .go:active{transform:translateY(6px);box-shadow:none}
+  .go small{font-size:13px;font-family:'Noto Sans SC';font-weight:700;opacity:.9}
+</style>
+</head>
+<body>
+
+<div class="cloud" style="left:6%;top:36px;width:90px;height:30px"></div>
+<div class="cloud" style="right:10%;top:60px;width:120px;height:36px"></div>
+
+<div class="hud">
+  <div class="bubble title"><div class="t kuai">最后一公里</div></div>
+  <div class="bubble time"><div class="k">剩余时间</div><div class="v" id="timer">04:32</div></div>
+  <div class="bubble"><div class="k">体力</div><div class="v">100</div></div>
+  <div class="bubble"><div class="k">心情</div><div class="v">86</div></div>
+</div>
+
+<div class="ground" id="ground">
+  <div class="path" style="left:0;top:44%;width:100%;height:34px"></div>
+  <div class="path" style="left:30%;top:0;width:34px;height:100%"></div>
+  <div class="path" style="left:66%;top:0;width:34px;height:100%"></div>
+
+  <div class="bldg" style="left:6%;top:10%;width:130px;height:90px;background:var(--sun)">店<span class="face">● ▽ ●</span></div>
+  <div class="bldg" style="left:42%;top:8%;width:150px;height:100px;background:var(--pink)">家<span class="face">● ︿ ●</span></div>
+  <div class="bldg" style="left:76%;top:60%;width:150px;height:96px;background:#B39DDB">馆<span class="face">● ‿ ●</span></div>
+  <div class="bldg" style="left:8%;top:66%;width:120px;height:84px;background:var(--sky)">铺<span class="face">● ﹏ ●</span></div>
+
+  <div class="poi home" style="left:14%;top:52%"><div class="box">你</div><div class="lb">家楼下 · 08:55</div></div>
+  <div class="poi work" style="left:88%;top:16%"><div class="box">司</div><div class="lb">公司 09:00 打卡!</div></div>
+</div>
+
+<div class="sticker" id="sticker"></div>
+
+<script>
+const BIKES=[
+  {id:'A',x:20,y:38,walk:20,color:'#FFB74D',visible:['看起来没问题'],clue:'咦？刹车线耷拉着…',hidden:'刹车失灵',dmg:{handle:true,saddle:true,chain:true},droopCable:true},
+  {id:'B',x:36,y:30,walk:35,color:'#4FC3F7',visible:['没有坐垫！'],clue:null,hidden:null,dmg:{handle:true,saddle:false,chain:true}},
+  {id:'C',x:50,y:56,walk:45,color:'#81C784',visible:['看起来没问题'],clue:'链条好像松松的…',hidden:'链条断',dmg:{handle:true,saddle:true,chain:false}},
+  {id:'D',x:62,y:36,walk:60,color:'#F06292',visible:['坐垫是湿的'],clue:'坐垫亮晶晶的有水',hidden:null,dmg:{handle:true,saddle:true,chain:true},wet:true},
+  {id:'E',x:74,y:52,walk:75,color:'#9575CD',visible:['没有把手！'],clue:null,hidden:null,dmg:{handle:false,saddle:true,chain:true}},
+  {id:'F',x:86,y:44,walk:90,color:'#FFD54F',visible:['看起来没问题'],clue:'这辆…莫非是好车？！',hidden:null,dmg:{handle:true,saddle:true,chain:true}},
+];
+let cur='A';
+
+function bikeSVG(b){
+  const ink='#2B2B2B', bad='#FF5D5D';
+  const saddle=b.dmg.saddle
+    ?`<line x1="95" y1="52" x2="95" y2="72" stroke="${ink}" stroke-width="4"/>
+      <rect x="80" y="42" width="30" height="12" rx="6" fill="${b.color}" stroke="${ink}" stroke-width="3.5"/>
+      ${b.wet?`<ellipse cx="95" cy="45" rx="10" ry="3.5" fill="#4FC3F7" stroke="${ink}" stroke-width="2"/><circle cx="89" cy="44" r="1.6" fill="#fff"/>`:''}`
+    :`<line x1="95" y1="52" x2="95" y2="72" stroke="${ink}" stroke-width="4"/><text x="80" y="46" font-size="16" fill="${bad}" font-weight="900">✕</text>`;
+  const handle=b.dmg.handle
+    ?`<line x1="205" y1="44" x2="205" y2="74" stroke="${ink}" stroke-width="4"/>
+      <line x1="191" y1="44" x2="219" y2="44" stroke="${ink}" stroke-width="6" stroke-linecap="round"/>
+      ${b.droopCable?`<path d="M211 46 Q 226 74 215 94" stroke="${bad}" stroke-width="2.5" fill="none" stroke-dasharray="4 3"/>`:''}`
+    :`<line x1="205" y1="44" x2="205" y2="74" stroke="${ink}" stroke-width="4"/><text x="199" y="42" font-size="16" fill="${bad}" font-weight="900">✕</text>`;
+  const chain=b.dmg.chain
+    ?`<line x1="95" y1="102" x2="150" y2="102" stroke="${ink}" stroke-width="3"/>`
+    :`<path d="M95 102 Q 122 120 150 102" stroke="${bad}" stroke-width="3" fill="none" stroke-dasharray="5 3"/>`;
+  return `<svg viewBox="0 0 260 155" width="100%">
+    <circle cx="70" cy="108" r="36" fill="#fff" stroke="${ink}" stroke-width="6"/>
+    <circle cx="190" cy="108" r="36" fill="#fff" stroke="${ink}" stroke-width="6"/>
+    <circle cx="70" cy="108" r="6" fill="${ink}"/><circle cx="190" cy="108" r="6" fill="${ink}"/>
+    <path d="M70 108 L112 108 L152 70 L95 70 Z" fill="none" stroke="${b.color}" stroke-width="7" stroke-linejoin="round"/>
+    <line x1="152" y1="70" x2="190" y2="108" stroke="${b.color}" stroke-width="7"/>
+    <line x1="112" y1="108" x2="95" y2="70" stroke="${b.color}" stroke-width="7"/>
+    <circle cx="112" cy="108" r="9" fill="${b.color}" stroke="${ink}" stroke-width="3"/>
+    ${chain}${saddle}${handle}</svg>`;
+}
+
+function renderPins(){
+  document.querySelectorAll('.pin').forEach(n=>n.remove());
+  const g=document.getElementById('ground');
+  BIKES.forEach(b=>{
+    const d=document.createElement('div');
+    d.className='pin'+(b.id===cur?' active':'');
+    d.style.left=b.x+'%';d.style.top=b.y+'%';
+    d.innerHTML=`<div class="balloon" style="background:${b.color}">${b.visible[0]==='看起来没问题'?'?':b.id}</div>
+      <div><span class="wt">走路 ${b.walk}s</span></div>`;
+    d.onclick=()=>{cur=b.id;renderPins();renderSticker();};
+    g.appendChild(d);
+  });
+}
+function renderSticker(){
+  const b=BIKES.find(x=>x.id===cur);
+  document.getElementById('sticker').innerHTML=`
+    <div class="bikebox">${bikeSVG(b)}</div>
+    <div>
+      <h2>单车 ${b.id} <span style="font-size:16px;color:#8a7a55">（走过去要 ${b.walk} 秒）</span></h2>
+      <div class="meta">${b.visible[0]==='看起来没问题'?'车况未知——是个盲盒，赌一把？':'毛病写在脸上了'}</div>
+      <div class="tags">
+        ${b.visible.map(v=>`<span class="tag ${v==='看起来没问题'?'ok':'bad'}">${v}</span>`).join('')}
+        ${b.clue?`<span class="tag hint">${b.clue}</span>`:''}
+        ${b.hidden?`<span class="tag hint">? 好像还有哪里不对劲…</span>`:''}
+      </div>
+    </div>
+    <button class="go">就它了！<br><small>步行 -${b.walk}s</small></button>`;
+}
+let t=272;
+setInterval(()=>{if(t>0){t--;const m=String(Math.floor(t/60)).padStart(2,'0'),s=String(t%60).padStart(2,'0');
+  document.getElementById('timer').textContent=m+':'+s;}},1000);
+renderPins();renderSticker();
+</script>
+</body>
+</html>

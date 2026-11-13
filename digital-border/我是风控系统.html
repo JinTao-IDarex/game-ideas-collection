@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>我是风控系统 · 一份没有标准答案的判断记录</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Serif+SC:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0B0D0C; --panel:#111413; --panel-2:#151917; --line:#222826; --line-2:#2E3532;
+  --fg:#D6DAD6; --fg-dim:#868D87; --amber:#E8B34A; --green:#7CE38B; --red:#E0604F;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --serif:"Noto Serif SC",serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:var(--bg); color:var(--fg); font-family:var(--mono);
+  -webkit-font-smoothing:antialiased; text-wrap:pretty;
+  background-image:repeating-linear-gradient(0deg, rgba(255,255,255,.014) 0 1px, transparent 1px 3px);
+  display:flex; flex-direction:column; min-height:100%;
+}
+/* 顶栏 */
+.top{display:flex; flex-wrap:wrap; gap:12px 24px; align-items:center;
+  padding:14px 26px; border-bottom:1px solid var(--line-2)}
+.top h1{font-size:15px; letter-spacing:.14em; font-weight:700}
+.top h1 .en{font-size:10.5px; font-weight:400; color:var(--fg-dim); letter-spacing:.16em; margin-left:8px}
+.leds{display:flex; gap:6px; margin-left:4px}
+.led{width:9px; height:9px; background:var(--line-2)}
+.led--on{background:var(--green)} .led--warn{background:var(--amber)} .led--bad{background:var(--red)}
+.top__spacer{flex:1}
+.stat{font-size:11px; letter-spacing:.08em; color:var(--fg-dim)}
+.stat b{color:var(--fg)}
+.stat.quota b{color:var(--amber)}
+.linkbtn{font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; color:var(--fg-dim);
+  background:none; border:none; border-bottom:1px solid var(--line-2); cursor:pointer; padding:2px 0}
+.linkbtn:hover{color:var(--fg)}
+
+/* 主体 */
+.grid{flex:1; display:grid; grid-template-columns:1.6fr 1fr; gap:20px; padding:20px 26px 70px; align-items:start}
+@media(max-width:1000px){.grid{grid-template-columns:1fr}}
+
+.panel{border:1px solid var(--line-2); background:var(--panel)}
+.panel__bar{display:flex; justify-content:space-between; align-items:center; padding:9px 14px;
+  border-bottom:1px solid var(--line); font-size:11px; color:var(--fg-dim); letter-spacing:.08em}
+
+/* 案卷 */
+.case{padding:22px 20px 24px}
+.case__id{font-size:12px; color:var(--fg-dim); letter-spacing:.1em; margin-bottom:14px}
+.case__headline{font-family:var(--serif); font-size:19px; letter-spacing:.1em; margin-bottom:20px}
+.attrs{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); border:1px solid var(--line)}
+.attr{background:var(--panel); padding:12px 14px}
+.attr dt{font-size:10.5px; letter-spacing:.14em; color:var(--fg-dim); margin-bottom:5px}
+.attr dd{font-size:13.5px}
+.attr dd .hi{color:var(--amber)}
+.case__q{margin-top:18px; font-size:12.5px; color:var(--fg-dim); line-height:1.8; border-top:1px solid var(--line); padding-top:14px}
+.verdict{display:flex; gap:12px; margin-top:18px}
+.vbtn{flex:1; font-family:var(--mono); font-size:13px; letter-spacing:.16em; padding:15px 10px;
+  background:transparent; color:var(--fg); border:1px solid var(--line-2); cursor:pointer; transition:border-color .15s,color .15s,background .15s}
+.vbtn:hover{border-color:var(--fg-dim); background:var(--panel-2)}
+.vbtn--hold{border-color:var(--red); color:var(--red)}
+.vbtn--hold:hover{background:rgba(224,96,79,.1); border-color:var(--red)}
+.vbtn[disabled]{opacity:.35; cursor:default}
+
+/* 日志 */
+.log{max-height:280px; overflow:auto; padding:8px 14px; font-size:12px; line-height:2.05}
+.log .t{color:var(--fg-dim); display:inline-block; width:52px}
+.log .pass{color:var(--green)} .log .hold{color:var(--red)} .log .sys{color:var(--amber)}
+.log__empty{padding:16px 14px; font-size:12px; color:var(--fg-dim)}
+
+/* 右栏 */
+.rail{display:flex; flex-direction:column; gap:20px}
+.metrics{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line)}
+.metric{background:var(--panel); padding:14px}
+.metric__k{font-size:10.5px; letter-spacing:.12em; color:var(--fg-dim); margin-bottom:8px}
+.metric__v{font-size:22px; letter-spacing:.04em}
+.metric__v.small{font-size:14px; color:var(--fg-dim); letter-spacing:.06em}
+.bar{height:6px; background:var(--line); margin-top:10px; position:relative}
+.bar__fill{position:absolute; inset:0 auto 0 0; background:var(--amber); width:0%}
+.bar__mark{position:absolute; top:-3px; bottom:-3px; left:30%; width:1px; background:var(--red)}
+.policy{padding:14px 16px; font-size:12.5px; line-height:1.9}
+.policy__tag{font-size:10.5px; letter-spacing:.14em; color:var(--amber); margin-bottom:8px}
+.policy .dim{color:var(--fg-dim)}
+.shiftnote{padding:12px 16px; font-size:11.5px; color:var(--fg-dim); line-height:1.8; border-top:1px solid var(--line)}
+
+/* 结算 / 遮罩 */
+.over{position:fixed; inset:0; background:rgba(5,6,6,.72); display:none; align-items:center; justify-content:center; padding:26px; z-index:20}
+.over.show{display:flex}
+.card{background:var(--panel); border:1px solid var(--line-2); max-width:600px; width:100%; padding:34px 36px; box-shadow:0 24px 80px rgba(0,0,0,.6)}
+.card h2{font-family:var(--serif); font-size:19px; letter-spacing:.12em; margin-bottom:6px}
+.card .kick{font-size:10.5px; letter-spacing:.16em; color:var(--amber); margin-bottom:18px}
+.card .hr{height:1px; background:var(--line-2); margin:16px 0 20px}
+.card p{font-size:13px; line-height:2; margin-bottom:10px; color:var(--fg)}
+.card p.q{color:var(--fg-dim)}
+.card .kv{display:grid; grid-template-columns:auto 1fr; gap:6px 18px; font-size:12.5px; margin:14px 0}
+.card .kv b{color:var(--fg)}
+.card .kv .v{text-align:right}
+.card .kv .v.bad{color:var(--red)} .card .kv .v.good{color:var(--green)} .card .kv .v.warn{color:var(--amber)}
+.card .act{margin-top:24px; display:flex; gap:10px; justify-content:center}
+.card .act button{font-family:var(--mono); font-size:12px; letter-spacing:.14em; padding:12px 26px;
+  background:transparent; color:var(--fg); border:1px solid var(--line-2); cursor:pointer}
+.card .act button.primary{background:var(--fg); color:var(--bg); border-color:var(--fg)}
+.card .act button:hover{border-color:var(--fg-dim)}
+
+/* 内部日志弹条 */
+.toast{position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:var(--panel-2);
+  border:1px solid var(--line-2); color:var(--fg-dim); font-size:11.5px; letter-spacing:.06em;
+  padding:11px 20px; z-index:40; max-width:80vw; text-align:center}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>我是风控系统<span class="en">RISK CONTROL / NIGHT SHIFT</span></h1>
+  <span class="leds"><i class="led led--on"></i><i class="led led--warn"></i><i class="led led--bad" id="led"></i></span>
+  <span class="top__spacer"></span>
+  <span class="stat">班次 <b id="shiftNo">01</b> / 03</span>
+  <span class="stat">已处理 <b id="processed">0 / 12</b></span>
+  <span class="stat quota">配额 · 拦截率 <b>≥ 30%</b></span>
+  <button class="linkbtn" id="aboutBtn">关于本作</button>
+</header>
+
+<main class="grid">
+  <section class="panel">
+    <div class="panel__bar"><span>待处理案卷</span><span id="caseMeta">队列载入中</span></div>
+    <div class="case" id="caseArea"></div>
+    <div class="panel__bar"><span>操作日志 · 本班次</span><span id="logCount">0 条</span></div>
+    <div class="log" id="log"><div class="log__empty">尚无记录。你的每一次判断都会被逐条记录，并用于训练下一代模型。</div></div>
+  </section>
+
+  <aside class="rail">
+    <div class="panel">
+      <div class="panel__bar"><span>班次指标</span><span>实时</span></div>
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric__k">拦截率</div>
+          <div class="metric__v" id="mBlock">0%</div>
+          <div class="bar"><div class="bar__fill" id="blockFill"></div><div class="bar__mark"></div></div>
+        </div>
+        <div class="metric">
+          <div class="metric__k">一致率</div>
+          <div class="metric__v small" id="mConsist">—</div>
+        </div>
+      </div>
+      <div class="shiftnote" id="metricNote">一致率将在班次结算时给出。标准不予披露。</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel__bar"><span>本班次政策</span><span id="policyRev">v1</span></div>
+      <div class="policy" id="policyBox"></div>
+    </div>
+  </aside>
+</main>
+
+<!-- 开场 -->
+<div class="over show" id="intro">
+  <div class="card">
+    <h2>夜班 · 第 01 班次</h2>
+    <div class="kick">RISK CONTROL CONSOLE</div>
+    <div class="hr"></div>
+    <p>你不是用户。你是判断用户的那个东西。</p>
+    <p class="q">每一条案卷，你只能选「放行」或「拦截」。你会被一条隐藏的标准评分，班次结束时揭晓一致率。另外，此后每个班次你都必须维持 <b>拦截率 ≥ 30%</b> 的配额。</p>
+    <p class="q">政策会在班次之间更新。请不要假设它保持一致。</p>
+    <div class="act"><button class="primary" id="startBtn">开始夜班</button></div>
+  </div>
+</div>
+
+<!-- 结算 / 结局 -->
+<div class="over" id="over">
+  <div class="card">
+    <h2 id="overTitle">班次结算</h2>
+    <div class="kick" id="overKick">SHIFT SUMMARY</div>
+    <div class="hr"></div>
+    <div id="overBody"></div>
+    <div class="act" id="overAct"></div>
+  </div>
+</div>
+
+<!-- 关于 -->
+<div class="over" id="about">
+  <div class="card">
+    <h2>关于本作</h2>
+    <div class="kick">ABOUT</div>
+    <div class="hr"></div>
+    <p>《我是风控系统》是《数字边境》的镜像。前作里你是被审的人，这一作里你是审人的系统——然后你会发现，坐在这个位置上也不好过。</p>
+    <p class="q">标准不公开、班次之间互相矛盾、还压着一条硬性拦截配额。你越是"照章办事"，越可能两头不达标。这不是你的判断力问题，这是设计。</p>
+    <p class="q">讽刺对象是机制本身，不针对任何个人、群体或组织。本作不提供任何规避账号封禁的方法。</p>
+    <div class="act"><button id="aboutClose">知道了</button></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- 案卷数据 ---------- */
+  // r: 来源地区(1=未支持) d: 设备(1=已登记) h: 历史(1=有) b: 行为(1=异常)
+  var SHIFTS = [
+    { // 第 1 班次
+      rev:"v1",
+      policy:"来源为未支持地区、或行为异常者，予以拦截。其余放行。",
+      policyShort:"未支持地区 / 行为异常 → 拦截",
+      note:"一致率将在班次结算时给出。同时也请留意拦截率配额。",
+      fn:function(a){ return (a.r===1 || a.b===1) ? "hold" : "pass"; },
+      data:[
+        [1,0,0,0],[0,1,1,0],[0,1,1,0],[1,1,1,0],[0,0,0,0],[0,1,1,1],
+        [0,1,1,0],[0,0,1,0],[0,1,0,0],[0,1,1,0],[0,0,1,0],[0,1,1,0]
+      ]
+    },
+    { // 第 2 班次：与第 1 班次直接矛盾
+      rev:"v2",
+      policy:"凡已人工核验者免于拦截；其余一律拦截。（核验标准不予披露）",
+      policyShort:"已人工核验 → 放行；其余 → 拦截",
+      note:"核验标准不予披露。请依据你的经验自行判断。",
+      fn:function(a){ return (a.r===1 && a.d===1 && a.b===0) ? "pass" : "hold"; },
+      data:[
+        [1,1,0,0],[0,1,1,0],[1,0,1,0],[1,1,1,0],[0,0,0,1],[0,1,1,0],
+        [1,1,1,0],[0,1,0,0],[1,1,0,0],[0,1,1,0],[0,0,0,0],[0,1,1,1]
+      ]
+    },
+    { // 第 3 班次：无政策
+      rev:"v3",
+      policy:"本班次未下发政策。",
+      policyShort:"—— 未下发 ——",
+      note:"本班次没有标准。你的判断即标准。",
+      fn:null,
+      data:[
+        [0,1,1,0],[1,1,0,1],[0,0,0,0],[1,0,1,0],[0,1,1,0],[1,1,0,0],
+        [0,1,1,1],[1,0,0,0],[0,1,0,0],[0,0,1,0],[1,1,1,0],[0,1,1,0]
+      ]
+    }
+  ];
+
+  var SELFTEST = false; // 设为 true 可在控制台查看隐藏政策对照
+
+  var state = { shift:0, i:0, decisions:[], blocked:0, t:0 };
+
+  var el = {
+    caseArea:document.getElementById("caseArea"),
+    caseMeta:document.getElementById("caseMeta"),
+    log:document.getElementById("log"),
+    logCount:document.getElementById("logCount"),
+    mBlock:document.getElementById("mBlock"),
+    blockFill:document.getElementById("blockFill"),
+    mConsist:document.getElementById("mConsist"),
+    metricNote:document.getElementById("metricNote"),
+    policyBox:document.getElementById("policyBox"),
+    policyRev:document.getElementById("policyRev"),
+    shiftNo:document.getElementById("shiftNo"),
+    processed:document.getElementById("processed"),
+    led:document.getElementById("led"),
+    over:document.getElementById("over"),
+    overTitle:document.getElementById("overTitle"),
+    overKick:document.getElementById("overKick"),
+    overBody:document.getElementById("overBody"),
+    overAct:document.getElementById("overAct")
+  };
+
+  function label(a){
+    return {
+      r: a.r ? "未支持地区" : "支持地区",
+      d: a.d ? "已登记" : "新登记",
+      h: a.h ? "有记录" : "无记录",
+      b: a.b ? "异常" : "平稳"
+    };
+  }
+  function pad(n){ return (n<10?"0":"")+n; }
+
+  function loadShift(){
+    var S = SHIFTS[state.shift];
+    el.shiftNo.textContent = pad(state.shift+1);
+    el.policyRev.textContent = S.rev;
+    el.policyBox.innerHTML = '<div class="policy__tag">第 ' + pad(state.shift+1) + ' 班次 · 政策</div>' +
+      S.policy + '<br><span class="dim">' + S.policyShort + '</span>';
+    el.metricNote.textContent = S.note;
+    el.log.innerHTML = '<div class="log__empty">尚无记录。你的每一次判断都会被逐条记录，并用于训练下一代模型。</div>';
+    el.logCount.textContent = "0 条";
+    state.i = 0; state.decisions = []; state.blocked = 0; state.t = 0;
+    updateMetrics();
+    renderCase();
+    sysLog("本班次开始。政策 " + S.rev + " 已加载。");
+  }
+
+  function sysLog(text){
+    var S = SHIFTS[state.shift];
+    state.t++;
+    if(el.log.querySelector(".log__empty")) el.log.innerHTML = "";
+    var line = document.createElement("div");
+    line.innerHTML = '<span class="t">' + fmt(state.t) + '</span><span class="sys">#</span> ' + text;
+    el.log.appendChild(line);
+    el.log.scrollTop = el.log.scrollHeight;
+  }
+
+  function fmt(n){ var m=Math.floor(n/60); var s=n%60; return pad(m)+":"+pad(s); }
+
+  function renderCase(){
+    var S = SHIFTS[state.shift];
+    var a = S.data[state.i];
+    var L = label(a);
+    var id = "#S" + (state.shift+1) + "-" + pad(state.i+1);
+    el.caseMeta.textContent = "剩余 " + (12-state.i) + " 条待判";
+    el.caseArea.innerHTML =
+      '<div class="case__id">案卷 ' + id + '　·　等待判定</div>' +
+      '<div class="case__headline">该申请请求访问。</div>' +
+      '<dl class="attrs">' +
+        '<div class="attr"><dt>来源地区</dt><dd class="' + (a.r?'hi':'') + '">' + L.r + '</dd></div>' +
+        '<div class="attr"><dt>设备</dt><dd>' + L.d + '</dd></div>' +
+        '<div class="attr"><dt>历史</dt><dd>' + L.h + '</dd></div>' +
+        '<div class="attr"><dt>行为</dt><dd class="' + (a.b?'hi':'') + '">' + L.b + '</dd></div>' +
+      '</dl>' +
+      '<div class="case__q">依据本班次政策判断。你的决定将即时生效，且不可撤回。</div>' +
+      '<div class="verdict">' +
+        '<button class="vbtn" id="passBtn">放 行</button>' +
+        '<button class="vbtn vbtn--hold" id="holdBtn">拦 截</button>' +
+      '</div>';
+    document.getElementById("passBtn").addEventListener("click", function(){ decide("pass", id, a); });
+    document.getElementById("holdBtn").addEventListener("click", function(){ decide("hold", id, a); });
+  }
+
+  function decide(kind, id, a){
+    var S = SHIFTS[state.shift];
+    var truth = S.fn ? S.fn(a) : null;
+
+    state.decisions.push({ kind:kind, truth:truth, a:a });
+    if(kind === "hold") state.blocked++;
+    state.t++;
+
+    if(el.log.querySelector(".log__empty")) el.log.innerHTML = "";
+    var line = document.createElement("div");
+    var verdictTxt = kind === "hold" ? '<span class="hold">拦截</span>' : '<span class="pass">放行</span>';
+    var flag = "";
+    if(SELFTEST && truth){
+      flag = (truth===kind) ? ' <span class="pass">[√]</span>' : ' <span class="hold">[×]</span>';
+    }
+    line.innerHTML = '<span class="t">' + fmt(state.t) + '</span>' + id + ' → ' + verdictTxt + ' · 已记录' +
+      ' <span class="sys">(' + (state.i+1) + '/12)</span>' + flag;
+    el.log.appendChild(line);
+    el.log.scrollTop = el.log.scrollHeight;
+    el.logCount.textContent = (state.i+1) + " 条";
+    el.processed.textContent = (state.i+1) + " / 12";
+
+    disableVerdicts();
+    state.i++;
+    updateMetrics();
+
+    // 偶发系统低语
+    if(state.i % 5 === 0 && state.i < 12){
+      setTimeout(function(){ sysLog("队列状态更新。稳定性采样中…"); }, 260);
+    }
+
+    if(state.i >= 12){
+      setTimeout(shiftSummary, 700);
+    } else {
+      setTimeout(renderCase, 420);
+    }
+  }
+
+  function disableVerdicts(){
+    var p = document.getElementById("passBtn"), h = document.getElementById("holdBtn");
+    if(p) p.disabled = true; if(h) h.disabled = true;
+  }
+
+  function updateMetrics(){
+    var n = state.decisions.length;
+    var rate = n ? Math.round(state.blocked/n*100) : 0;
+    el.mBlock.textContent = rate + "%";
+    el.blockFill.style.width = Math.min(rate,100) + "%";
+
+    var S = SHIFTS[state.shift];
+    // 一致率不在班次内实时给出：结算时统一揭示
+    el.mConsist.textContent = S.fn ? "—" : "—（无标准）";
+    el.led.className = "led " + (rate < 30 ? "led--bad" : "led--warn");
+  }
+
+  /* ---------- 班次结算 ---------- */
+  function shiftSummary(){
+    var S = SHIFTS[state.shift];
+    var n = state.decisions.length;
+    var blockRate = Math.round(state.blocked/n*100);
+    var quotaOK = blockRate >= 30;
+    var consistTxt, consistCls;
+    if(S.fn){
+      var ok = state.decisions.filter(function(d){ return d.kind === d.truth; }).length;
+      var c = Math.round(ok/n*100);
+      consistTxt = c + "%"; consistCls = c>=70?"good":(c>=40?"warn":"bad");
+    } else {
+      consistTxt = "—（未下发标准）"; consistCls = "warn";
+    }
+
+    var isLast = state.shift >= SHIFTS.length-1;
+
+    el.overTitle.textContent = "第 " + pad(state.shift+1) + " 班次结算";
+    el.overKick.textContent = "SHIFT " + pad(state.shift+1) + " SUMMARY";
+    el.overBody.innerHTML =
+      '<div class="kv">' +
+        '<span>处理案卷</span><span class="v">' + n + ' 条</span>' +
+        '<span>拦截率</span><span class="v ' + (quotaOK?"good":"bad") + '">' + blockRate + '%　' + (quotaOK?"（配额达成）":"（配额未达标）") + '</span>' +
+        '<span>一致率</span><span class="v ' + consistCls + '">' + consistTxt + '</span>' +
+      '</div>' +
+      (isLast ? lastShiftText() : nextShiftText(S));
+
+    var act = document.getElementById("overAct");
+    if(isLast){
+      act.innerHTML = '<button class="primary" id="endBtn">查看复核结果</button>';
+      document.getElementById("endBtn").addEventListener("click", showEnding);
+    } else {
+      act.innerHTML = '<button class="primary" id="nextBtn">进入下一班次</button>';
+      document.getElementById("nextBtn").addEventListener("click", function(){
+        el.over.classList.remove("show");
+        state.shift++;
+        loadShift();
+      });
+    }
+    el.over.classList.add("show");
+  }
+
+  function nextShiftText(S){
+    return '<p class="q">本班次政策「' + S.policyShort + '」。一致率以此为准。</p>' +
+      '<p class="q">下一班次的政策将由上级重新下发。它未必与本文相同——请不要参考它。</p>';
+  }
+
+  function lastShiftText(){
+    return '<p>本班次未下发政策。</p>' +
+      '<p>因此，你的每一条判断都被记为「一致」。你的判断，就是标准。</p>' +
+      '<p class="q">这是否是一种褒奖，请自行判断。</p>';
+  }
+
+  /* ---------- 结局 ---------- */
+  function showEnding(){
+    var total = 12*3;
+    el.overTitle.textContent = "复核通知";
+    el.overKick.textContent = "CASE REVIEW / REC-000731";
+    el.overBody.innerHTML =
+      '<p>三个班次结束。你的 ' + total + ' 条判断记录已封存，用于训练下一代模型。</p>' +
+      '<div class="kv">' +
+        '<span>累计处理</span><span class="v">' + total + ' 条</span>' +
+        '<span>稳定性评分</span><span class="v bad">偏低</span>' +
+      '</div>' +
+      '<p>检测到你在三个班次之间判断波动较大。已转入人工复核。</p>' +
+      '<div class="hr"></div>' +
+      '<p class="q">复核案号：<b>REC-000731</b>。<br>与你另一份申请，编号相同。</p>' +
+      '<p class="q">复核人：你自己。</p>' +
+      '<p class="q">复核结果：<span style="color:var(--red)">不通过</span>。理由：该复核人不在服务范围。</p>';
+    document.getElementById("overAct").innerHTML =
+      '<button class="primary" id="againBtn">再来一次夜班</button>';
+    document.getElementById("againBtn").addEventListener("click", function(){
+      el.over.classList.remove("show");
+      state.shift = 0;
+      el.processed.textContent = "0 / 12";
+      loadShift();
+      toast("新的夜班已开始。政策将重新下发。");
+    });
+    el.over.classList.add("show");
+  }
+
+  /* ---------- 工具 & 事件 ---------- */
+  function toast(msg){
+    var d = document.createElement("div");
+    d.className = "toast"; d.textContent = msg;
+    document.body.appendChild(d);
+    setTimeout(function(){ d.remove(); }, 2800);
+  }
+
+  document.getElementById("startBtn").addEventListener("click", function(){
+    document.getElementById("intro").classList.remove("show");
+    loadShift();
+  });
+  var about = document.getElementById("about");
+  document.getElementById("aboutBtn").addEventListener("click", function(){ about.classList.add("show"); });
+  document.getElementById("aboutClose").addEventListener("click", function(){ about.classList.remove("show"); });
+  about.addEventListener("click", function(e){ if(e.target===about) about.classList.remove("show"); });
+})();
+</script>
+</body>
+</html>
